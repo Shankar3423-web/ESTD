@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "estd-postgres": {
+      "command": "python",
+      "args": [
+        "-m",
+        "backend.step6_mcp.postgres.launcher"
+      ],
+      "cwd": "backend",
+      "env": {}
+    },
+    "estd-gdrive": {
+      "command": "python",
+      "args": [
+        "-m",
+        "backend.step6_mcp.google.launcher"
+      ],
+      "cwd": "backend",
+      "env": {}
+    }
+  }
+}

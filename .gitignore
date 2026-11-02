@@ -1,0 +1,43 @@
+# Environment variables
+.env
+.env*.local
+*.env
+backend/.env
+frontend/.env
+!*.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+backend/.venv/
+venv/
+env/
+*.log
+
+# Frontend & Node
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+.vite/
+frontend/.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# MCP Credentials and Google Keys
+*oauth*.json
+*credentials*.json
+credentials/
+backend/credentials/
+.gdrive-server-credentials.json
+gcp-oauth.keys.json
+
+# OS and Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

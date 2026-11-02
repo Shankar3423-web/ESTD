@@ -1,0 +1,1185 @@
+{
+  "Tech": {
+    "category_id": 1,
+    "category_code": "TECH",
+    "article_count": 10,
+    "article_ids": [
+      1,
+      8,
+      1651,
+      1652,
+      1653,
+      1654,
+      1655,
+      1656,
+      1657,
+      1658
+    ],
+    "doc_count": 9,
+    "accessible_docs": 9,
+    "canonical_folders": {
+      "Artificial Intelligence": "1T72l9KNzYdjKPVluGMX7ZOsZ7sA_aJx2",
+      "Software & Cloud": "1bayg5zAZtM-XH9HjuDS-0G4naqWCTjIs",
+      "Consumer Technology & Gadgets": "1eiM7wJ0XBBFQg_9MdBYDx3Rf1hYDntHB",
+      "Cybersecurity & Privacy": "10X-F6bs-24DQlkWJ48h77W1sHSqalPdI",
+      "Developer Technologies & Open Source": "14Az0niIwi8qAe2ee8x9Ikm6xHOdmya9K",
+      "Emerging Tech & Semiconductors": "1R9wRvdN0CjMm4ulz5iQ3GtiJsgGDIRLw",
+      "Digital Platforms & Big Tech": "1QKVCrRWZTrVA3IKbbJ78FwJSYSaC542-"
+    },
+    "doc_details": [
+      {
+        "id": 1,
+        "article_id": 1,
+        "subcategory": "Artificial Intelligence",
+        "doc_id": "1tYCslIwQHOIiHZDzUzSZQe3m_dOVi0CkiXf8n5sUSjs",
+        "title": "ESTD - Johnson & Johnson CEO Joaquin Duato Advocates for Embracing Artificial Intelligence as a Force Multiplier",
+        "db_sub_folder": "1T72l9KNzYdjKPVluGMX7ZOsZ7sA_aJx2",
+        "drive_parents": [
+          "1T72l9KNzYdjKPVluGMX7ZOsZ7sA_aJx2"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 408,
+        "article_id": 1651,
+        "subcategory": "Artificial Intelligence",
+        "doc_id": "1U0jZg2S3YaoGyHtu2-7IG3a7HCioecukqc8Y7JhYjDs",
+        "title": "ESTD - AI Safety Under Scrutiny Amid Incidents of Autonomous Agent Behavior",
+        "db_sub_folder": "1T72l9KNzYdjKPVluGMX7ZOsZ7sA_aJx2",
+        "drive_parents": [
+          "1T72l9KNzYdjKPVluGMX7ZOsZ7sA_aJx2"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 409,
+        "article_id": 1652,
+        "subcategory": "Consumer Technology & Gadgets",
+        "doc_id": "1NVuOTWLnHzmXE6bqlpc8aDzWm5h_CNO8sbYaYqq1IPU",
+        "title": "ESTD - OnePlus 12 Flagship Smartphone Officially Launched in India with Premium Specifications",
+        "db_sub_folder": "1eiM7wJ0XBBFQg_9MdBYDx3Rf1hYDntHB",
+        "drive_parents": [
+          "1eiM7wJ0XBBFQg_9MdBYDx3Rf1hYDntHB"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 410,
+        "article_id": 1653,
+        "subcategory": "Cybersecurity & Privacy",
+        "doc_id": "1ETHUyvqWILNICe20KLVCjgDhaxIQ3V63aOnjksuqtOE",
+        "title": "ESTD - WhatsApp Bans 6.9 Million Accounts in India During December 2023 Citing IT Rules Violations",
+        "db_sub_folder": "10X-F6bs-24DQlkWJ48h77W1sHSqalPdI",
+        "drive_parents": [
+          "10X-F6bs-24DQlkWJ48h77W1sHSqalPdI"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 411,
+        "article_id": 1654,
+        "subcategory": "Developer Technologies & Open Source",
+        "doc_id": "1ESeUi2ZUaSQtirH6KubDGY3yavwLEmiBwrDBkqlLK2c",
+        "title": "ESTD - Microsoft CoreAI Scientist Advances GitHub Copilot Agentic Models and Developer Security",
+        "db_sub_folder": "14Az0niIwi8qAe2ee8x9Ikm6xHOdmya9K",
+        "drive_parents": [
+          "14Az0niIwi8qAe2ee8x9Ikm6xHOdmya9K"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 412,
+        "article_id": 1655,
+        "subcategory": "Emerging Tech & Semiconductors",
+        "doc_id": "1HuQghtXILuEj-_aAZDOJ_vSGYWX8S6rwCNpaNnXc9bM",
+        "title": "ESTD - Betavolt Unveils Revolutionary Nuclear Battery with 50-Year Lifespan for Smartphones and Beyond",
+        "db_sub_folder": "1R9wRvdN0CjMm4ulz5iQ3GtiJsgGDIRLw",
+        "drive_parents": [
+          "1R9wRvdN0CjMm4ulz5iQ3GtiJsgGDIRLw"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 413,
+        "article_id": 1656,
+        "subcategory": "Digital Platforms & Big Tech",
+        "doc_id": "1W_IQJz-TOOugv-E2Bho-bUrZcamL78LFWzUpvSZOEzE",
+        "title": "ESTD - Justice Department Reveals North Korean Infiltration of Dozens of U.S. Companies Through Remote IT Worker Scheme",
+        "db_sub_folder": "1QKVCrRWZTrVA3IKbbJ78FwJSYSaC542-",
+        "drive_parents": [
+          "1QKVCrRWZTrVA3IKbbJ78FwJSYSaC542-"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 414,
+        "article_id": 1657,
+        "subcategory": "Digital Platforms & Big Tech",
+        "doc_id": "1TbDVBQ855ZZ6t_NHrpcJFtw3yQG4qMmc88kzTMc-vRk",
+        "title": "ESTD - Bumble Acquired by Ithaca Holdings in $1.3 Billion Go-Private Deal Amidst Online Dating Industry Reset",
+        "db_sub_folder": "1QKVCrRWZTrVA3IKbbJ78FwJSYSaC542-",
+        "drive_parents": [
+          "1QKVCrRWZTrVA3IKbbJ78FwJSYSaC542-"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 415,
+        "article_id": 1658,
+        "subcategory": "Software & Cloud",
+        "doc_id": "1Zag4JwO1pu2A-P0qCtxJvsJX16QaCDZHfWnscZ4D7l8",
+        "title": "ESTD - Cloudflare Acquires Deno to Enhance Workers Programming Model and Edge Computing Capabilities",
+        "db_sub_folder": "1bayg5zAZtM-XH9HjuDS-0G4naqWCTjIs",
+        "drive_parents": [
+          "1bayg5zAZtM-XH9HjuDS-0G4naqWCTjIs"
+        ],
+        "trashed": false,
+        "status": "OK"
+      }
+    ]
+  },
+  "Entertainment": {
+    "category_id": 2,
+    "category_code": "ENT",
+    "article_count": 16,
+    "article_ids": [
+      2,
+      495,
+      496,
+      497,
+      498,
+      500,
+      501,
+      503,
+      504,
+      509,
+      512,
+      553,
+      557,
+      559,
+      560,
+      562
+    ],
+    "doc_count": 16,
+    "accessible_docs": 16,
+    "canonical_folders": {
+      "Movies & Cinema": "1p6F-TR9-ALCYH8E52kqiBEbQuTo1zdUt",
+      "Music": "1bq69bTTu12-5UqPOyuZLkhmPpTToZ3lH",
+      "TV & OTT": "1HWXIXZI29cTXmXXx8ZNTef3aKxgY6HQ_",
+      "Creators & Influencers": "1v24B8Z4gQW4zO4Z1B8t6Qv9tZ6b7bV4Z",
+      "Celebrities & Pop Culture": "1P8Xob6Pi6wcfNWSvUIIxQWFFUFY5uoIR",
+      "Gaming & Digital Entertainment": "1NJZBVbNvVoj_rW9bPMh5aa7FIlCoFZDZ",
+      "Awards & Events": "1ZjbdggJuLCR9zwb7fvg19x97ezeQkfh_",
+      "Digital Storytelling & Culture": "1635TVg7x5GvQ0Eb8_R_thZ541Yr2TMAu"
+    },
+    "doc_details": [
+      {
+        "id": 2,
+        "article_id": 2,
+        "subcategory": "Gaming & Digital Entertainment",
+        "doc_id": "1JbSRKzpzLeFOk4C644Z5Sbcd_KZkARzt-rB0lrmcfco",
+        "title": "ESTD - Battlefield 6 Teases Dead Space Crossover Amidst Franchise Revival Hopes",
+        "db_sub_folder": "1NJZBVbNvVoj_rW9bPMh5aa7FIlCoFZDZ",
+        "drive_parents": [
+          "1NJZBVbNvVoj_rW9bPMh5aa7FIlCoFZDZ"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 150,
+        "article_id": 495,
+        "subcategory": "TV & OTT",
+        "doc_id": "1jvO_6pY_mq6UKLukLHPflxhWuS9gf5PZwYs_5tlJ6ew",
+        "title": "ESTD - Beta Film Secures Key Broadcast Deals for -Queen Silvia- and -La Vida Barcelona-",
+        "db_sub_folder": "1HWXIXZI29cTXmXXx8ZN_d_F78bV8bLw_",
+        "drive_parents": [
+          "1p6F-TR9-ALCYH8E52kqiBEbQuTo1zdUt"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 151,
+        "article_id": 496,
+        "subcategory": "TV & OTT",
+        "doc_id": "1NoVpCTZQQRFUGeZfMAqUemr2XZdmge7jtxNgn3E2FIk",
+        "title": "ESTD - Prime Video Secures UK & Ireland Rights for 'Diana- Her Secret Confessions' Featuring Unheard Princess Diana Audio",
+        "db_sub_folder": "1HWXIXZI29cTXmXXx8ZN_d_F78bV8bLw_",
+        "drive_parents": [
+          "1HWXIXZI29cTXmXXx8ZNTef3aKxgY6HQ_"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 152,
+        "article_id": 497,
+        "subcategory": "Celebrities & Pop Culture",
+        "doc_id": "1WjGie56hhB4MAfJvUGCsQEQH6ki8hgBuX-JUMFdGnsQ",
+        "title": "ESTD - Chappell Roan Dazzles in Latex and Thigh-High Socks at National PrEP Day Celebration",
+        "db_sub_folder": "1P8T3mU45xGk5j4cI2aI2g92P8-v725A-",
+        "drive_parents": [
+          "1P8Xob6Pi6wcfNWSvUIIxQWFFUFY5uoIR"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 153,
+        "article_id": 498,
+        "subcategory": "Music",
+        "doc_id": "1bw47QfnFxh0VT0W7HaSa2MxDBPqkwYhRtVo-36SgUQM",
+        "title": "ESTD - KIRO Newsradio Offers Free Tickets to Terry Fator's Live Performance at Muckleshoot Casino Resort",
+        "db_sub_folder": "1bq69bTTu12-5UqPOyuZLkh88y5Uq0A2F",
+        "drive_parents": [
+          "1bq69bTTu12-5UqPOyuZLkhmPpTToZ3lH"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 154,
+        "article_id": 500,
+        "subcategory": "Celebrities & Pop Culture",
+        "doc_id": "18qH0cRqE4zN3x6sdHwgURi-P_L5_R4upa0paCRLussI",
+        "title": "ESTD - Meghan Markle Shares New Video of Archie and Lilibet Enjoying British Countryside Amidst UK Relocation",
+        "db_sub_folder": "1P8T3mU45xGk5j4cI2aI2g92P8-v725A-",
+        "drive_parents": [
+          "1NJZBVbNvVoj_rW9bPMh5aa7FIlCoFZDZ"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 155,
+        "article_id": 501,
+        "subcategory": "Celebrities & Pop Culture",
+        "doc_id": "1HSR4BIlLj6vPI7Fr8H7NtMljYezkPdlq5VSep__HXmo",
+        "title": "ESTD - Pete Wicks Addresses Olivia Attwood Wedding Speculation Amidst Podcast and Animal Welfare Triumphs",
+        "db_sub_folder": "1P8T3mU45xGk5j4cI2aI2g92P8-v725A-",
+        "drive_parents": [
+          "1ZjbdggJuLCR9zwb7fvg19x97ezeQkfh_"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 156,
+        "article_id": 503,
+        "subcategory": "Creators & Influencers",
+        "doc_id": "1-Bx995BbDLhejfTYliwfLO9ZWm3CZLZoUYtCQ-K-eRw",
+        "title": "ESTD - Sidhu Moosewala Returns to Stage as Hologram in Canada, Kicking Off Global Tour",
+        "db_sub_folder": "19zku9d6d_2vY5G5H0F6L8zD9e_01mQ8c",
+        "drive_parents": [
+          "19zku9L_yC1v_Dc8ymucv8giM8OPqjB-v"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 157,
+        "article_id": 504,
+        "subcategory": "Celebrities & Pop Culture",
+        "doc_id": "1oWhjBkmaCXbDOH4VwPW0Ae5R2XjYxKNNn2nAIdpGaos",
+        "title": "ESTD - Maye Musk Nearly Declined Historic SI Swimsuit Cover Over Body Image Concerns, Details Journey in New Book 'Timeless'",
+        "db_sub_folder": "1P8T3mU45xGk5j4cI2aI2g92P8-v725A-",
+        "drive_parents": [
+          "1635TVg7x5GvQ0Eb8_R_thZ541Yr2TMAu"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 158,
+        "article_id": 509,
+        "subcategory": "Movies & Cinema",
+        "doc_id": "1PAb8AHJtHK-PMqJu9AJV2FSD6lrcoYSyjLi9ZcOK5qw",
+        "title": "ESTD - Garividi Lakshmi Secures UA13+ Certification from CBFC, Set for October 17 Release",
+        "db_sub_folder": "1p6F-TR9-ALCY3H2-m71Psmq-n2kG-f-J",
+        "drive_parents": [
+          "1p6F-TR9-ALCYH8E52kqiBEbQuTo1zdUt"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 159,
+        "article_id": 512,
+        "subcategory": "Celebrities & Pop Culture",
+        "doc_id": "15jSqvAm2Bjsfgf9JdROVfMgOOH_GOeJNcelpt1TVM-M",
+        "title": "ESTD - Sobhita Dhulipala Humourously Confesses 'Relationship' with ChatGPT, Sparks Fan Relief",
+        "db_sub_folder": "1P8T3mU45xGk5j4cI2aI2g92P8-v725A-",
+        "drive_parents": [
+          "1p6F-TR9-ALCYH8E52kqiBEbQuTo1zdUt"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 160,
+        "article_id": 553,
+        "subcategory": "Gaming & Digital Entertainment",
+        "doc_id": "1dHMNrH7d5tbMpYeBZKFdeuJhcEBxLthpF9eAp-jsOI4",
+        "title": "ESTD - KRAFTON India Doubles Esports College Tour to 256 Campuses, Expanding Competitive Gaming Reach Across India",
+        "db_sub_folder": "1zN65z-E9f-Gj_U3aB_zY-2m6V5tA-9D_",
+        "drive_parents": [
+          "1NJZBVbNvVoj_rW9bPMh5aa7FIlCoFZDZ"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 161,
+        "article_id": 557,
+        "subcategory": "Digital Storytelling & Culture",
+        "doc_id": "14WFKodQq6da3DmEfMyPsc2P6GqNk0AeI2xLhpohOw14",
+        "title": "ESTD - Pioneering Animator Nina Sabnani Honored with IDSFFK Lifetime Achievement Award, Reflects on Indian Animation's Evolution and Cultural Story...",
+        "db_sub_folder": "15q8o1_L-5A4P6xX8F1G7d_0zX4kL9wV8",
+        "drive_parents": [
+          "1635TVg7x5GvQ0Eb8_R_thZ541Yr2TMAu"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 162,
+        "article_id": 559,
+        "subcategory": "TV & OTT",
+        "doc_id": "1akWVMOr2-j4neWahJ9-ZSvFSk3I6F8woYrkFhXbSCEU",
+        "title": "ESTD - Jailer 2 Hindi Release Confirmed Amidst Multiplex OTT Window Dispute",
+        "db_sub_folder": "1HWXIXZI29cTXmXXx8ZN_d_F78bV8bLw_",
+        "drive_parents": [
+          "1HWXIXZI29cTXmXXx8ZNTef3aKxgY6HQ_"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 163,
+        "article_id": 560,
+        "subcategory": "Music",
+        "doc_id": "1y1zcThYmFiJCoi0vm1pH7r2RVLPGWLm5qOwWQ3_fBYQ",
+        "title": "ESTD - Chhota Sidhu Recreates Iconic 'Thaapi' at Toronto Hologram Concert, Honoring Sidhu Moosewala's Legacy",
+        "db_sub_folder": "1bq69bTTu12-5UqPOyuZLkh88y5Uq0A2F",
+        "drive_parents": [
+          "1bq69bTTu12-5UqPOyuZLkhmPpTToZ3lH"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 165,
+        "article_id": 562,
+        "subcategory": "Creators & Influencers",
+        "doc_id": "1hRbRvPhfZMEKOART8iC1IcnBm8dXwxlKcdLfnjM2KO8",
+        "title": "ESTD - Rahul Gupta Initiative Empowers Emerging Indian Content Creators with Essential Equipment and Networking Opportunities",
+        "db_sub_folder": "19zku9d6d_2vY5G5H0F6L8zD9e_01mQ8c",
+        "drive_parents": [
+          "19zku9L_yC1v_Dc8ymucv8giM8OPqjB-v"
+        ],
+        "trashed": false,
+        "status": "OK"
+      }
+    ]
+  },
+  "Business & Finance": {
+    "category_id": 3,
+    "category_code": "BIZ_FIN",
+    "article_count": 10,
+    "article_ids": [
+      3,
+      561,
+      2259,
+      2260,
+      2261,
+      2262,
+      2263,
+      2264,
+      2265,
+      2266
+    ],
+    "doc_count": 10,
+    "accessible_docs": 10,
+    "canonical_folders": {
+      "Financial Markets & Banking": "1HL-pMeWMT_l2BSjnHDFOpUqUNuXlJrx9",
+      "Startups & Venture Capital": "1qAHp5dlMLoavxV8-Aq-zKFpV1JXhpD_f",
+      "Corporate Strategy & Earnings": "1QQE0ezGtCM6A3Ib84eQfEukkXXsSCQfF",
+      "Personal Finance & Wealth Management": "1kadQcraP4D3cL2jvxSToRhMxpumFNg_t",
+      "Economy & Macroeconomics": "1ZSU-AmmB0Swi-FgzffvGUDYLCXZ7cL2F",
+      "Trade, Supply Chain & Industry": "1AGzqqVCDeo0NBE28Y68kqMeM6uy6Deti"
+    },
+    "doc_details": [
+      {
+        "id": 3,
+        "article_id": 3,
+        "subcategory": "Personal Finance & Wealth Management",
+        "doc_id": "1QPcN5maIXN-ZnaSEnff0FJMLCQqUKqMOrcE_N6U8sMs",
+        "title": "ESTD - Australian Budget Tax Reforms Reshape Retirement Planning Strategies",
+        "db_sub_folder": "1kadQcraP4D3cL2jvxSToRhMxpumFNg_t",
+        "drive_parents": [
+          "1kadQcraP4D3cL2jvxSToRhMxpumFNg_t"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 164,
+        "article_id": 561,
+        "subcategory": "Trade, Supply Chain & Industry",
+        "doc_id": "1UMXX07YBhEcNzqlpqe2bQw7kmlSaDP6aXpNDYtbKOF8",
+        "title": "ESTD - GK Group Secures Seven Prestigious Honours at FADA Dealer Awards 2026",
+        "db_sub_folder": "1ZjbdggJuLCR9N_G-s79L2m4y_8D41V8e",
+        "drive_parents": [
+          "1ZjbdggJuLCR9zwb7fvg19x97ezeQkfh_"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 501,
+        "article_id": 2259,
+        "subcategory": "Economy & Macroeconomics",
+        "doc_id": "1SqOgAEAhnuYHVBQUiYXj9LuKzqsrXHEVXqu-wMUQgr0",
+        "title": "ESTD - IMF Endorses India's Updated GDP Methodology, Citing Alignment with Best Practices",
+        "db_sub_folder": "1ZSU-AmmB0Swi-FgzffvGUDYLCXZ7cL2F",
+        "drive_parents": [
+          "1ZSU-AmmB0Swi-FgzffvGUDYLCXZ7cL2F"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 502,
+        "article_id": 2260,
+        "subcategory": "Economy & Macroeconomics",
+        "doc_id": "1ZvuXhgElEUo9Qgb22oFJMgP3G1cS8z_GiKq1mxStqZ0",
+        "title": "ESTD - Global Markets Reel as Tech Stocks Plunge Amid AI Spending Doubts and Inflation Fears",
+        "db_sub_folder": "1ZSU-AmmB0Swi-FgzffvGUDYLCXZ7cL2F",
+        "drive_parents": [
+          "1ZSU-AmmB0Swi-FgzffvGUDYLCXZ7cL2F"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 503,
+        "article_id": 2261,
+        "subcategory": "Financial Markets & Banking",
+        "doc_id": "1l75Zhb25j73ekAGwLRjcGdMjHwb2INADXngaGA2KlLI",
+        "title": "ESTD - India to Continue Aggressive Disinvestment Drive Despite Meeting FY27 Target with IDBI Bank Sale",
+        "db_sub_folder": "1HL-pMeWMT_l2BSjnHDFOpUqUNuXlJrx9",
+        "drive_parents": [
+          "1HL-pMeWMT_l2BSjnHDFOpUqUNuXlJrx9"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 504,
+        "article_id": 2262,
+        "subcategory": "Trade, Supply Chain & Industry",
+        "doc_id": "1Zx-DHZYkrYzPlS9fwvaHQfIQPy97WCOpexy4-w8UCpM",
+        "title": "ESTD - Toyota Launches 2026 Glanza Facelift in India, Starting at Rs 6.99 Lakh",
+        "db_sub_folder": "1AGzqqVCDeo0NBE28Y68kqMeM6uy6Deti",
+        "drive_parents": [
+          "1AGzqqVCDeo0NBE28Y68kqMeM6uy6Deti"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 505,
+        "article_id": 2263,
+        "subcategory": "Startups & Venture Capital",
+        "doc_id": "1UhsQ7GUsbI1MJYxCdIdYR0tOhusdTb1A8C3QU-kCEek",
+        "title": "ESTD - Shamrock AI Secures $5 Million Seed Funding to Enhance Enterprise AI Agent Reliability",
+        "db_sub_folder": "1qAHp5dlMLoavxV8-Aq-zKFpV1JXhpD_f",
+        "drive_parents": [
+          "1qAHp5dlMLoavxV8-Aq-zKFpV1JXhpD_f"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 506,
+        "article_id": 2264,
+        "subcategory": "Corporate Strategy & Earnings",
+        "doc_id": "14w5ZTwkvuuOqtU8Oatye5TxbNsaIxK135t2f7aN_sLQ",
+        "title": "ESTD - Kumar Mangalam Birla Plans $30 Billion Investment Push Amid Global Crises",
+        "db_sub_folder": "1QQE0ezGtCM6A3Ib84eQfEukkXXsSCQfF",
+        "drive_parents": [
+          "1QQE0ezGtCM6A3Ib84eQfEukkXXsSCQfF"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 507,
+        "article_id": 2265,
+        "subcategory": "Personal Finance & Wealth Management",
+        "doc_id": "11R2zz624KGg6geN8umYqdfqewxmAsLp7j-PqqqQaDy4",
+        "title": "ESTD - Gold and Silver Rebound After Sharp Decline Amid Shifting Fed Expectations and Equity Selloff",
+        "db_sub_folder": "1kadQcraP4D3cL2jvxSToRhMxpumFNg_t",
+        "drive_parents": [
+          "1kadQcraP4D3cL2jvxSToRhMxpumFNg_t"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 508,
+        "article_id": 2266,
+        "subcategory": "Trade, Supply Chain & Industry",
+        "doc_id": "1BwNHDxaZQ99I43aAetJaAcjgGn2kLyFRHH-KLdxxyEI",
+        "title": "ESTD - boAt Expands International Reach into Sri Lanka and Bhutan, Reports Doubled International Revenue in FY26",
+        "db_sub_folder": "1AGzqqVCDeo0NBE28Y68kqMeM6uy6Deti",
+        "drive_parents": [
+          "1AGzqqVCDeo0NBE28Y68kqMeM6uy6Deti"
+        ],
+        "trashed": false,
+        "status": "OK"
+      }
+    ]
+  },
+  "Developments": {
+    "category_id": 4,
+    "category_code": "DEV",
+    "article_count": 14,
+    "article_ids": [
+      4,
+      5,
+      6,
+      7,
+      1956,
+      1957,
+      1958,
+      1959,
+      1960,
+      1961,
+      1962,
+      1963,
+      1964,
+      1965
+    ],
+    "doc_count": 12,
+    "accessible_docs": 12,
+    "canonical_folders": {
+      "Government & Public Policy": "1PyI-Yv7c2HGsHMDNsd07ANRTtzqzGgTN",
+      "Infrastructure & Urban Planning": "1sIkch2cHtEuHqer3ABw_27veR4veZLWx",
+      "Energy, Climate & Environment": "1lSjvqTmCqwca6un2serwNPfswEv3-xA6",
+      "Health & Medical Sciences": "1RQY1_3b5_ZHwTa9pW6RX_JabQbF4X6Wy",
+      "Education & Learning Policy": "1v0gcs8WgaKIu9hFFisHFfsqSk9xH-DYX",
+      "Science & Research Discoveries": "13yzzKyylqOpmVCmPIVjqstYvBuX4-_9s",
+      "Global Affairs & Geopolitics": "1nKr50HBplpN6LH3UKqEOipdaNuaFodxm"
+    },
+    "doc_details": [
+      {
+        "id": 4,
+        "article_id": 4,
+        "subcategory": "Government & Public Policy",
+        "doc_id": "1V0-OI0-d7g7E6n_7nhrND2e6kkUeZ2Q2hnXA2ddFOlQ",
+        "title": "ESTD - Madhya Pradesh Forensic Labs Face Critical Staff Shortage, Impeding New Evidence Law Implementation",
+        "db_sub_folder": "1PyI-Yv7c2HGsHMDNsd07ANRTtzqzGgTN",
+        "drive_parents": [
+          "1PyI-Yv7c2HGsHMDNsd07ANRTtzqzGgTN"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 5,
+        "article_id": 5,
+        "subcategory": "Education & Learning Policy",
+        "doc_id": "177l3vmtnqjLxaRp68PwMTJCHczIzwk8i_iz2yLL-zU4",
+        "title": "ESTD - Chicago Public Schools Watchdog Reopens Decade-Old Allegations Against School Board Candidate Hilario Dominguez",
+        "db_sub_folder": "1v0gcs8WgaKIu9hFFisHFfsqSk9xH-DYX",
+        "drive_parents": [
+          "1v0gcs8WgaKIu9hFFisHFfsqSk9xH-DYX"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 461,
+        "article_id": 1956,
+        "subcategory": "Government & Public Policy",
+        "doc_id": "1VPpvxRxjhQopMIRnxJWsQIjLkgXqJdreu8pMN8rte2c",
+        "title": "ESTD - Mayawati Demands Regularisation of Contractual Employees in Uttar Pradesh Government Departments",
+        "db_sub_folder": "1PyI-Yv7c2HGsHMDNsd07ANRTtzqzGgTN",
+        "drive_parents": [
+          "1PyI-Yv7c2HGsHMDNsd07ANRTtzqzGgTN"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 462,
+        "article_id": 1957,
+        "subcategory": "Government & Public Policy",
+        "doc_id": "1-nbQhGT8UwEQacNvwIzqg2OQGTqD-jKNs_9Fq7Au6e4",
+        "title": "ESTD - Andhra Pradesh State Election Commission Modernizes Portal for Upcoming Local Body Polls",
+        "db_sub_folder": "1PyI-Yv7c2HGsHMDNsd07ANRTtzqzGgTN",
+        "drive_parents": [
+          "1PyI-Yv7c2HGsHMDNsd07ANRTtzqzGgTN"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 463,
+        "article_id": 1958,
+        "subcategory": "Infrastructure & Urban Planning",
+        "doc_id": "1Qy3foy5FjGxXjdiyz9F2sZTDmBwtzdPYNTculjuJr5Y",
+        "title": "ESTD - Midnight Biryani Menu Card Triggers Police Raid at Hyderabad Convention Hall",
+        "db_sub_folder": "1sIkch2cHtEuHqer3ABw_27veR4veZLWx",
+        "drive_parents": [
+          "1sIkch2cHtEuHqer3ABw_27veR4veZLWx"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 464,
+        "article_id": 1959,
+        "subcategory": "Infrastructure & Urban Planning",
+        "doc_id": "1cwbAMJRwYNh3CJNdhDTCAHzpB2UdveZEFQ5nH7yQ_yM",
+        "title": "ESTD - International Cricket Returns to Hyderabad After Two-Year Hiatus, Uppal Stadium Fills with Fans",
+        "db_sub_folder": "1sIkch2cHtEuHqer3ABw_27veR4veZLWx",
+        "drive_parents": [
+          "1sIkch2cHtEuHqer3ABw_27veR4veZLWx"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 465,
+        "article_id": 1960,
+        "subcategory": "Energy, Climate & Environment",
+        "doc_id": "1X5CbQ7S1NuBjipaBYM1dRNa358d98f98ejYpSziGn-E",
+        "title": "ESTD - Adani-Linked Mining Project Threatens Rare Jeypore Ground Gecko in Eastern Ghats",
+        "db_sub_folder": "1lSjvqTmCqwca6un2serwNPfswEv3-xA6",
+        "drive_parents": [
+          "1lSjvqTmCqwca6un2serwNPfswEv3-xA6"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 466,
+        "article_id": 1961,
+        "subcategory": "Health & Medical Sciences",
+        "doc_id": "1lgQSRerOdr8vPtLLiAae6ZSS8VTQYvAb8Y52PxVzMbA",
+        "title": "ESTD - WHO Director-General Commends Jordan's Leadership in Health System Delivery and Humanitarian Aid",
+        "db_sub_folder": "1RQY1_3b5_ZHwTa9pW6RX_JabQbF4X6Wy",
+        "drive_parents": [
+          "1RQY1_3b5_ZHwTa9pW6RX_JabQbF4X6Wy"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 467,
+        "article_id": 1962,
+        "subcategory": "Health & Medical Sciences",
+        "doc_id": "1cG3pEWZl_oRPX4cL8b05vMhy7IlVlk-2XKwVO4PCcQE",
+        "title": "ESTD - Three Mumbai Blood Banks Face License Suspension Over Donor Incentives",
+        "db_sub_folder": "1RQY1_3b5_ZHwTa9pW6RX_JabQbF4X6Wy",
+        "drive_parents": [
+          "1RQY1_3b5_ZHwTa9pW6RX_JabQbF4X6Wy"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 468,
+        "article_id": 1963,
+        "subcategory": "Education & Learning Policy",
+        "doc_id": "1VTIkwQcvH4h2jGRr0GpZMQ1VcFPqleLkoexgyzJ2T14",
+        "title": "ESTD - NCTE Debunks Fake Notice on TGT Eligibility Criteria, Warns Against Misinformation",
+        "db_sub_folder": "1v0gcs8WgaKIu9hFFisHFfsqSk9xH-DYX",
+        "drive_parents": [
+          "1v0gcs8WgaKIu9hFFisHFfsqSk9xH-DYX"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 469,
+        "article_id": 1964,
+        "subcategory": "Science & Research Discoveries",
+        "doc_id": "1740xXto6lT_bhQEurTpLzWhYJ7dsE3GmxHbWSh-P5JQ",
+        "title": "ESTD - Consumer Trust in Precision Fermentation Hinges on Clear Communication, New Report Finds",
+        "db_sub_folder": "13yzzKyylqOpmVCmPIVjqstYvBuX4-_9s",
+        "drive_parents": [
+          "13yzzKyylqOpmVCmPIVjqstYvBuX4-_9s"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 470,
+        "article_id": 1965,
+        "subcategory": "Global Affairs & Geopolitics",
+        "doc_id": "1TWCq-ec8GVCFLTRyp_-SgMnF54QI_aZ648i0G1FVZKg",
+        "title": "ESTD - UN Security Council Renews Sanctions on Haiti to Disrupt Gang Violence and Illicit Arms Flow",
+        "db_sub_folder": "1nKr50HBplpN6LH3UKqEOipdaNuaFodxm",
+        "drive_parents": [
+          "1nKr50HBplpN6LH3UKqEOipdaNuaFodxm"
+        ],
+        "trashed": false,
+        "status": "OK"
+      }
+    ]
+  },
+  "Sports": {
+    "category_id": 5,
+    "category_code": "SPORTS",
+    "article_count": 30,
+    "article_ids": [
+      1051,
+      1052,
+      1053,
+      1054,
+      1055,
+      1056,
+      1057,
+      1058,
+      1059,
+      1060,
+      1061,
+      1062,
+      1348,
+      1349,
+      1350,
+      1351,
+      1352,
+      1353,
+      1354,
+      1355,
+      1356,
+      1547,
+      1548,
+      1549,
+      1550,
+      1551,
+      1552,
+      1553,
+      1554,
+      1555
+    ],
+    "doc_count": 30,
+    "accessible_docs": 30,
+    "canonical_folders": {
+      "Cricket": "1ex9jhbtb628NSoPPDrXx5QwMPgxq1EzQ",
+      "Football": "1Z0QhI1T_g0mLW__Nun4tpHViKerQFjXN",
+      "Tennis": "1wyUq08_Usl8Z3m45AOHNxa57jf1PCaTx",
+      "Badminton": "1W7Wc8Ktu0yJJvshI9jIsSvq7cnr7OlTU",
+      "Motorsport": "1k134k01lFcJ_DSn9YrVt7KuJLASaWtfB",
+      "Hockey": "1l91GZBBdj241QojBuBiDT6qHBsHZUt3r",
+      "Athletics & Olympic Sports": "1Xn0UCI1YahV3VpohpybKf8C3NYn3LcQH",
+      "Esports & Competitive Gaming": "1wNsL2NytAhzVT6eT06VDzZ6X_3XIvAMi",
+      "Other Sports": "18hrWowsRd1A4uEY1V3AgBvu440D6upAZ"
+    },
+    "doc_details": [
+      {
+        "id": 226,
+        "article_id": 1051,
+        "subcategory": "Cricket",
+        "doc_id": "15k6kwNHz_W-AqqwXEXf9s0gQCV0NeYWEmniI_NEpMBo",
+        "title": "ESTD - Shubman Gill and Shafali Verma Crowned ICC Players of the Month for October 2026",
+        "db_sub_folder": "1ex9jhbtb628NSoPPDrXx5QwMPgxq1EzQ",
+        "drive_parents": [
+          "1ex9jhbtb628NSoPPDrXx5QwMPgxq1EzQ"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 227,
+        "article_id": 1052,
+        "subcategory": "Football",
+        "doc_id": "1a_xcpYguvYCfRhdvcLCLzzAXxz-4GedbGCQ9cHyBeHo",
+        "title": "ESTD - Hansi Flick's Barcelona Dominates La Liga, Widening Gap Over Jose Mourinho's Struggling Real Madrid",
+        "db_sub_folder": "1Z0QhI1T_g0mLW__Nun4tpHViKerQFjXN",
+        "drive_parents": [
+          "1Z0QhI1T_g0mLW__Nun4tpHViKerQFjXN"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 228,
+        "article_id": 1053,
+        "subcategory": "Football",
+        "doc_id": "1WjdvG2ItETw54Kl2EN-7trW7hmwxiCygkrooQQrXolQ",
+        "title": "ESTD - Ronaldo Scores as Al-Nassr Secures Win After Hour-Long Security Delay in Riyadh",
+        "db_sub_folder": "1Z0QhI1T_g0mLW__Nun4tpHViKerQFjXN",
+        "drive_parents": [
+          "1Z0QhI1T_g0mLW__Nun4tpHViKerQFjXN"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 229,
+        "article_id": 1054,
+        "subcategory": "Athletics & Olympic Sports",
+        "doc_id": "1yDYy93Ey2xKFQxyAgfnCSNym8hJiURLW3Nrh6DNCrr0",
+        "title": "ESTD - Pranavi Urs Secures Historic Asian Games Golf Gold, Eyes Olympic and Major Titles",
+        "db_sub_folder": "1Xn0UCI1YahV3VpohpybKf8C3NYn3LcQH",
+        "drive_parents": [
+          "1Xn0UCI1YahV3VpohpybKf8C3NYn3LcQH"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 230,
+        "article_id": 1055,
+        "subcategory": "Cricket",
+        "doc_id": "1wneJeuFMJzF3Srzn34vfqQ48Ar0IT8lRAVPQ4CsD8p4",
+        "title": "ESTD - Hyderabad Dominates Tripura in Ranji Trophy 2026, Securing Innings Victory on Day Three",
+        "db_sub_folder": "1ex9jhbtb628NSoPPDrXx5QwMPgxq1EzQ",
+        "drive_parents": [
+          "1ex9jhbtb628NSoPPDrXx5QwMPgxq1EzQ"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 231,
+        "article_id": 1056,
+        "subcategory": "Tennis",
+        "doc_id": "1HQWWga4WmZGs4mC9rBEFhoNiHKzbnU0mnkwaJ70mxlc",
+        "title": "ESTD - Alexander Zverev Clinches Historic ATP Year-End World No. 1 Ranking",
+        "db_sub_folder": "1wyUq08_Usl8Z3m45AOHNxa57jf1PCaTx",
+        "drive_parents": [
+          "1wyUq08_Usl8Z3m45AOHNxa57jf1PCaTx"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 232,
+        "article_id": 1057,
+        "subcategory": "Badminton",
+        "doc_id": "1ZDWY_oKXXpbFWu_wQhemY8ZtwiO2-jCKcdtW4YQy2eQ",
+        "title": "ESTD - Indian Badminton Stars Face Formidable Challenges at Denmark Open Super 750",
+        "db_sub_folder": "1W7Wc8Ktu0yJJvshI9jIsSvq7cnr7OlTU",
+        "drive_parents": [
+          "1W7Wc8Ktu0yJJvshI9jIsSvq7cnr7OlTU"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 233,
+        "article_id": 1058,
+        "subcategory": "Motorsport",
+        "doc_id": "1Dogt086xEr0HEp3uEd4jxom7LoST62KL2P3BmtkQzOo",
+        "title": "ESTD - Alex Palou Puts Next-Gen IR-28 Chassis Through Demanding Sebring Test",
+        "db_sub_folder": "1k134k01lFcJ_DSn9YrVt7KuJLASaWtfB",
+        "drive_parents": [
+          "1k134k01lFcJ_DSn9YrVt7KuJLASaWtfB"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 234,
+        "article_id": 1059,
+        "subcategory": "Hockey",
+        "doc_id": "1-Q2G9Prjk2SuugHyKZljHi7G5WnE8LYPtKF70KWRPTo",
+        "title": "ESTD - Asian Games Gold Medalist Ishika Sambharwal Felicitated by Haryana Gramin Bank in Bhiwani",
+        "db_sub_folder": "1l91GZBBdj241QojBuBiDT6qHBsHZUt3r",
+        "drive_parents": [
+          "1l91GZBBdj241QojBuBiDT6qHBsHZUt3r"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 235,
+        "article_id": 1060,
+        "subcategory": "Athletics & Olympic Sports",
+        "doc_id": "1wzOS0cw5oCIlXuJc42tD1-DyEU_aqruJUFXejhvEL6Q",
+        "title": "ESTD - Neeraj Chauhan Secures Double Medal Haul at Aichi-Nagoya Asian Games, Eyes Olympic Glory",
+        "db_sub_folder": "1Xn0UCI1YahV3VpohpybKf8C3NYn3LcQH",
+        "drive_parents": [
+          "1Xn0UCI1YahV3VpohpybKf8C3NYn3LcQH"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 236,
+        "article_id": 1061,
+        "subcategory": "Esports & Competitive Gaming",
+        "doc_id": "1l-BNSaeKJNebWPhf3b7HuzkF4QXF1HmvXRNB2nOGcG0",
+        "title": "ESTD - SKO 2026 Season 2 Main Tournament Set for October 18, Featuring Eight Top Shadowverse Players",
+        "db_sub_folder": "1wNsL2NytAhzVT6eT06VDzZ6X_3XIvAMi",
+        "drive_parents": [
+          "1wNsL2NytAhzVT6eT06VDzZ6X_3XIvAMi"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 237,
+        "article_id": 1062,
+        "subcategory": "Other Sports",
+        "doc_id": "1aWdeoYAE_2jPiVXu59F7e8srtnrAlLvw9UIaQqEf9RM",
+        "title": "ESTD - Caruana Joins So in Lead After Endgame-Dominated Round 4 of 2026 U.S. Chess Championship",
+        "db_sub_folder": "18hrWowsRd1A4uEY1V3AgBvu440D6upAZ",
+        "drive_parents": [
+          "18hrWowsRd1A4uEY1V3AgBvu440D6upAZ"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 298,
+        "article_id": 1348,
+        "subcategory": "Cricket",
+        "doc_id": "10m2Ufx2x79PiHXKiCVbVSoVkKm5Rgl4mpvjBrAFAbTw",
+        "title": "ESTD - ICC Reports Over 1.5 Crore Ticket Applications for 2027 Cricket World Cup Ballot",
+        "db_sub_folder": "1ex9jhbtb628NSoPPDrXx5QwMPgxq1EzQ",
+        "drive_parents": [
+          "1ex9jhbtb628NSoPPDrXx5QwMPgxq1EzQ"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 299,
+        "article_id": 1349,
+        "subcategory": "Football",
+        "doc_id": "1YUA3hO3afAsI7pxaoDCwRj8qA7cFkd4KeQTBvzhkx2M",
+        "title": "ESTD - Bengaluru FC Secures Dramatic 3-2 Victory Over SC Delhi in Thrilling ISL Opener",
+        "db_sub_folder": "1Z0QhI1T_g0mLW__Nun4tpHViKerQFjXN",
+        "drive_parents": [
+          "1Z0QhI1T_g0mLW__Nun4tpHViKerQFjXN"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 300,
+        "article_id": 1350,
+        "subcategory": "Tennis",
+        "doc_id": "1BsgHYcWGke8jBWZHBk84RV7a8UEkaw-0IPtht8brMnM",
+        "title": "ESTD - Maaya Rajeshwaran Revathi, 17, Becomes Youngest Indian Woman to Win Pro Tennis Title",
+        "db_sub_folder": "1wyUq08_Usl8Z3m45AOHNxa57jf1PCaTx",
+        "drive_parents": [
+          "1wyUq08_Usl8Z3m45AOHNxa57jf1PCaTx"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 301,
+        "article_id": 1351,
+        "subcategory": "Badminton",
+        "doc_id": "1B7Sy9iELl13ZADqp5Qv4-amTU3Vd4U9yQ8fk7Ah8-Qg",
+        "title": "ESTD - Indian Shuttlers Achieve Flawless Start at BWF World Junior Championships 2026 in Cairo",
+        "db_sub_folder": "1W7Wc8Ktu0yJJvshI9jIsSvq7cnr7OlTU",
+        "drive_parents": [
+          "1W7Wc8Ktu0yJJvshI9jIsSvq7cnr7OlTU"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 302,
+        "article_id": 1352,
+        "subcategory": "Motorsport",
+        "doc_id": "1bAvIkAk7uEbOCPiaIcmWblNrFvdvdO1zwoN39_4q4mM",
+        "title": "ESTD - Indian Prodigy Atiqa Mir Joins Kart Republic, A Launchpad for Future F1 Stars",
+        "db_sub_folder": "1k134k01lFcJ_DSn9YrVt7KuJLASaWtfB",
+        "drive_parents": [
+          "1k134k01lFcJ_DSn9YrVt7KuJLASaWtfB"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 303,
+        "article_id": 1353,
+        "subcategory": "Hockey",
+        "doc_id": "1dKlj8MFwfZwgFWX03JfUD93v2RGBkx_ZNFpJbDy9iUc",
+        "title": "ESTD - Seguin Breaks Goal Drought, But Stars Fall to Penguins in Shootout Despite Oettinger's Stellar Performance",
+        "db_sub_folder": "1l91GZBBdj241QojBuBiDT6qHBsHZUt3r",
+        "drive_parents": [
+          "1l91GZBBdj241QojBuBiDT6qHBsHZUt3r"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 304,
+        "article_id": 1354,
+        "subcategory": "Athletics & Olympic Sports",
+        "doc_id": "1H_I4yfdAW0e7phQNhVMTEFNcFsZVF3NrBjdJuctJUGI",
+        "title": "ESTD - Izzi Batt-Doyle Shatters Australian Women's Marathon Record at Chicago",
+        "db_sub_folder": "1Xn0UCI1YahV3VpohpybKf8C3NYn3LcQH",
+        "drive_parents": [
+          "1Xn0UCI1YahV3VpohpybKf8C3NYn3LcQH"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 305,
+        "article_id": 1355,
+        "subcategory": "Esports & Competitive Gaming",
+        "doc_id": "1vFAp21nDvoxSmdRq-52ct9NsUJlEccTT3RH7LotM7Wg",
+        "title": "ESTD - KRAFTON India Doubles Esports College Campus Tour to 256 Institutions, Expanding Competitive Gaming Across the Nation",
+        "db_sub_folder": "1wNsL2NytAhzVT6eT06VDzZ6X_3XIvAMi",
+        "drive_parents": [
+          "1wNsL2NytAhzVT6eT06VDzZ6X_3XIvAMi"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 306,
+        "article_id": 1356,
+        "subcategory": "Other Sports",
+        "doc_id": "1CCJ9jRScXxvuDnsPSVkc1CIO1sB2C51-isj0qXT6cPM",
+        "title": "ESTD - BRICS Traditional and Indigenous Demonstration Games Conclude in Ahmedabad, Showcasing Diverse Global Sports",
+        "db_sub_folder": "18hrWowsRd1A4uEY1V3AgBvu440D6upAZ",
+        "drive_parents": [
+          "18hrWowsRd1A4uEY1V3AgBvu440D6upAZ"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 369,
+        "article_id": 1547,
+        "subcategory": "Cricket",
+        "doc_id": "1W4CZdISQtq8EpMQM7Wg2Rak8yeR1at_xX6fT1GJwXcM",
+        "title": "ESTD - Hazlewood's Six-Wicket Haul Seals Dominant Australian Victory Over South Africa in First Test",
+        "db_sub_folder": "1ex9jhbtb628NSoPPDrXx5QwMPgxq1EzQ",
+        "drive_parents": [
+          "1ex9jhbtb628NSoPPDrXx5QwMPgxq1EzQ"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 370,
+        "article_id": 1548,
+        "subcategory": "Football",
+        "doc_id": "1iNt_rp8KNQvi2pL6RUN82wRaFX5f5bTxve3XXcRcD7s",
+        "title": "ESTD - UCL Drama- Barcelona Maintains Perfect Record, Bayern Stunned, Manchester United's Slump Deepens",
+        "db_sub_folder": "1Z0QhI1T_g0mLW__Nun4tpHViKerQFjXN",
+        "drive_parents": [
+          "1Z0QhI1T_g0mLW__Nun4tpHViKerQFjXN"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 371,
+        "article_id": 1549,
+        "subcategory": "Other Sports",
+        "doc_id": "1fs7bDMIZ3z-YJon8Hw4Rh_fQaDdMc9uGkSemJ79A92E",
+        "title": "ESTD - Fabiano Caruana Secures Titled Tuesday Victory During U.S. Championship Off Day",
+        "db_sub_folder": "18hrWowsRd1A4uEY1V3AgBvu440D6upAZ",
+        "drive_parents": [
+          "18hrWowsRd1A4uEY1V3AgBvu440D6upAZ"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 372,
+        "article_id": 1550,
+        "subcategory": "Football",
+        "doc_id": "1E69L7fPKaim49DkmmRALr26V3PAd7j6pc9xFzTouk5E",
+        "title": "ESTD - Indian Football Federation Poised to Receive Rs 237 Crore from FIFA Over Four Years",
+        "db_sub_folder": "1Z0QhI1T_g0mLW__Nun4tpHViKerQFjXN",
+        "drive_parents": [
+          "1Z0QhI1T_g0mLW__Nun4tpHViKerQFjXN"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 373,
+        "article_id": 1551,
+        "subcategory": "Cricket",
+        "doc_id": "1mrrwL2KJlBwmulhfM-S_p3gT7I2bya_D6m3urkriSlE",
+        "title": "ESTD - Umesh Yadav Details Acrimonious Vidarbha Exit, Citing Lack of Support Post-Injury",
+        "db_sub_folder": "1ex9jhbtb628NSoPPDrXx5QwMPgxq1EzQ",
+        "drive_parents": [
+          "1ex9jhbtb628NSoPPDrXx5QwMPgxq1EzQ"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 374,
+        "article_id": 1552,
+        "subcategory": "Cricket",
+        "doc_id": "1oTgn9tOdNWIYBPwC6yup5rZlKxB4Ybe4L0nt0uAjbDU",
+        "title": "ESTD - Harmanpreet Kaur Steps Down as India Women's Cricket Captain, Leaves Unmatched Legacy",
+        "db_sub_folder": "1ex9jhbtb628NSoPPDrXx5QwMPgxq1EzQ",
+        "drive_parents": [
+          "1ex9jhbtb628NSoPPDrXx5QwMPgxq1EzQ"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 375,
+        "article_id": 1553,
+        "subcategory": "Cricket",
+        "doc_id": "1NnSIk52aN5B8RHru59jm_KKER0B76BcaRAJx25_SBKI",
+        "title": "ESTD - India Eyes Historic 300-Run Mark and Series Victory Against West Indies in Hyderabad",
+        "db_sub_folder": "1ex9jhbtb628NSoPPDrXx5QwMPgxq1EzQ",
+        "drive_parents": [
+          "1ex9jhbtb628NSoPPDrXx5QwMPgxq1EzQ"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 376,
+        "article_id": 1554,
+        "subcategory": "Cricket",
+        "doc_id": "1coEHlrPnqn4vJu5-_JeTnJbByOHQO0yegPhgWOxSqF4",
+        "title": "ESTD - HCA Member Among Four Arrested in Hyderabad for India vs. West Indies T20 Ticket Black Marketing",
+        "db_sub_folder": "1ex9jhbtb628NSoPPDrXx5QwMPgxq1EzQ",
+        "drive_parents": [
+          "1ex9jhbtb628NSoPPDrXx5QwMPgxq1EzQ"
+        ],
+        "trashed": false,
+        "status": "OK"
+      },
+      {
+        "id": 377,
+        "article_id": 1555,
+        "subcategory": "Cricket",
+        "doc_id": "1deHa3Ldwl0N6aGzyst5k-Un81dTBqUbC9otCAENl_qg",
+        "title": "ESTD - India Pacer Umesh Yadav Alleges Former Vidarbha Coach Sought His Removal, Citing Power Play",
+        "db_sub_folder": "1ex9jhbtb628NSoPPDrXx5QwMPgxq1EzQ",
+        "drive_parents": [
+          "1ex9jhbtb628NSoPPDrXx5QwMPgxq1EzQ"
+        ],
+        "trashed": false,
+        "status": "OK"
+      }
+    ]
+  }
+}

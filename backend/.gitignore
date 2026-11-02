@@ -1,0 +1,14 @@
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+*.log
+
+# MCP Credentials and Tokens
+*oauth*.json
+*credentials*.json
+credentials/
+.gdrive-server-credentials.json
+gcp-oauth.keys.json

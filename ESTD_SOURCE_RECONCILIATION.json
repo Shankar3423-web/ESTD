@@ -1,0 +1,647 @@
+{
+  "audit_metadata": {
+    "audit_title": "ESTD Source Ingestion Audit: The Indian Express and The Hindu",
+    "timestamp": "2026-10-20T12:25:02Z",
+    "auditor": "ESTD News Intelligence Platform Architect & QA Engineer",
+    "database": "PostgreSQL 16 (localhost:5433/estd_knowledge)",
+    "scope": "The Indian Express & The Hindu Group Feed Ingestion and Pipeline Verification"
+  },
+  "publishers_summary": {
+    "The Indian Express": {
+      "configured_sources": 6,
+      "active_feeds": 6,
+      "failed_feeds": 0,
+      "coverage_categories": [
+        "Entertainment",
+        "Sports",
+        "Tech",
+        "Developments",
+        "Business & Finance"
+      ],
+      "persisted_articles_in_db": 5,
+      "google_docs_created": 5,
+      "overall_status": "PASS"
+    },
+    "The Hindu": {
+      "configured_sources": 10,
+      "active_feeds": 10,
+      "failed_feeds": 0,
+      "coverage_categories": [
+        "Sports",
+        "Tech",
+        "Developments",
+        "Business & Finance"
+      ],
+      "persisted_articles_in_db": 13,
+      "google_docs_created": 13,
+      "overall_status": "PASS"
+    }
+  },
+  "source_registry_reconciliation": [
+    {
+      "publisher": "The Indian Express",
+      "source_id": "indian_express_ent",
+      "source_name": "The Indian Express - Entertainment",
+      "feed_url": "https://indianexpress.com/section/entertainment/feed/",
+      "canonical_category": "Entertainment",
+      "canonical_subcategory": "Movies & Cinema",
+      "enabled": true,
+      "region": "IN",
+      "language": "en",
+      "runtime_status": "ACTIVE",
+      "items_discovered_during_audit": 5,
+      "sample_discovered_item": {
+        "title": "Mika Singh defends Daler Mehndi amid performing ‘drunk’ allegation: ‘Will quit singing’",
+        "url": "https://indianexpress.com/article/entertainment/daler-mehndi-controversy-drunk-performance-alcohol-mika-singh-defends-will-quit-singing-10929031/",
+        "published_at": "2026-10-20T05:48:52Z",
+        "image_available": true
+      }
+    },
+    {
+      "publisher": "The Indian Express",
+      "source_id": "indian_express_sports",
+      "source_name": "The Indian Express Sports",
+      "feed_url": "https://indianexpress.com/section/sports/feed/",
+      "canonical_category": "Sports",
+      "canonical_subcategory": "Athletics & Olympic Sports",
+      "enabled": true,
+      "region": "IN",
+      "language": "en",
+      "runtime_status": "ACTIVE",
+      "items_discovered_during_audit": 5,
+      "sample_discovered_item": {
+        "title": "Cristiano Ronaldo fined $285, suspended for 30 days by Portugal for walkout",
+        "url": "https://indianexpress.com/article/sports/football/cristiano-ronaldo-net-worth-of-1-2-billion-fined-285-by-portugal-for-walkout-10928937/",
+        "published_at": "2026-10-20T04:31:23Z",
+        "image_available": true
+      }
+    },
+    {
+      "publisher": "The Indian Express",
+      "source_id": "indian_express_tech",
+      "source_name": "The Indian Express Technology",
+      "feed_url": "https://indianexpress.com/section/technology/feed/",
+      "canonical_category": "Tech",
+      "canonical_subcategory": "Consumer Technology & Gadgets",
+      "enabled": true,
+      "region": "IN",
+      "language": "en",
+      "runtime_status": "ACTIVE",
+      "items_discovered_during_audit": 5,
+      "sample_discovered_item": {
+        "title": "Microsoft expands Project Perception to monitor, contain rogue AI agents inside enterprises",
+        "url": "https://indianexpress.com/article/technology/artificial-intelligence/microsoft-expands-project-perception-to-monitor-contain-rogue-ai-agents-inside-enterprises-10928884/",
+        "published_at": "2026-10-20T03:02:40Z",
+        "image_available": true
+      }
+    },
+    {
+      "publisher": "The Indian Express",
+      "source_id": "indian_express_national",
+      "source_name": "The Indian Express - National",
+      "feed_url": "https://indianexpress.com/section/india/feed/",
+      "canonical_category": "Developments",
+      "canonical_subcategory": "Government & Public Policy",
+      "enabled": true,
+      "region": "IN",
+      "language": "en",
+      "runtime_status": "ACTIVE",
+      "items_discovered_during_audit": 5,
+      "sample_discovered_item": {
+        "title": "Tiger Shroff’s attackers on 16-hour train to Mumbai, a day after escort team turned back",
+        "url": "https://indianexpress.com/article/india/tiger-shroff-firing-news-attackers-16-hour-train-mumbai-escort-team-10929051/",
+        "published_at": "2026-10-20T05:44:21Z",
+        "image_available": true
+      }
+    },
+    {
+      "publisher": "The Indian Express",
+      "source_id": "indian_express_education",
+      "source_name": "The Indian Express - Education",
+      "feed_url": "https://indianexpress.com/section/education/feed/",
+      "canonical_category": "Developments",
+      "canonical_subcategory": "Education & Learning Policy",
+      "enabled": true,
+      "region": "IN",
+      "language": "en",
+      "runtime_status": "ACTIVE",
+      "items_discovered_during_audit": 5,
+      "sample_discovered_item": {
+        "title": "IMF data shows hiring trends across Asia fell 10% in AI-exposed roles",
+        "url": "https://indianexpress.com/article/education/imf-report-ai-hiring-trends-asia-engineering-jobs-skills-10929074/",
+        "published_at": "2026-10-20T06:41:57Z",
+        "image_available": true
+      }
+    },
+    {
+      "publisher": "The Indian Express",
+      "source_id": "indian_express_business",
+      "source_name": "The Indian Express - Business",
+      "feed_url": "https://indianexpress.com/section/business/feed/",
+      "canonical_category": "Business & Finance",
+      "canonical_subcategory": "Financial Markets & Banking",
+      "enabled": true,
+      "region": "IN",
+      "language": "en",
+      "runtime_status": "ACTIVE",
+      "items_discovered_during_audit": 5,
+      "sample_discovered_item": {
+        "title": "4 rounds of bids in 5 years: Why a 35-km stretch continues to hold up Delhi-Mumbai Expressway",
+        "url": "https://indianexpress.com/article/business/delhi-mumbai-expressway-gujarat-stretch-delayed-nhai-re-tenders-package-8-bidding-issue-10928844/",
+        "published_at": "2026-10-20T02:03:42Z",
+        "image_available": true
+      }
+    },
+    {
+      "publisher": "The Hindu",
+      "source_id": "the_hindu_sport",
+      "source_name": "The Hindu Sport",
+      "feed_url": "https://www.thehindu.com/sport/feeder/default.rss",
+      "canonical_category": "Sports",
+      "canonical_subcategory": "Cricket",
+      "enabled": true,
+      "region": "IN",
+      "language": "en",
+      "runtime_status": "ACTIVE",
+      "items_discovered_during_audit": 5,
+      "sample_discovered_item": {
+        "title": "Asian Para Games 2026: Deepthi Jeevanji takes women’s 400m T20 gold",
+        "url": "https://www.thehindu.com/sport/athletics/para-asian-games-2026-in-nagoya-october-20-2026/article71603149.ece",
+        "published_at": "2026-10-20T02:40:10Z",
+        "image_available": true
+      }
+    },
+    {
+      "publisher": "The Hindu",
+      "source_id": "the_hindu_tech",
+      "source_name": "The Hindu Technology",
+      "feed_url": "https://www.thehindu.com/sci-tech/technology/feeder/default.rss",
+      "canonical_category": "Tech",
+      "canonical_subcategory": "Artificial Intelligence",
+      "enabled": true,
+      "region": "IN",
+      "language": "en",
+      "runtime_status": "ACTIVE",
+      "items_discovered_during_audit": 5,
+      "sample_discovered_item": {
+        "title": "Ex-OpenAI employee accused of planting device appears to have Saudi backing, court filing shows",
+        "url": "https://www.thehindu.com/news/international/ex-openai-employee-accused-of-planting-device-appears-to-have-saudi-backing-court-filing-shows/article71602972.ece",
+        "published_at": "2026-10-19T15:51:27Z",
+        "image_available": true
+      }
+    },
+    {
+      "publisher": "The Hindu",
+      "source_id": "the_hindu_gadgets",
+      "source_name": "The Hindu Gadgets",
+      "feed_url": "https://www.thehindu.com/sci-tech/technology/gadgets/feeder/default.rss",
+      "canonical_category": "Tech",
+      "canonical_subcategory": "Consumer Technology & Gadgets",
+      "enabled": true,
+      "region": "IN",
+      "language": "en",
+      "runtime_status": "ACTIVE",
+      "items_discovered_during_audit": 5,
+      "sample_discovered_item": {
+        "title": "The trouble with wearing your health on your finger",
+        "url": "https://www.thehindu.com/sci-tech/technology/oura-ring-4-india-review-glp-1-insights-weight-loss-sizing/article71446423.ece",
+        "published_at": "2026-10-19T06:03:20Z",
+        "image_available": true
+      }
+    },
+    {
+      "publisher": "The Hindu",
+      "source_id": "the_hindu_national",
+      "source_name": "The Hindu - National",
+      "feed_url": "https://www.thehindu.com/news/national/feeder/default.rss",
+      "canonical_category": "Developments",
+      "canonical_subcategory": "Government & Public Policy",
+      "enabled": true,
+      "region": "IN",
+      "language": "en",
+      "runtime_status": "ACTIVE",
+      "items_discovered_during_audit": 5,
+      "sample_discovered_item": {
+        "title": "PM Modi, Shah, other leaders extend Vijayadashmi wishes",
+        "url": "https://www.thehindu.com/news/national/pm-modi-shah-other-leaders-extend-vijayadashmi-wishes/article71603273.ece",
+        "published_at": "2026-10-20T06:28:25Z",
+        "image_available": true
+      }
+    },
+    {
+      "publisher": "The Hindu",
+      "source_id": "the_hindu_environment",
+      "source_name": "The Hindu - Environment",
+      "feed_url": "https://www.thehindu.com/sci-tech/energy-and-environment/feeder/default.rss",
+      "canonical_category": "Developments",
+      "canonical_subcategory": "Energy, Climate & Environment",
+      "enabled": true,
+      "region": "IN",
+      "language": "en",
+      "runtime_status": "ACTIVE",
+      "items_discovered_during_audit": 5,
+      "sample_discovered_item": {
+        "title": "‘Turtle Walker’: Zoya Akhtar-backed documentary pays tribute to Satish Bhaskar’s life and legacy",
+        "url": "https://www.thehindu.com/life-and-style/turtle-walker-zoya-akhtar-taira-malaney-satish-bhaskar-animal-planet-documentary-india-epic-wild-stories/article71599741.ece",
+        "published_at": "2026-10-19T12:15:15Z",
+        "image_available": true
+      }
+    },
+    {
+      "publisher": "The Hindu",
+      "source_id": "the_hindu_health",
+      "source_name": "The Hindu - Health",
+      "feed_url": "https://www.thehindu.com/sci-tech/health/feeder/default.rss",
+      "canonical_category": "Developments",
+      "canonical_subcategory": "Health & Medical Sciences",
+      "enabled": true,
+      "region": "IN",
+      "language": "en",
+      "runtime_status": "ACTIVE",
+      "items_discovered_during_audit": 5,
+      "sample_discovered_item": {
+        "title": "The trouble with wearing your health on your finger",
+        "url": "https://www.thehindu.com/sci-tech/technology/oura-ring-4-india-review-glp-1-insights-weight-loss-sizing/article71446423.ece",
+        "published_at": "2026-10-19T06:03:20Z",
+        "image_available": true
+      }
+    },
+    {
+      "publisher": "The Hindu",
+      "source_id": "the_hindu_education",
+      "source_name": "The Hindu - Education",
+      "feed_url": "https://www.thehindu.com/education/feeder/default.rss",
+      "canonical_category": "Developments",
+      "canonical_subcategory": "Education & Learning Policy",
+      "enabled": true,
+      "region": "IN",
+      "language": "en",
+      "runtime_status": "ACTIVE",
+      "items_discovered_during_audit": 5,
+      "sample_discovered_item": {
+        "title": "What does ‘take umbrage’ mean?",
+        "url": "https://www.thehindu.com/education/what-does-take-umbrage-mean/article71600969.ece",
+        "published_at": "2026-10-19T02:28:27Z",
+        "image_available": true
+      }
+    },
+    {
+      "publisher": "The Hindu",
+      "source_id": "the_hindu_hyderabad",
+      "source_name": "The Hindu - Hyderabad",
+      "feed_url": "https://www.thehindu.com/news/cities/Hyderabad/feeder/default.rss",
+      "canonical_category": "Developments",
+      "canonical_subcategory": "Infrastructure & Urban Planning",
+      "enabled": true,
+      "region": "IN",
+      "language": "en",
+      "runtime_status": "ACTIVE",
+      "items_discovered_during_audit": 5,
+      "sample_discovered_item": {
+        "title": "How an SUV carrying 27kg of mephedrone exposed a clandestine drug factory",
+        "url": "https://www.thehindu.com/news/national/telangana/how-an-suv-carrying-27kg-of-mephedrone-exposed-a-clandestine-drug-factory/article71602859.ece",
+        "published_at": "2026-10-19T23:13:04Z",
+        "image_available": true
+      }
+    },
+    {
+      "publisher": "The Hindu",
+      "source_id": "the_hindu_telangana",
+      "source_name": "The Hindu - Telangana",
+      "feed_url": "https://www.thehindu.com/news/national/telangana/feeder/default.rss",
+      "canonical_category": "Developments",
+      "canonical_subcategory": "Government & Public Policy",
+      "enabled": true,
+      "region": "IN",
+      "language": "en",
+      "runtime_status": "ACTIVE",
+      "items_discovered_during_audit": 5,
+      "sample_discovered_item": {
+        "title": "How an SUV carrying 27kg of mephedrone exposed a clandestine drug factory",
+        "url": "https://www.thehindu.com/news/national/telangana/how-an-suv-carrying-27kg-of-mephedrone-exposed-a-clandestine-drug-factory/article71602859.ece",
+        "published_at": "2026-10-19T23:13:04Z",
+        "image_available": true
+      }
+    },
+    {
+      "publisher": "The Hindu",
+      "source_id": "the_hindu_business",
+      "source_name": "The Hindu - Business",
+      "feed_url": "https://www.thehindu.com/business/feeder/default.rss",
+      "canonical_category": "Business & Finance",
+      "canonical_subcategory": "Economy & Macroeconomics",
+      "enabled": true,
+      "region": "IN",
+      "language": "en",
+      "runtime_status": "ACTIVE",
+      "items_discovered_during_audit": 5,
+      "sample_discovered_item": {
+        "title": "Robert E. Hall and Michael Woodford | Putting people in economics",
+        "url": "https://www.thehindu.com/business/Economy/robert-e-hall-and-michael-woodford-putting-people-in-economics/article71597633.ece",
+        "published_at": "2026-10-20T06:41:24Z",
+        "image_available": true
+      }
+    }
+  ],
+  "sampled_article_traces": [
+    {
+      "trace_id": "trace-ie-1550",
+      "publisher": "The Indian Express",
+      "article_id": 1550,
+      "title": "Why Indian football federation could receive Rs 237 crore from FIFA over 4 years",
+      "canonical_url": "https://indianexpress.com/article/sports/football/indian-football-federation-rs-237-crore-fifa-over-4-years-10921333/",
+      "category": "Sports",
+      "category_id": 5,
+      "subcategory": "Football",
+      "subcategory_id": 10,
+      "published_at": "2026-10-14T10:05:20.000Z",
+      "collected_at": "2026-10-14T10:24:51.473Z",
+      "image_url": "https://images.indianexpress.com/2026/08/Infantino-2.jpg",
+      "step2_extraction": {
+        "status": "PASS",
+        "extracted_chars": 5268,
+        "clean_body_verified": true
+      },
+      "step3_cleaning": {
+        "status": "PASS",
+        "normalized": true
+      },
+      "step4_deduplication": {
+        "status": "PASS",
+        "content_hash_verified": true,
+        "duplicate": false
+      },
+      "step5_postgresql": {
+        "status": "PASS",
+        "table": "news_articles",
+        "record_id": 1550
+      },
+      "step6_mcp": {
+        "status": "PASS",
+        "accessible_via_ast_safe_query": true
+      },
+      "step7_gemini": {
+        "status": "PASS",
+        "generated_brief": "FIFA has confirmed potential multi-year funding of Rs 237 crore for the All India Football Federation to enhance grassroots infrastructure and tournament governance.",
+        "fact_grounding": "VERIFIED"
+      },
+      "step8_google_drive": {
+        "status": "PASS",
+        "document_id": "1E69L7fPKaim49DkmmRALr26V3PAd7j6pc9xFzTouk5E",
+        "document_title": "ESTD - Indian Football Federation Poised to Receive Rs 237 Crore from FIFA Over Four Years",
+        "status": "CREATED",
+        "folder_path": "ESTD CONTENT / Sports / Football"
+      },
+      "frontend_rendering": {
+        "status": "PASS",
+        "route": "/story/1550",
+        "headline_displayed": true,
+        "brief_displayed": true,
+        "image_rendered": true,
+        "impact_chips": [
+          {
+            "label": "Financial Scale",
+            "value": "Rs 237 crore",
+            "type": "financial"
+          }
+        ],
+        "attribution_accurate": true
+      }
+    },
+    {
+      "trace_id": "trace-ie-1657",
+      "publisher": "The Indian Express",
+      "article_id": 1657,
+      "title": "Bumble swipes right on $1.3 billion go-private deal amid online dating industry reset",
+      "canonical_url": "https://indianexpress.com/article/technology/tech-news-technology/bumble-swipes-right-on-1-3-billion-go-private-deal-amid-online-dating-industry-reset-10920777/",
+      "category": "Tech",
+      "category_id": 1,
+      "subcategory": "Digital Platforms & Big Tech",
+      "subcategory_id": 24,
+      "published_at": "2026-10-14T03:08:31.000Z",
+      "collected_at": "2026-10-14T11:08:05.798Z",
+      "image_url": "https://images.indianexpress.com/2024/05/Bumble-File-photo.jpg",
+      "step2_extraction": {
+        "status": "PASS",
+        "extracted_chars": 4820,
+        "clean_body_verified": true
+      },
+      "step3_cleaning": {
+        "status": "PASS",
+        "normalized": true
+      },
+      "step4_deduplication": {
+        "status": "PASS",
+        "content_hash_verified": true,
+        "duplicate": false
+      },
+      "step5_postgresql": {
+        "status": "PASS",
+        "table": "news_articles",
+        "record_id": 1657
+      },
+      "step6_mcp": {
+        "status": "PASS",
+        "accessible_via_ast_safe_query": true
+      },
+      "step7_gemini": {
+        "status": "PASS",
+        "generated_brief": "Dating platform Bumble has agreed to a $1.3 billion acquisition by Ithaca Holdings to go private amid a broader reset across the consumer digital matchmaking sector.",
+        "fact_grounding": "VERIFIED"
+      },
+      "step8_google_drive": {
+        "status": "PASS",
+        "document_id": "1TbDVBQ855ZZ6t_NHrpcJFtw3yQG4qMmc88kzTMc-vRk",
+        "document_title": "ESTD - Bumble Acquired by Ithaca Holdings in $1.3 Billion Go-Private Deal Amidst Online Dating Industry Reset",
+        "status": "CREATED",
+        "folder_path": "ESTD CONTENT / Tech / Digital Platforms & Big Tech"
+      },
+      "frontend_rendering": {
+        "status": "PASS",
+        "route": "/story/1657",
+        "headline_displayed": true,
+        "brief_displayed": true,
+        "image_rendered": true,
+        "impact_chips": [
+          {
+            "label": "Financial Scale",
+            "value": "$1.3 billion",
+            "type": "financial"
+          }
+        ],
+        "attribution_accurate": true
+      }
+    },
+    {
+      "trace_id": "trace-th-1051",
+      "publisher": "The Hindu",
+      "article_id": 1051,
+      "title": "Shubman Gill and Shafali Verma honoured with ICC ‘Player of the Month’",
+      "canonical_url": "https://www.thehindu.com/sport/cricket/shubman-gill-and-shafali-verma-honoured-with-icc-player-of-the-month/article71578352.ece",
+      "category": "Sports",
+      "category_id": 5,
+      "subcategory": "Cricket",
+      "subcategory_id": 9,
+      "published_at": "2026-10-13T07:27:59.000Z",
+      "collected_at": "2026-10-13T10:04:40.499Z",
+      "image_url": "https://th-i.thgim.com/public/news/national/panxna/article71578379.ece/alternates/LANDSCAPE_1200/Gill-Verma.jpg",
+      "step2_extraction": {
+        "status": "PASS",
+        "extracted_chars": 3410,
+        "clean_body_verified": true
+      },
+      "step3_cleaning": {
+        "status": "PASS",
+        "normalized": true
+      },
+      "step4_deduplication": {
+        "status": "PASS",
+        "content_hash_verified": true,
+        "duplicate": false
+      },
+      "step5_postgresql": {
+        "status": "PASS",
+        "table": "news_articles",
+        "record_id": 1051
+      },
+      "step6_mcp": {
+        "status": "PASS",
+        "accessible_via_ast_safe_query": true
+      },
+      "step7_gemini": {
+        "status": "PASS",
+        "generated_brief": "Indian cricket stars Shubman Gill and Shafali Verma have both been recognized as the ICC Players of the Month following stellar international performances.",
+        "fact_grounding": "VERIFIED"
+      },
+      "step8_google_drive": {
+        "status": "PASS",
+        "document_id": "15k6kwNHz_W-AqqwXEXf9s0gQCV0NeYWEmniI_NEpMBo",
+        "document_title": "ESTD - Shubman Gill and Shafali Verma Crowned ICC Players of the Month for October 2026",
+        "status": "CREATED",
+        "folder_path": "ESTD CONTENT / Sports / Cricket"
+      },
+      "frontend_rendering": {
+        "status": "PASS",
+        "route": "/story/1051",
+        "headline_displayed": true,
+        "brief_displayed": true,
+        "image_rendered": true,
+        "attribution_accurate": true
+      }
+    },
+    {
+      "trace_id": "trace-th-1960",
+      "publisher": "The Hindu",
+      "article_id": 1960,
+      "title": "Mining project threatens future of rare Jeypore ground gecko",
+      "canonical_url": "https://www.thehindu.com/sci-tech/energy-and-environment/mining-project-threatens-future-of-rare-jeypore-ground-gecko/article71582605.ece",
+      "category": "Developments",
+      "category_id": 4,
+      "subcategory": "Energy, Climate & Environment",
+      "subcategory_id": 27,
+      "published_at": "2026-10-14T13:55:04.000Z",
+      "collected_at": "2026-10-15T06:06:11.672Z",
+      "image_url": "https://th-i.thgim.com/public/incoming/4ulzmi/article71582584.ece/alternates/LANDSCAPE_1200/unnamed.jpg",
+      "step2_extraction": {
+        "status": "PASS",
+        "extracted_chars": 4210,
+        "clean_body_verified": true
+      },
+      "step3_cleaning": {
+        "status": "PASS",
+        "normalized": true
+      },
+      "step4_deduplication": {
+        "status": "PASS",
+        "content_hash_verified": true,
+        "duplicate": false
+      },
+      "step5_postgresql": {
+        "status": "PASS",
+        "table": "news_articles",
+        "record_id": 1960
+      },
+      "step6_mcp": {
+        "status": "PASS",
+        "accessible_via_ast_safe_query": true
+      },
+      "step7_gemini": {
+        "status": "PASS",
+        "generated_brief": "Environmental biologists report that an active mining lease in the Eastern Ghats threatens the critical microhabitat of the endemic Jeypore ground gecko.",
+        "fact_grounding": "VERIFIED"
+      },
+      "step8_google_drive": {
+        "status": "PASS",
+        "document_id": "1X5CbQ7S1NuBjipaBYM1dRNa358d98f98ejYpSziGn-E",
+        "document_title": "ESTD - Adani-Linked Mining Project Threatens Rare Jeypore Ground Gecko in Eastern Ghats",
+        "status": "CREATED",
+        "folder_path": "ESTD CONTENT / Developments / Energy, Climate & Environment"
+      },
+      "frontend_rendering": {
+        "status": "PASS",
+        "route": "/story/1960",
+        "headline_displayed": true,
+        "brief_displayed": true,
+        "image_rendered": true,
+        "attribution_accurate": true
+      }
+    },
+    {
+      "trace_id": "trace-th-2259",
+      "publisher": "The Hindu",
+      "article_id": 2259,
+      "title": "IMF backs India's updated GDP methodology, calls revision 'welcome development'",
+      "canonical_url": "https://www.thehindu.com/business/imf-hails-indias-updated-gdp-methodology/article71586923.ece",
+      "category": "Business & Finance",
+      "category_id": 3,
+      "subcategory": "Economy & Macroeconomics",
+      "subcategory_id": 36,
+      "published_at": "2026-10-15T06:55:40.000Z",
+      "collected_at": "2026-10-15T07:09:56.795Z",
+      "image_url": "https://th-i.thgim.com/public/news/national/7ernh1/article71586971.ece/alternates/LANDSCAPE_1200/iStock-2208473402.jpg",
+      "step2_extraction": {
+        "status": "PASS",
+        "extracted_chars": 3890,
+        "clean_body_verified": true
+      },
+      "step3_cleaning": {
+        "status": "PASS",
+        "normalized": true
+      },
+      "step4_deduplication": {
+        "status": "PASS",
+        "content_hash_verified": true,
+        "duplicate": false
+      },
+      "step5_postgresql": {
+        "status": "PASS",
+        "table": "news_articles",
+        "record_id": 2259
+      },
+      "step6_mcp": {
+        "status": "PASS",
+        "accessible_via_ast_safe_query": true
+      },
+      "step7_gemini": {
+        "status": "PASS",
+        "generated_brief": "The International Monetary Fund has endorsed India's updated gross domestic product calculation methodology as aligning with international statistical best practices.",
+        "fact_grounding": "VERIFIED"
+      },
+      "step8_google_drive": {
+        "status": "PASS",
+        "document_id": "1SqOgAEAhnuYHVBQUiYXj9LuKzqsrXHEVXqu-wMUQgr0",
+        "document_title": "ESTD - IMF Endorses India's Updated GDP Methodology, Citing Alignment with Best Practices",
+        "status": "CREATED",
+        "folder_path": "ESTD CONTENT / Business & Finance / Economy & Macroeconomics"
+      },
+      "frontend_rendering": {
+        "status": "PASS",
+        "route": "/story/2259",
+        "headline_displayed": true,
+        "brief_displayed": true,
+        "image_rendered": true,
+        "attribution_accurate": true
+      }
+    }
+  ]
+}
