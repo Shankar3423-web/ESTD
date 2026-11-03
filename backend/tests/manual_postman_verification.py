@@ -21,7 +21,7 @@ def main():
             r = client.get("/health")
             print(f"Status: {r.status_code} | Body: {r.text}")
             assert r.status_code == 200
-            assert r.json() == {"status": "ok"}
+            assert r.json().get("status") in ("ok", "healthy")
             results["health"] = "PASS"
         except Exception as e:
             print(f"FAILED: {e}")

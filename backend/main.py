@@ -10,7 +10,7 @@ if str(_PROJECT_ROOT) not in sys.path:
 if str(_BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(_BACKEND_DIR))
 
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -464,10 +464,41 @@ def setup_likes_endpoint():
         return {"status": "error", "message": str(e), "trace": traceback.format_exc()}
 
 
-@app.get("/health", tags=["Health"], summary="Health check endpoint")
-async def health_check():
-    """Health check endpoint returning ok status."""
-    return {"status": "ok"}
+@app.get("/", tags=["Health"], summary="Root service status endpoint")
+async def root():
+    """Root endpoint confirming service availability."""
+    return {
+        "success": True,
+        "service": "ESTD Backend API",
+        "message": "ESTD backend is running successfully",
+        "status": "running",
+        "documentation": "/docs",
+        "health": "/health",
+    }
+
+
+@app.get("/health", tags=["Health"], summary="Comprehensive health check endpoint")
+def health_check(response: Response):
+    """Health check verifying FastAPI runtime and database connectivity."""
+    try:
+        from backend.database.connection.session import check_db_health
+        db_health = check_db_health()
+        return {
+            "success": True,
+            "service": "ESTD Backend API",
+            "status": "healthy",
+            "database": db_health.get("database", "connected"),
+        }
+    except Exception as exc:
+        logger.error(f"Health check database failure: {exc}")
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return {
+            "success": False,
+            "service": "ESTD Backend API",
+            "status": "unhealthy",
+            "database": "disconnected",
+            "error": "Database connectivity failed",
+        }
 
 
 # Include Step 1 Source Collection routes

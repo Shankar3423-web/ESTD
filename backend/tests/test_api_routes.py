@@ -24,11 +24,27 @@ def client():
     return TestClient(app)
 
 
+def test_root_endpoint(client):
+    """Verify GET / returns 200 with service information."""
+    response = client.get("/")
+    assert response.status_code == 200
+    data = response.json()
+    assert data.get("success") is True
+    assert data.get("service") == "ESTD Backend API"
+    assert data.get("status") == "running"
+    assert data.get("documentation") == "/docs"
+    assert data.get("health") == "/health"
+
+
 def test_health_check_endpoint(client):
-    """Verify GET /health returns status: ok."""
+    """Verify GET /health returns service and database health."""
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    data = response.json()
+    assert data.get("success") is True
+    assert data.get("service") == "ESTD Backend API"
+    assert data.get("status") == "healthy"
+    assert data.get("database") == "connected"
 
 
 def test_gnews_endpoint_success(client):
