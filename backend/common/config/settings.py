@@ -51,7 +51,12 @@ class Settings(BaseSettings):
     def get_database_url(self) -> str:
         """Return the effective database connection URL."""
         if self.database_url and self.database_url.strip():
-            return self.database_url.strip()
+            url = self.database_url.strip()
+            if url.startswith("DATABASE_URL="):
+                url = url[len("DATABASE_URL="):].strip()
+            if url.startswith("postgres://"):
+                url = "postgresql://" + url[len("postgres://"):]
+            return url
         pwd = self.postgres_password.get_secret_value() if self.postgres_password else "root"
         return f"postgresql://{self.postgres_user}:{pwd}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
 

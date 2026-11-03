@@ -113,7 +113,7 @@ app = FastAPI(
 )
 
 
-# CORS middleware for development flexibility
+# CORS middleware for development and production
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -125,8 +125,9 @@ app.add_middleware(
         "http://127.0.0.1:5175",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "https://frontend-zeta-amber.vercel.app",
     ],
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$|^https://frontend-.*\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
