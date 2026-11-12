@@ -113,7 +113,22 @@ npm run build
 
 ---
 
-## 7. Verification Results
+## 7. Deployment URLs (Vercel + Render)
+
+Set these two values in the hosting service environment settings:
+
+| Hosting service | Variable | Value |
+| :--- | :--- | :--- |
+| **Vercel (frontend)** | `VITE_API_BASE_URL` | `https://estd.onrender.com` |
+| **Render (backend)** | `FRONTEND_URL` | `https://frontend-zeta-amber.vercel.app` |
+
+Replace the frontend URL with your Vercel production domain if it differs. `FRONTEND_URL` also accepts multiple origins separated by commas. Redeploy each service after changing its variable; Vite embeds `VITE_API_BASE_URL` when the frontend is built. The backend URL should be the public HTTPS URL, with no trailing slash.
+
+The “Could Not Connect” screen means the browser could not complete its request to the backend. Check that the Render service is running and that `https://estd.onrender.com/health` responds; a stopped/asleep service, incorrect backend URL, or CORS origin mismatch can all cause this browser-level error.
+
+---
+
+## 8. Verification Results
 
 - **Vite Production Build**: `✓ built in 36.62s` with 0 errors.
 - **Backend API Connectivity**: `GET /health` (`status: ok`), `GET /pipeline/articles`, `GET /api/v1/knowledge/categories`, `GET /api/v1/knowledge/subcategories` fully operational.

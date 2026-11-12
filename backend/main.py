@@ -34,6 +34,7 @@ from backend.common.exceptions.custom_exceptions import (
     RSSSourceNotFoundError,
     RSSTimeoutError,
 )
+from backend.common.config.settings import get_settings
 from backend.common.logging.logger import logger
 from backend.step1_source_collection.apis.routes import router as source_collection_router
 from backend.step2_article_extraction.apis.routes import router as article_extraction_router
@@ -114,6 +115,12 @@ app = FastAPI(
 
 
 # CORS middleware for development and production
+frontend_origins = [
+    origin.strip().rstrip("/")
+    for origin in get_settings().frontend_url.split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -125,9 +132,9 @@ app.add_middleware(
         "http://127.0.0.1:5175",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-        "https://frontend-zeta-amber.vercel.app",
+        *frontend_origins,
     ],
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$|^https://frontend-.*\.vercel\.app$",
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

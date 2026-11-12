@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     # App Environment
     app_env: str = Field(default="development", alias="APP_ENV")
 
+    # Browser frontend origin(s) allowed by the backend CORS middleware.
+    frontend_url: str = Field(default="", alias="FRONTEND_URL")
+
     # Database Configuration (Step 4 & Step 5)
     postgres_host: str = Field(default="localhost", alias="POSTGRES_HOST")
     postgres_port: int = Field(default=5433, alias="POSTGRES_PORT")
