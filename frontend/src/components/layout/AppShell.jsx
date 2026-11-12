@@ -140,8 +140,8 @@ export default function AppShell({ savedStories, onToggleSave, onListen }) {
           systemOverview={overview}
         />
 
-        {/* Live Platform Element: Breaking News Intelligence Ticker Bar */}
-        <BreakingTickerBar />
+        {/* The Live page has its own ticker, so show the shared wire elsewhere only. */}
+        {location.pathname.replace(/\/+$/, '') !== '/live' && <BreakingTickerBar />}
 
         {/* Content Viewport */}
         <main className="content-viewport" id="main-content">

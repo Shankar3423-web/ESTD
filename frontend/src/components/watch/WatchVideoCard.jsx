@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, CheckCircle2, Bookmark, Share2, ShieldCheck, Tv, Sparkles, Radio, Users, Clock } from 'lucide-react';
+import { Play, Video, CheckCircle2, Bookmark, Share2, ShieldCheck, Tv, Sparkles, Radio, Users, Clock } from 'lucide-react';
 import ImageWithFallback from '../common/ImageWithFallback';
 import { getCategoryMeta } from '../../constants/taxonomy';
 
@@ -67,11 +67,16 @@ export default function WatchVideoCard({
         />
 
         {/* Hover Dark Vignette & Play Icon */}
-        <div className="watch-card-play-overlay">
+        <div className="watch-card-play-overlay" aria-hidden="true">
           <div className="watch-card-play-circle" style={{ background: accentColor }}>
             <Play size={18} fill="#07080B" color="#07080B" className="play-icon-offset" />
           </div>
         </div>
+
+        <span className="watch-card-video-badge" aria-label="Video">
+          <Video size={12} />
+          <span>VIDEO</span>
+        </span>
 
         {/* Duration Pill */}
         <span className="watch-card-duration-badge">{duration}</span>

@@ -6540,6 +6540,7 @@ button {
   z-index: 35;
   transition: height 0.25s ease, background 0.25s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  margin-bottom: 8px;
 }
 
 .breaking-ticker-bar.collapsed {
@@ -10987,25 +10988,30 @@ button {
 .watch-card-play-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
-  transition: opacity 0.2s ease;
+  opacity: 1;
+  transition: background 0.2s ease;
 }
 .watch-video-card:hover .watch-card-play-overlay {
-  opacity: 1;
+  background: rgba(0, 0, 0, 0.3);
 }
 
 .watch-card-play-circle {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  border: 2px solid rgba(255, 255, 255, 0.88);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 18px rgba(0, 229, 255, 0.22);
+  transition: transform 0.2s ease;
+}
+.watch-video-card:hover .watch-card-play-circle {
+  transform: scale(1.08);
 }
 
 .play-icon-offset {
@@ -11023,6 +11029,29 @@ button {
   background: rgba(7, 8, 11, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #ffffff;
+}
+
+.watch-card-video-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 7px;
+  border-radius: 5px;
+  background: rgba(7, 8, 11, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.55px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.watch-card-video-badge svg {
+  color: var(--card-accent, #00E5FF);
 }
 
 .watch-card-perspective-badge {
