@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Search, X, Activity, User, SlidersHorizontal, ArrowLeft } from 'lucide-react';
+import { Search, X, Activity, User, SlidersHorizontal, ArrowLeft, LayoutGrid, Zap } from 'lucide-react';
 import { useFollowedCategories } from '../../utils/followedCategories';
 
 export default function TopBar({
@@ -96,6 +96,29 @@ export default function TopBar({
 
       {/* Actions and Feed controls */}
       <div className="top-bar-actions">
+        {/* Bento vs Inshorts View Switcher */}
+        <div className="topbar-mode-toggle">
+          <button
+            type="button"
+            className={`topbar-mode-btn ${location.pathname !== '/inshorts' ? 'active' : ''}`}
+            onClick={() => navigate('/')}
+            title="Bento Magazine Wire"
+          >
+            <LayoutGrid size={13} />
+            <span>Bento</span>
+          </button>
+          <button
+            type="button"
+            className={`topbar-mode-btn ${location.pathname === '/inshorts' ? 'active' : ''}`}
+            onClick={() => navigate('/inshorts')}
+            title="Swipable Inshorts Card Reader"
+          >
+            <Zap size={13} />
+            <span>Inshorts</span>
+            <span className="topbar-mode-badge">SWIPE</span>
+          </button>
+        </div>
+
         {/* Latest / Following Feed Selector */}
         <div className="feed-toggle" role="tablist">
           <button

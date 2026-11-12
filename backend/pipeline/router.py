@@ -1,4 +1,5 @@
 """FastAPI router exposing pipeline orchestration and dashboard verification endpoints."""
+import time
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
@@ -183,6 +184,16 @@ def _build_article_card_items(articles: List[NewsArticle], session: Session) -> 
     return items
 
 
+# In-memory fast cache for dashboard articles to reduce latency from remote PostgreSQL
+_DASHBOARD_ARTICLES_CACHE: dict = {}
+_DASHBOARD_CACHE_TTL = 75.0  # seconds
+
+
+def clear_dashboard_cache():
+    """Clear cached articles when pipeline finishes or like count mutates."""
+    _DASHBOARD_ARTICLES_CACHE.clear()
+
+
 @router.get(
     "/articles",
     response_model=ArticleListDashboardResponse,
@@ -196,6 +207,12 @@ def list_dashboard_articles(
     session: Session = Depends(get_db),
 ):
     """Fetch stored articles and their associated Google Document links for dashboard display."""
+    cache_key = f"{category or 'All'}:{subcategory or 'All'}:{(search or '').strip().lower()}:{limit}"
+    now = time.time()
+    cached = _DASHBOARD_ARTICLES_CACHE.get(cache_key)
+    if cached and (now - cached["timestamp"] < _DASHBOARD_CACHE_TTL):
+        return cached["response"]
+
     query = session.query(NewsArticle)
 
     if category and category != "All":
@@ -218,7 +235,14 @@ def list_dashboard_articles(
 
     articles = query.order_by(NewsArticle.created_at.desc()).limit(limit).all()
     items = _build_article_card_items(articles, session)
-    return ArticleListDashboardResponse(total=len(items), items=items)
+    response_obj = ArticleListDashboardResponse(total=len(items), items=items)
+
+    # Store in memory cache
+    _DASHBOARD_ARTICLES_CACHE[cache_key] = {
+        "timestamp": now,
+        "response": response_obj,
+    }
+    return response_obj
 
 
 @router.post(
@@ -250,6 +274,7 @@ def toggle_article_like(
         session.delete(existing_like)
         article.likes_count = max(0, (article.likes_count or 1) - 1)
         session.commit()
+        clear_dashboard_cache()
         return {
             "article_id": article_id,
             "liked": False,
@@ -262,6 +287,7 @@ def toggle_article_like(
         session.add(new_like)
         article.likes_count = (article.likes_count or 0) + 1
         session.commit()
+        clear_dashboard_cache()
         return {
             "article_id": article_id,
             "liked": True,
@@ -303,6 +329,9 @@ def get_article_likes(
     }
 
 
+_OVERVIEW_CACHE = None
+_OVERVIEW_CACHE_TIME = 0.0
+
 @router.get(
     "/overview",
     response_model=SystemOverviewResponse,
@@ -310,6 +339,11 @@ def get_article_likes(
 )
 def get_system_overview(session: Session = Depends(get_db)):
     """Aggregate health and counts for PostgreSQL, MCP, Gemini, and Google Drive."""
+    global _OVERVIEW_CACHE, _OVERVIEW_CACHE_TIME
+    now = time.time()
+    if _OVERVIEW_CACHE and (now - _OVERVIEW_CACHE_TIME < 60.0):
+        return _OVERVIEW_CACHE
+
     # 1. PostgreSQL Knowledge Source
     articles_count = session.query(NewsArticle).count()
     categories_count = session.query(Category).count()
@@ -373,7 +407,7 @@ def get_system_overview(session: Session = Depends(get_db)):
     # 5. Last Run Info
     latest_job = pipeline_orchestrator.get_latest_job()
 
-    return SystemOverviewResponse(
+    resp = SystemOverviewResponse(
         postgres=postgres_data,
         mcp=mcp_data,
         gemini=gemini_data,
@@ -382,6 +416,9 @@ def get_system_overview(session: Session = Depends(get_db)):
         is_pipeline_running=pipeline_orchestrator.is_running(),
         active_job_id=pipeline_orchestrator.active_job_id,
     )
+    _OVERVIEW_CACHE = resp
+    _OVERVIEW_CACHE_TIME = now
+    return resp
 
 
 # In-memory cache for fast repeated queries

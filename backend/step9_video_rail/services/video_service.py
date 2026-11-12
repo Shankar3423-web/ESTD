@@ -17,7 +17,7 @@ logger = logging.getLogger("estd.step9.video_service")
 _VIDEO_CACHE: Dict[int, List[Dict[str, Any]]] = {}
 
 # Canonical 5 perspective roles in ESTD
-CANONICAL_ROLES = ["Official", "Broadcast", "Analysis", "Creator", "Fan"]
+CANONICAL_ROLES = ["Official", "Broadcast", "Analysis", "Creator", "Fan"]   
 
 ROLE_DEFAULTS = {
     "Official": {

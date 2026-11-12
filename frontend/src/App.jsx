@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AppShell from './components/layout/AppShell';
 import HomePage from './pages/HomePage';
+import InshortsPage from './pages/InshortsPage';
 import CategoryPage from './pages/CategoryPage';
 import StoryObject from './components/story/StoryObject';
 import WatchPage from './pages/WatchPage';
@@ -109,6 +110,21 @@ export default function App() {
               />
             }
           />
+
+          {/* Inshorts / Swipe Cards Dedicated Routes */}
+          <Route
+            path="/inshorts"
+            element={
+              <InshortsPage
+                savedStories={savedStories}
+                onToggleSave={handleToggleSave}
+                watchLaterStories={watchLaterStories}
+                onToggleWatchLater={handleToggleWatchLater}
+              />
+            }
+          />
+          <Route path="/swipe" element={<Navigate to="/inshorts" replace />} />
+          <Route path="/cards" element={<Navigate to="/inshorts" replace />} />
 
           {/* Canonical Category & Subcategory Pages */}
           <Route

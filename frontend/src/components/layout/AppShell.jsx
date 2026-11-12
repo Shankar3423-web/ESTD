@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
+import BreakingTickerBar from '../common/BreakingTickerBar';
 import PipelineInspectorModal from '../diagnostics/PipelineInspectorModal';
 import {
   runPipeline,
@@ -69,25 +70,28 @@ export default function AppShell({ savedStories, onToggleSave, onListen }) {
     [loadOverview]
   );
 
-  // Initial startup: check pipeline runner state & system overview
+  // Initial startup: check pipeline runner state & system overview (deferred slightly to prioritize feed paint)
   useEffect(() => {
-    loadOverview();
-    async function checkStatus() {
-      try {
-        const res = await getPipelineStatus();
-        if (res.is_running && res.active_job_id) {
-          setIsRunning(true);
-          startPollingJob(res.active_job_id);
-        } else if (res.last_job) {
-          setActiveJob(res.last_job);
+    const timer = setTimeout(() => {
+      loadOverview();
+      async function checkStatus() {
+        try {
+          const res = await getPipelineStatus();
+          if (res.is_running && res.active_job_id) {
+            setIsRunning(true);
+            startPollingJob(res.active_job_id);
+          } else if (res.last_job) {
+            setActiveJob(res.last_job);
+          }
+        } catch (err) {
+          console.debug('Initial status notice:', err);
         }
-      } catch (err) {
-        console.debug('Initial status notice:', err);
       }
-    }
-    checkStatus();
+      checkStatus();
+    }, 100);
 
     return () => {
+      clearTimeout(timer);
       if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
     };
   }, [loadOverview, startPollingJob]);
@@ -135,6 +139,9 @@ export default function AppShell({ savedStories, onToggleSave, onListen }) {
           onOpenDiagnostics={() => setIsDiagnosticsOpen(true)}
           systemOverview={overview}
         />
+
+        {/* Live Platform Element: Breaking News Intelligence Ticker Bar */}
+        <BreakingTickerBar />
 
         {/* Content Viewport */}
         <main className="content-viewport" id="main-content">

@@ -13,6 +13,7 @@ import {
   Compass,
   TrendingUp,
   Sparkles,
+  Zap,
 } from 'lucide-react';
 import { CATEGORIES } from '../../constants/taxonomy';
 
@@ -22,6 +23,7 @@ export default function Sidebar({ onOpenDiagnostics, systemStatus }) {
 
   const primaryDestinations = [
     { label: 'Home (For You)', path: '/', icon: Home, accent: '#00E5FF' },
+    { label: 'Inshorts (Cards)', path: '/inshorts', icon: Zap, accent: '#B8FF3B', badge: 'SWIPABLE' },
     { label: 'Watch', path: '/watch', icon: Video, accent: '#FF20B8', badge: 'VIDEO' },
     { label: 'Live', path: '/live', icon: Radio, accent: '#EF4444', isLive: true },
     { label: 'Ask ESTD', path: '/search', icon: Search, accent: '#B8FF3B' },

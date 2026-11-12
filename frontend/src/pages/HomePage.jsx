@@ -7,6 +7,8 @@ import FlashBitesBar from '../components/story/FlashBitesBar';
 import WeeklyRadarDrop from '../components/story/WeeklyRadarDrop';
 import CategoryQuickRow from '../components/story/CategoryQuickRow';
 import FollowingStreamView from '../components/following/FollowingStreamView';
+import InshortsDeskReader from '../components/story/InshortsDeskReader';
+import { LayoutGrid, Zap, FileText } from 'lucide-react';
 import EmptyState from '../components/common/EmptyState';
 import ErrorState from '../components/common/ErrorState';
 import SkeletonCard from '../components/story/SkeletonCard';
@@ -32,9 +34,45 @@ export default function HomePage({
   const [activeFollowingCategory, setActiveFollowingCategory] = useState('All');
 
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [stories, setStories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  
+  // Instant load: initialize from localStorage cache if available so first paint is 0ms
+  const [stories, setStories] = useState(() => {
+    try {
+      const cached = localStorage.getItem('estd_feed_cache');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return [];
+  });
+  
+  const [loading, setLoading] = useState(() => {
+    try {
+      const cached = localStorage.getItem('estd_feed_cache');
+      if (cached && JSON.parse(cached).length > 0) return false;
+    } catch {}
+    return true;
+  });
   const [error, setError] = useState(null);
+
+  // View Mode State: 'bento' (default magazine) vs 'inshorts' (card-by-card quick read)
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      return localStorage.getItem('estd_preferred_view_mode') || 'bento';
+    } catch {
+      return 'bento';
+    }
+  });
+
+  const handleSetViewMode = (mode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('estd_preferred_view_mode', mode);
+    } catch (e) {
+      console.warn('Could not persist view mode:', e);
+    }
+  };
 
   // Video Lightbox Modal State
   const [modalStory, setModalStory] = useState(null);
@@ -54,37 +92,41 @@ export default function HomePage({
   useEffect(() => {
     let isMounted = true;
     async function loadFeed() {
-      setLoading(true);
+      // Only set loading true if we don't already have cached stories (prevents blank screen flashes)
+      if (stories.length === 0) {
+        setLoading(true);
+      }
       setError(null);
       try {
         if (selectedCategory === 'All') {
-          // Curate a balanced, interleaved mix of news across all 5 canonical categories
-          const categories = [
-            'Tech',
-            'Entertainment',
-            'Sports',
-            'Developments',
-            'Business & Finance',
-          ];
-          const categoryResults = await Promise.all(
-            categories.map((cat) =>
-              fetchStories({ category: cat, limit: 25 }).catch(() => [])
-            )
-          );
+          // Ultra-fast single query with in-memory caching instead of 5 separate round-trips
+          const allStories = await fetchStories({ limit: 60 });
 
-          // Interleave category stories 1-by-1 for a vibrant, diverse feed
+          // Interleave category stories 1-by-1 in pure memory (0.01ms) for balanced diversity
+          const byCat = {};
+          for (const s of allStories) {
+            const cat = s.category || 'General';
+            if (!byCat[cat]) byCat[cat] = [];
+            byCat[cat].push(s);
+          }
+
+          const categories = Object.keys(byCat);
           const mixed = [];
-          const maxCount = Math.max(...categoryResults.map((r) => r.length), 0);
+          const maxCount = Math.max(...categories.map((c) => byCat[c].length), 0);
           for (let i = 0; i < maxCount; i++) {
-            for (let c = 0; c < categoryResults.length; c++) {
-              if (i < categoryResults[c].length) {
-                mixed.push(categoryResults[c][i]);
+            for (const cat of categories) {
+              if (i < byCat[cat].length) {
+                mixed.push(byCat[cat][i]);
               }
             }
           }
 
+          const finalStories = mixed.length > 0 ? mixed : allStories;
           if (isMounted) {
-            setStories(mixed);
+            setStories(finalStories);
+            try {
+              localStorage.setItem('estd_feed_cache', JSON.stringify(finalStories.slice(0, 40)));
+            } catch {}
           }
         } else {
           // Specific category filtered feed
@@ -97,7 +139,7 @@ export default function HomePage({
           }
         }
       } catch (err) {
-        if (isMounted) setError(err.message || 'Failed to load feed.');
+        if (isMounted && stories.length === 0) setError(err.message || 'Failed to load feed.');
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -160,6 +202,50 @@ export default function HomePage({
       {/* ============================================================== */}
       {!loading && !error && feedMode === 'latest' && stories.length > 0 && (
         <>
+          {/* View Mode Switcher: Bento Magazine vs Inshorts Card Reader */}
+          <div className="home-view-toggle-bar">
+            <div className="home-view-toggle-group">
+              <button
+                type="button"
+                className={`home-view-toggle-btn ${viewMode === 'bento' ? 'active' : ''}`}
+                onClick={() => handleSetViewMode('bento')}
+                title="Bento Magazine Wire Layout"
+              >
+                <LayoutGrid size={14} />
+                <span>Bento Magazine</span>
+              </button>
+              <button
+                type="button"
+                className={`home-view-toggle-btn ${viewMode === 'inshorts' ? 'active' : ''}`}
+                onClick={() => handleSetViewMode('inshorts')}
+                title="Inshorts-style Card-by-Card Quick Read"
+              >
+                <Zap size={14} />
+                <span>Inshorts Quick-Read</span>
+                <span className="home-view-new-badge">NEW</span>
+              </button>
+            </div>
+
+            <div className="home-view-caption">
+              {viewMode === 'inshorts' ? (
+                <span>⚡ Card-by-card story contract with keyboard navigation (↓/↑, J/K, S)</span>
+              ) : (
+                <span>📰 Multi-category news desks, 60s flash bites & radar calendar</span>
+              )}
+            </div>
+          </div>
+
+          {viewMode === 'inshorts' ? (
+            <InshortsDeskReader
+              stories={stories}
+              savedStories={savedStories}
+              onToggleSave={onToggleSave}
+              watchLaterStories={watchLaterStories}
+              onToggleWatchLater={onToggleWatchLater}
+              onExitToBento={() => handleSetViewMode('bento')}
+            />
+          ) : (
+            <>
           {/* Section 1 & 2: Hero Landing Viewport (Featured Carousel + 60s Flash Bites) */}
           <div className="home-hero-landing">
             {/* Section 1: Hero Spotlight Carousel (one latest story per category) */}
@@ -172,6 +258,47 @@ export default function HomePage({
             {/* Section 2: 60-Second Flash Bites (Gen-Z Story Rings & Smart Brevity) */}
             <FlashBitesBar stories={stories} />
           </div>
+
+          {/* Section 2.5: The Daily Pack — Text Intelligence (The Sacred Story Contract) */}
+          <section className="home-daily-pack-section">
+            <div className="daily-pack-header">
+              <div className="daily-pack-title-group">
+                <span className="daily-pack-badge">
+                  <FileText size={14} />
+                  <span>THE DAILY PACK • TEXT INTELLIGENCE</span>
+                </span>
+                <h3 className="daily-pack-title">Today's Sacred Story Briefs (Finite Pack)</h3>
+                <p className="daily-pack-subtitle">
+                  Spoken headline (≤ 12 words) • 50–70 word one-paragraph brief • 3–5 numerical impact chips. Zero walls of text.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="daily-pack-switch-inshorts"
+                onClick={() => navigate('/inshorts')}
+                title="Switch to full-screen Inshorts card swiper"
+              >
+                <Zap size={14} color="#B8FF3B" />
+                <span>Swipe Cards Mode (Inshorts) →</span>
+              </button>
+            </div>
+
+            <div className="daily-pack-cards-grid">
+              {stories.slice(0, 6).map((story) => (
+                <StoryCard
+                  key={story.id}
+                  story={story}
+                  isSaved={savedStories.some((s) => s.id === story.id)}
+                  onToggleSave={onToggleSave}
+                  watchLaterStories={watchLaterStories}
+                  onToggleWatchLater={onToggleWatchLater}
+                  isWatchLater={watchLaterStories.some((s) => String(s.id) === String(story.id))}
+                  onWatchVideo={() => handleOpenVideoModal(story)}
+                />
+              ))}
+            </div>
+          </section>
 
           {/* Section 3: Category Pulse Rows */}
           {selectedCategory === 'All' ? (
@@ -266,6 +393,8 @@ export default function HomePage({
 
           {/* Section 4: The Radar — What's Dropping This Week (Gen-Z Forward Calendar) */}
           {selectedCategory === 'All' && <WeeklyRadarDrop />}
+            </>
+          )}
         </>
       )}
 
