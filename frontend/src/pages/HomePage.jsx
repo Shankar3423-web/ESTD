@@ -41,7 +41,11 @@ export default function HomePage({
       const cached = localStorage.getItem('estd_feed_cache');
       if (cached) {
         const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Verify cached stories has at least 4 unique categories so old 3-category cache is refreshed
+          const uniqueCats = new Set(parsed.map((s) => s.category));
+          if (uniqueCats.size >= 4) return parsed;
+        }
       }
     } catch {}
     return [];
@@ -50,7 +54,13 @@ export default function HomePage({
   const [loading, setLoading] = useState(() => {
     try {
       const cached = localStorage.getItem('estd_feed_cache');
-      if (cached && JSON.parse(cached).length > 0) return false;
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const uniqueCats = new Set(parsed.map((s) => s.category));
+          if (uniqueCats.size >= 4) return false;
+        }
+      }
     } catch {}
     return true;
   });
@@ -99,8 +109,8 @@ export default function HomePage({
       setError(null);
       try {
         if (selectedCategory === 'All') {
-          // Ultra-fast single query with in-memory caching instead of 5 separate round-trips
-          const allStories = await fetchStories({ limit: 60 });
+          // Ultra-fast single query with in-memory caching across all 5 categories
+          const allStories = await fetchStories({ limit: 150 });
 
           // Interleave category stories 1-by-1 in pure memory (0.01ms) for balanced diversity
           const byCat = {};
@@ -125,7 +135,7 @@ export default function HomePage({
           if (isMounted) {
             setStories(finalStories);
             try {
-              localStorage.setItem('estd_feed_cache', JSON.stringify(finalStories.slice(0, 40)));
+              localStorage.setItem('estd_feed_cache', JSON.stringify(finalStories.slice(0, 100)));
             } catch {}
           }
         } else {

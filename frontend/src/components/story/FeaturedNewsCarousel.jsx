@@ -260,20 +260,68 @@ export default function FeaturedNewsCarousel({
   );
 }
 
+const CANONICAL_5_CATEGORIES = [
+  'Tech',
+  'Entertainment',
+  'Business & Finance',
+  'Developments',
+  'Sports',
+];
+
+function matchCategory(storyCat, targetCat) {
+  if (!storyCat || !targetCat) return false;
+  const s = String(storyCat).toLowerCase().trim();
+  const t = String(targetCat).toLowerCase().trim();
+  if (s === t) return true;
+  if (t === 'business & finance') {
+    return s.includes('business') || s.includes('finance');
+  }
+  if (t === 'tech') {
+    return s === 'tech' || s.includes('technology');
+  }
+  if (t === 'entertainment') {
+    return s.includes('entertainment') || s.includes('ent');
+  }
+  if (t === 'developments') {
+    return s.includes('development') || s.includes('dev');
+  }
+  if (t === 'sports') {
+    return s.includes('sport');
+  }
+  return false;
+}
+
 /**
- * Picks the most recent story from each unique category.
+ * Picks the most recent story from each of the 5 canonical categories.
+ * Ensures the hero carousel always scrolls through all 5 categories.
  */
 function useMemo_pickOnePerCategory(stories) {
   return React.useMemo(() => {
     if (!stories || stories.length === 0) return [];
-    const seen = new Map();
-    for (const story of stories) {
-      const cat = story.category || 'General';
-      if (!seen.has(cat)) {
-        seen.set(cat, story);
+    const picked = [];
+    const usedIds = new Set();
+
+    // 1. Pick the latest story for each of the 5 canonical categories in order
+    for (const cat of CANONICAL_5_CATEGORIES) {
+      const found = stories.find((s) => !usedIds.has(s.id) && matchCategory(s.category, cat));
+      if (found) {
+        picked.push({ ...found, category: cat });
+        usedIds.add(found.id);
       }
     }
-    return Array.from(seen.values());
+
+    // 2. If any canonical category had no match, backfill from remaining stories to ensure 5 slides
+    if (picked.length < CANONICAL_5_CATEGORIES.length) {
+      for (const s of stories) {
+        if (!usedIds.has(s.id)) {
+          picked.push(s);
+          usedIds.add(s.id);
+          if (picked.length >= CANONICAL_5_CATEGORIES.length) break;
+        }
+      }
+    }
+
+    return picked;
   }, [stories]);
 }
 

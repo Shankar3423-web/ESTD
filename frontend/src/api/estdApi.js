@@ -36,7 +36,7 @@ const _STORIES_CACHE_TTL_MS = 60000; // 60 seconds
  * subcategory, image URL, and full content.
  * Includes in-memory client-side TTL caching to eliminate repeated network latency.
  */
-export async function fetchStories({ category, subcategory, search, limit = 60, forceRefresh = false } = {}) {
+export async function fetchStories({ category, subcategory, search, limit = 150, forceRefresh = false } = {}) {
   const queryParams = new URLSearchParams();
   if (category && category !== 'All') {
     queryParams.append('category', category);

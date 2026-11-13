@@ -28,7 +28,7 @@ export default function FlashBitesBar({ stories = [] }) {
   // Active Story in Flash Modal
   const [activeStoryIndex, setActiveStoryIndex] = useState(null);
 
-  // Pick top 8 diverse stories across categories for flash bites
+  // Pick diverse stories across all 5 categories for a rich 60s flash bites rail (up to 18 bites)
   const flashStories = useMemo(() => {
     if (!stories || stories.length === 0) return [];
 
@@ -41,14 +41,15 @@ export default function FlashBitesBar({ stories = [] }) {
 
     const result = [];
     const categories = Object.keys(byCat);
-    for (let round = 0; round < 2; round++) {
+    // 3 to 4 rounds across all categories for balanced diversity up to 18 flash bites
+    for (let round = 0; round < 4; round++) {
       for (const cat of categories) {
-        if (byCat[cat][round] && result.length < 8) {
+        if (byCat[cat][round] && result.length < 18) {
           result.push(byCat[cat][round]);
         }
       }
     }
-    return result.length > 0 ? result : stories.slice(0, 8);
+    return result.length > 0 ? result : stories.slice(0, 18);
   }, [stories]);
 
   const checkScroll = () => {
