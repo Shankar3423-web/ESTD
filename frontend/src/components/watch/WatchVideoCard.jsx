@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Video, CheckCircle2, Bookmark, Share2, ShieldCheck, Tv, Sparkles, Radio, Users, Clock } from 'lucide-react';
+import { Play, CheckCircle2, Bookmark, Clock } from 'lucide-react';
 import ImageWithFallback from '../common/ImageWithFallback';
 import { getCategoryMeta } from '../../constants/taxonomy';
 
@@ -24,26 +24,8 @@ export default function WatchVideoCard({
   const duration = video?.duration || '3:45';
   const views = video?.views || '140K views';
   const sourceName = video?.source || targetStory.sourceName || 'ESTD Verified Wire';
-  const role = video?.role || video?.type || 'Official';
   const title = video?.title || targetStory.headline || 'Breaking Intelligence Video';
   const thumbnail = targetStory.imageUrl || video?.thumbnail;
-
-  const getRoleIcon = (r) => {
-    switch (r?.toLowerCase()) {
-      case 'official':
-        return <ShieldCheck size={11} />;
-      case 'broadcast':
-        return <Tv size={11} />;
-      case 'analysis':
-        return <Sparkles size={11} />;
-      case 'creator':
-        return <Radio size={11} />;
-      case 'fan':
-        return <Users size={11} />;
-      default:
-        return <Play size={11} />;
-    }
-  };
 
   const handleCardClick = () => {
     if (onPlay) {
@@ -66,26 +48,15 @@ export default function WatchVideoCard({
           subcategory={targetStory.subcategory}
         />
 
-        {/* Hover Dark Vignette & Play Icon */}
+        {/* Centered Round Play Button Overlay */}
         <div className="watch-card-play-overlay" aria-hidden="true">
-          <div className="watch-card-play-circle" style={{ background: accentColor }}>
-            <Play size={18} fill="#07080B" color="#07080B" className="play-icon-offset" />
+          <div className="watch-card-play-circle">
+            <Play size={20} fill="currentColor" color="currentColor" className="play-icon-offset" />
           </div>
         </div>
 
-        <span className="watch-card-video-badge" aria-label="Video">
-          <Video size={12} />
-          <span>VIDEO</span>
-        </span>
-
         {/* Duration Pill */}
         <span className="watch-card-duration-badge">{duration}</span>
-
-        {/* Perspective Role Tag */}
-        <span className="watch-card-perspective-badge" style={{ borderColor: accentColor }}>
-          {getRoleIcon(role)}
-          <span>{role}</span>
-        </span>
       </div>
 
       {/* Card Body */}

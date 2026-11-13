@@ -128,6 +128,7 @@ export default function ImageWithFallback({
         height: '100%',
         overflow: 'hidden',
         background: '#12141c',
+        isolation: 'isolate',
       }}
     >
       {/* Subtle non-blocking shimmer behind the image */}

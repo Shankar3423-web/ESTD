@@ -8815,6 +8815,7 @@ button {
   align-items: center;
   justify-content: center;
   opacity: 0;
+  z-index: 5;
   transition: opacity 0.2s ease;
 }
 
@@ -8833,6 +8834,7 @@ button {
   padding: 1px 5px;
   border-radius: 4px;
   font-family: monospace;
+  z-index: 6;
 }
 
 .watch-queue-cat-badge {
@@ -8844,6 +8846,7 @@ button {
   padding: 1px 5px;
   border-radius: 3px;
   text-transform: uppercase;
+  z-index: 6;
 }
 
 .watch-queue-info {
@@ -10973,13 +10976,14 @@ button {
   aspect-ratio: 16 / 9;
   background: #07080B;
   overflow: hidden;
+  isolation: isolate;
 }
 
 .watch-card-thumb-wrap img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .watch-video-card:hover .watch-card-thumb-wrap img {
   transform: scale(1.05);
@@ -10988,34 +10992,48 @@ button {
 .watch-card-play-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 1;
-  transition: background 0.2s ease;
+  z-index: 5;
+  pointer-events: none;
+  transition: background 0.25s ease;
 }
 .watch-video-card:hover .watch-card-play-overlay {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.35);
 }
 
 .watch-card-play-circle {
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
+  background: rgba(7, 8, 12, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 2px solid rgba(255, 255, 255, 0.9);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid rgba(255, 255, 255, 0.88);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 18px rgba(0, 229, 255, 0.22);
-  transition: transform 0.2s ease;
+  color: #ffffff;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6), 0 0 16px var(--card-accent, rgba(0, 229, 255, 0.35));
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .watch-video-card:hover .watch-card-play-circle {
-  transform: scale(1.08);
+  transform: scale(1.14);
+  background: var(--card-accent, #00E5FF);
+  border-color: #ffffff;
+  color: #07080B;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.65), 0 0 24px var(--card-accent, rgba(0, 229, 255, 0.65));
 }
 
 .play-icon-offset {
-  margin-left: 2px;
+  margin-left: 3px;
+  transition: transform 0.2s ease;
+}
+.watch-video-card:hover .play-icon-offset {
+  transform: translateX(1px);
 }
 
 .watch-card-duration-badge {
@@ -11029,6 +11047,10 @@ button {
   background: rgba(7, 8, 11, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #ffffff;
+  z-index: 6;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .watch-card-video-badge {
@@ -11048,6 +11070,7 @@ button {
   letter-spacing: 0.55px;
   line-height: 1;
   pointer-events: none;
+  z-index: 6;
 }
 
 .watch-card-video-badge svg {
@@ -11069,6 +11092,8 @@ button {
   color: #ffffff;
   font-size: 10.5px;
   font-weight: 600;
+  z-index: 6;
+  pointer-events: none;
 }
 
 .watch-card-body {
