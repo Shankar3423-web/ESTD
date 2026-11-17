@@ -223,18 +223,10 @@ def build_fallback_perspective(
     index: int,
 ) -> Dict[str, Any]:
     """Build an intelligent dynamic search-backed perspective if direct YouTube scraping had zero items."""
-    encoded_search = urllib.parse.quote_plus(f"{headline} {role}")
+    clean_title = clean_headline_for_search(headline)
+    encoded_search = urllib.parse.quote_plus(f"{clean_title} {role} news")
     defaults = ROLE_DEFAULTS.get(role, ROLE_DEFAULTS["Official"])
     role_lower = role.lower()
-
-    cat_embed_ids = {
-        "Tech": "aircAruvnKk",
-        "Sports": "LXb3EKWsInQ",
-        "Entertainment": "fJ9rUzIMcZQ",
-        "Business & Finance": "7Pq-S557XQU",
-        "Developments": "h4Uu5eyN6VU",
-    }
-    vid_id = cat_embed_ids.get(category, "aircAruvnKk")
 
     return {
         "id": f"{article_id}-v{index + 1}-{role_lower}",
@@ -244,9 +236,9 @@ def build_fallback_perspective(
         "source": f"{source_name or defaults['default_source']} ({role})",
         "duration": "3:15",
         "platform": f"{role} Stream",
-        "videoId": vid_id,
+        "videoId": None,
         "url": f"https://www.youtube.com/results?search_query={encoded_search}",
-        "embedUrl": f"https://www.youtube-nocookie.com/embed/{vid_id}",
+        "embedUrl": f"https://www.youtube-nocookie.com/embed?listType=search&list={encoded_search}",
         "videoStreamUrl": "https://vjs.zencdn.net/v/oceans.mp4",
         "thumbnail": f"https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=800&q=80",
         "summary": defaults["summary"],

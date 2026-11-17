@@ -142,6 +142,34 @@ export default function WatchTheatreView({
   const perspectives = story?.videoRail || [];
   const currentPerspective = perspectives[activePerspectiveIndex] || perspectives[0] || {};
 
+  const cleanHeadline = useMemo(() => {
+    const raw = story?.headline || story?.title || story?.originalTitle || 'News Wire';
+    return raw.replace(/^(EXCLUSIVE|WATCH|LIVE|BREAKING|REPORT|UPDATE|EXPLAINER)\s*[:|-]\s*/i, '').trim();
+  }, [story]);
+
+  const activeEmbedUrl = useMemo(() => {
+    const vidId = currentPerspective.videoId;
+    const isPlaceholder =
+      !vidId ||
+      vidId === 'aircAruvnKk' ||
+      vidId === 'fJ9rUzIMcZQ' ||
+      vidId === 'LXb3EKWsInQ' ||
+      vidId === '7Pq-S557XQU' ||
+      vidId === 'h4Uu5eyN6VU';
+
+    if (vidId && !isPlaceholder) {
+      return `https://www.youtube-nocookie.com/embed/${vidId}`;
+    }
+    if (
+      currentPerspective.embedUrl &&
+      !currentPerspective.embedUrl.includes('aircAruvnKk') &&
+      !currentPerspective.embedUrl.includes('fJ9rUzIMcZQ')
+    ) {
+      return currentPerspective.embedUrl;
+    }
+    return `https://www.youtube-nocookie.com/embed?listType=search&list=${encodeURIComponent(cleanHeadline + ' news')}`;
+  }, [currentPerspective, cleanHeadline]);
+
   const currentIndex = allStories.findIndex((s) => String(s.id) === String(story?.id));
   const prevStory = currentIndex > 0 ? allStories[currentIndex - 1] : null;
   const nextStory = currentIndex >= 0 && currentIndex < allStories.length - 1 ? allStories[currentIndex + 1] : null;
@@ -367,19 +395,10 @@ export default function WatchTheatreView({
 
             {/* Video Canvas */}
             <div className="watch-video-canvas">
-              {currentPerspective.embedUrl ? (
+              {activeEmbedUrl ? (
                 <iframe
-                  key={`yt-${currentPerspective.id}-${activePerspectiveIndex}-${currentPerspective.embedUrl}`}
-                  src={`${currentPerspective.embedUrl}${currentPerspective.embedUrl.includes('?') ? '&' : '?'}autoplay=1&mute=0&rel=0&modestbranding=1`}
-                  title={currentPerspective.title || story.headline}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  className="watch-iframe-player"
-                />
-              ) : currentPerspective.videoId ? (
-                <iframe
-                  key={`yt-${currentPerspective.videoId}-${activePerspectiveIndex}`}
-                  src={`https://www.youtube-nocookie.com/embed/${currentPerspective.videoId}?autoplay=1&mute=0&rel=0&modestbranding=1`}
+                  key={`yt-${currentPerspective.id || 'theatre'}-${activePerspectiveIndex}-${activeEmbedUrl}`}
+                  src={`${activeEmbedUrl}${activeEmbedUrl.includes('?') ? '&' : '?'}autoplay=1&mute=0&rel=0&modestbranding=1`}
                   title={currentPerspective.title || story.headline}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen

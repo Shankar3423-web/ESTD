@@ -96,17 +96,22 @@ class ArticleCardItem(BaseModel):
     """Unified article representation for dashboard presentation."""
     id: int
     title: str
+    slug: Optional[str] = None
     category: str
     source_name: Optional[str] = None
     source_type: str
     url: str
+    canonical_url: Optional[str] = None
     published_at: Optional[datetime] = None
+    source_published_at: Optional[datetime] = None
     created_at: datetime
     content_snippet: str
     content: Optional[str] = None
     executive_summary: Optional[str] = None
     image_url: Optional[str] = None
     subcategory: Optional[str] = None
+    entities: Optional[Dict[str, Any]] = None
+    qa_status: str = "PUBLISHED"
     ai_status: str
     pipeline_status: str
     likes_count: int = 0

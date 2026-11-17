@@ -2,6 +2,7 @@
 from datetime import datetime, timezone
 import math
 from typing import List, Optional, Tuple, Union
+import uuid
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -10,11 +11,13 @@ from backend.common.constants.categories import VALID_CATEGORIES
 from backend.common.exceptions.custom_exceptions import InvalidCategoryError
 from backend.common.logging.logger import logger
 from backend.common.utils.datetime_utils import get_utc_now_iso, normalize_datetime_to_iso
+from backend.common.utils.slug_utils import generate_slug
 from backend.database.connection.session import check_db_health, get_db_session
 from backend.database.models.category import Category
 from backend.database.models.news_article import NewsArticle
 from backend.database.repositories.category_repository import CategoryRepository
 from backend.database.repositories.news_article_repository import NewsArticleRepository
+from backend.step1_source_collection.services.url_resolver import resolve_real_publisher_url
 from backend.step3_content_cleaning.models.cleaned_article import CleanedArticle
 from backend.step4_duplicate_detection.detectors.exact_content_detector import ExactContentDetector
 from backend.step4_duplicate_detection.normalizers.url_normalizer import normalize_url
@@ -232,17 +235,24 @@ class KnowledgeSourceService:
             published_at_dt = self._parse_datetime(published_at_str)
             collected_at_dt = self._parse_datetime(collected_at_str) or datetime.now(timezone.utc)
 
+            # Resolve real destination URL and generate SEO slug
+            real_canonical_url = resolve_real_publisher_url(url)
+            article_slug = generate_slug(title, str(uuid.uuid4())[:6])
+
             new_article = NewsArticle(
                 title=title,
+                slug=article_slug,
                 description=description,
                 content=content,
                 url=url,
+                canonical_url=real_canonical_url,
                 normalized_url=normalized_url,
                 content_hash=content_hash,
                 source_name=source_name,
                 source_type=source_type.lower() if source_type else "custom",
                 author=author,
                 published_at=published_at_dt,
+                source_published_at=published_at_dt,
                 category=canonical_cat,
                 category_id=category_record.id,
                 subcategory=subcat_record.name if subcat_record else resolved_subcat_name,
@@ -251,6 +261,8 @@ class KnowledgeSourceService:
                 language=language or "en",
                 region=region,
                 image_url=image_url,
+                entities={},
+                qa_status="PUBLISHED",
                 collected_at=collected_at_dt,
                 created_at=datetime.now(timezone.utc),
                 updated_at=datetime.now(timezone.utc),

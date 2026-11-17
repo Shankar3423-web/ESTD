@@ -79,9 +79,19 @@ class MCPSettings(BaseSettings):
     def get_postgres_connection_url(self) -> str:
         """Return the raw PostgreSQL database URL (used only for server execution)."""
         if self.database_url and self.database_url.strip():
-            return self.database_url.strip()
-        pwd = self.postgres_password.get_secret_value() if self.postgres_password else "root"
-        return f"postgresql://{self.postgres_user}:{pwd}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+            url = self.database_url.strip()
+        else:
+            pwd = self.postgres_password.get_secret_value() if self.postgres_password else "root"
+            url = f"postgresql://{self.postgres_user}:{pwd}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+
+        # If connecting to a remote PostgreSQL host (e.g. Render, Neon, Supabase, Cloud),
+        # ensure SSL is enforced so node-postgres MCP does not fail with ECONNRESET.
+        lower_url = url.lower()
+        is_local = "localhost" in lower_url or "127.0.0.1" in lower_url
+        if not is_local and "sslmode" not in lower_url and "ssl=" not in lower_url:
+            separator = "&" if "?" in url else "?"
+            url = f"{url}{separator}sslmode=require"
+        return url
 
     def get_safe_postgres_url(self) -> str:
         """Return connection URL with password securely masked for safe logging and status reporting."""

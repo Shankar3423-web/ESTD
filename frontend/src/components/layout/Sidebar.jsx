@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home,
   Video,
@@ -14,6 +14,7 @@ import {
   TrendingUp,
   Sparkles,
   Zap,
+  Mic,
 } from 'lucide-react';
 import { CATEGORIES } from '../../constants/taxonomy';
 
@@ -25,6 +26,7 @@ export default function Sidebar({ onOpenDiagnostics, systemStatus }) {
     { label: 'Home (For You)', path: '/', icon: Home, accent: '#00E5FF' },
     { label: 'Inshorts (Cards)', path: '/inshorts', icon: Zap, accent: '#B8FF3B', badge: 'SWIPABLE' },
     { label: 'Watch', path: '/watch', icon: Video, accent: '#FF20B8', badge: 'VIDEO' },
+    { label: 'ESTDPOD', path: '/watch?category=podcasts#estdpod', icon: Mic, accent: '#FF2A54', badge: 'ORIGINALS' },
     { label: 'Live', path: '/live', icon: Radio, accent: '#EF4444', isLive: true },
     { label: 'Ask ESTD', path: '/search', icon: Search, accent: '#B8FF3B' },
     { label: 'Saved', path: '/saved', icon: Bookmark, accent: '#FFB020' },
@@ -88,13 +90,29 @@ export default function Sidebar({ onOpenDiagnostics, systemStatus }) {
         <div className="nav-section-label">Feed & Intelligence</div>
         {primaryDestinations.map((item) => {
           const Icon = item.icon;
-          const isActive = item.path === '/'
-            ? location.pathname === '/'
-            : location.pathname.startsWith(item.path);
+
+          let isActive = false;
+          const isWatchRoute = location.pathname === '/watch' || location.pathname.startsWith('/watch/');
+          const isPodcastActive =
+            location.hash === '#estdpod' ||
+            location.search.includes('category=podcasts') ||
+            location.pathname === '/podcasts';
+
+          if (item.label === 'Home (For You)') {
+            isActive = location.pathname === '/';
+          } else if (item.label === 'Watch') {
+            // Strictly active ONLY when on /watch and NOT viewing podcasts
+            isActive = isWatchRoute && !isPodcastActive;
+          } else if (item.label === 'ESTDPOD') {
+            // Strictly active ONLY when podcasts view/hash is engaged
+            isActive = isPodcastActive;
+          } else {
+            isActive = location.pathname.startsWith(item.path);
+          }
 
           return (
-            <NavLink
-              key={item.path}
+            <Link
+              key={item.label}
               to={item.path}
               className={`nav-link ${isActive ? 'active' : ''}`}
               style={{ '--accent-color': item.accent }}
@@ -120,7 +138,7 @@ export default function Sidebar({ onOpenDiagnostics, systemStatus }) {
                   {item.badge}
                 </span>
               )}
-            </NavLink>
+            </Link>
           );
         })}
 

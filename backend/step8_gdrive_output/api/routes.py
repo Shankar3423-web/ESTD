@@ -4,6 +4,8 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
+from backend.common.auth.security import verify_admin_api_key
+
 from backend.database.connection.session import get_db
 from backend.database.repositories.google_document_repository import GoogleDocumentRepository
 from backend.step8_gdrive_output.exceptions import (
@@ -63,6 +65,7 @@ def get_orchestrator(
     response_model=FolderHierarchySchema,
     status_code=status.HTTP_200_OK,
     summary="Idempotently initialize ESTD CONTENT folder and 5 category subfolders",
+    dependencies=[Depends(verify_admin_api_key)],
 )
 def initialize_folder_hierarchy(
     force_refresh: bool = Query(default=False, description="Force refresh discovery from Google Drive"),
@@ -106,6 +109,7 @@ def get_folder_structure(
     response_model=Step8DocumentResponse,
     status_code=status.HTTP_200_OK,
     summary="Process an approved knowledge source article into Google Docs",
+    dependencies=[Depends(verify_admin_api_key)],
 )
 def process_article(
     article_id: int,
@@ -152,6 +156,7 @@ def process_article(
     response_model=Step8DocumentResponse,
     status_code=status.HTTP_200_OK,
     summary="Directly output validated GeneratedNews content to Google Docs",
+    dependencies=[Depends(verify_admin_api_key)],
 )
 def process_direct_content(
     request: ProcessDirectRequest,
@@ -218,6 +223,7 @@ def get_document_status(
     "/retry/{article_id}",
     response_model=Step8DocumentResponse,
     summary="Retry failed Google Document creation for an article",
+    dependencies=[Depends(verify_admin_api_key)],
 )
 def retry_article_document(
     article_id: int,

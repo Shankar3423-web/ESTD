@@ -14,6 +14,7 @@ def get_alembic_config(db_url: Optional[str] = None) -> Config:
     backend_dir = Path(__file__).resolve().parent.parent.parent
     ini_path = backend_dir / "alembic.ini"
     alembic_cfg = Config(str(ini_path))
+    alembic_cfg.set_main_option("script_location", str(backend_dir / "database" / "migrations"))
     
     settings = get_settings()
     effective_url = db_url or (

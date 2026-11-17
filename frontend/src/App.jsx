@@ -229,6 +229,10 @@ export default function App() {
             }
           />
 
+          {/* Podcasts and ESTDPOD direct routes */}
+          <Route path="/podcasts" element={<Navigate to="/watch?category=podcasts#estdpod" replace />} />
+          <Route path="/estdpod" element={<Navigate to="/watch?category=podcasts#estdpod" replace />} />
+
           {/* Hubs Redirect */}
           <Route path="/hub" element={<Navigate to="/" replace />} />
           <Route path="/hubs" element={<Navigate to="/" replace />} />

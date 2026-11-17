@@ -172,7 +172,10 @@ ESTD News Intelligence Platform — All Rights Reserved.
 
 def run_ingestion():
     print("=" * 80)
-    print("ESTD PIPELINE — 117 ARTICLE COMPREHENSIVE INGESTION ENGINE")
+    print("DEPRECATION NOTICE: This legacy manual script has been deprecated.")
+    print("Please use the automated pipeline via `POST /pipeline/run` or `backend.pipeline.scheduler`.")
+    print("=" * 80)
+    return
     print(f"Timestamp: {datetime.now(timezone.utc).isoformat()}")
     print("=" * 80)
 

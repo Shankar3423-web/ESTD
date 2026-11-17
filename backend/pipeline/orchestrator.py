@@ -17,6 +17,7 @@ import time
 import uuid
 from typing import Dict, List, Optional
 
+from backend.common.config.settings import get_settings
 from backend.common.constants.categories import VALID_CATEGORIES, resolve_canonical_category
 from backend.common.logging.logger import logger
 from backend.database.connection.session import get_db_session
@@ -111,7 +112,7 @@ class PipelineOrchestrator:
         target_categories = []
         for c in raw_cats:
             rc = resolve_canonical_category(c)
-            cat_name = rc.value if rc else c
+            cat_name = rc if rc else c
             if cat_name in VALID_CATEGORIES and cat_name not in target_categories:
                 target_categories.append(cat_name)
         if not target_categories:
@@ -420,9 +421,32 @@ class PipelineOrchestrator:
                         generated_news_map[art_id] = gen_response.data
                         self.generated_summaries[art_id] = gen_response.data.summary
                         job.metrics.ai_generated += 1
+
+                        # Persist Gemini AI synthesized report and QA status into PostgreSQL
+                        with get_db_session() as session:
+                            art_record = session.query(NewsArticle).filter(NewsArticle.id == art_id).first()
+                            if art_record:
+                                art_record.description = gen_response.data.summary
+                                art_record.content = gen_response.data.formatted_body
+                                art_record.qa_status = "APPROVED"
+                                session.commit()
+                    else:
+                        with get_db_session() as session:
+                            art_record = session.query(NewsArticle).filter(NewsArticle.id == art_id).first()
+                            if art_record:
+                                art_record.qa_status = "FAILED"
+                                session.commit()
                 except Exception as exc:
                     logger.warning(f"Step 7 Gemini generation warning for article {art_id}: {exc}")
                     job.metrics.failed += 1
+                    try:
+                        with get_db_session() as session:
+                            art_record = session.query(NewsArticle).filter(NewsArticle.id == art_id).first()
+                            if art_record:
+                                art_record.qa_status = "FAILED"
+                                session.commit()
+                    except Exception:
+                        pass
 
             step7.status = StepStatus.COMPLETED
             step7.completed_at = datetime.now(timezone.utc)
@@ -430,38 +454,45 @@ class PipelineOrchestrator:
             logger.info(f"Step 7 Complete: {len(generated_news_map)} articles generated.")
 
             # =========================================================================
-            # STEP 8: Google Docs Creation in Google Drive Category Folders
+            # STEP 8: Google Docs Creation in Google Drive Category Folders (Optional)
             # =========================================================================
             job.current_step = "GOOGLE_DOCS"
             job.progress = 94
             step8 = job.steps["step8"]
-            step8.status = StepStatus.RUNNING
             step8.started_at = datetime.now(timezone.utc)
 
-            step8_orchestrator = Step8Orchestrator()
-            # Ensure folder hierarchy is verified
-            step8_orchestrator.folder_resolver.initialize_hierarchy(force_refresh=False)
+            settings = get_settings()
+            if not settings.enable_gdrive_export:
+                step8.status = StepStatus.SKIPPED
+                step8.completed_at = datetime.now(timezone.utc)
+                step8.details = "Google Docs export decoupled (ENABLE_GDRIVE_EXPORT=false in settings)."
+                logger.info("Step 8 Skipped: Google Drive export is disabled.")
+            else:
+                step8.status = StepStatus.RUNNING
+                step8_orchestrator = Step8Orchestrator()
+                # Ensure folder hierarchy is verified
+                step8_orchestrator.folder_resolver.initialize_hierarchy(force_refresh=False)
 
-            docs_created_count = 0
-            for art_id, generated_news in generated_news_map.items():
-                try:
-                    with get_db_session() as session:
-                        doc_resp = step8_orchestrator.process_approved_content(
-                            news=generated_news,
-                            article_id=art_id,
-                            session=session,
-                        )
-                        if doc_resp.success:
-                            docs_created_count += 1
-                            job.metrics.docs_created += 1
-                except Exception as exc:
-                    logger.warning(f"Step 8 Google Docs creation warning for article {art_id}: {exc}")
-                    job.metrics.failed += 1
+                docs_created_count = 0
+                for art_id, generated_news in generated_news_map.items():
+                    try:
+                        with get_db_session() as session:
+                            doc_resp = step8_orchestrator.process_approved_content(
+                                news=generated_news,
+                                article_id=art_id,
+                                session=session,
+                            )
+                            if doc_resp.success:
+                                docs_created_count += 1
+                                job.metrics.docs_created += 1
+                    except Exception as exc:
+                        logger.warning(f"Step 8 Google Docs creation warning for article {art_id}: {exc}")
+                        job.metrics.failed += 1
 
-            step8.status = StepStatus.COMPLETED
-            step8.completed_at = datetime.now(timezone.utc)
-            step8.details = f"Created and routed {docs_created_count} documents in Google Drive category folders."
-            logger.info(f"Step 8 Complete: {docs_created_count} Google Documents created.")
+                step8.status = StepStatus.COMPLETED
+                step8.completed_at = datetime.now(timezone.utc)
+                step8.details = f"Created and routed {docs_created_count} documents in Google Drive category folders."
+                logger.info(f"Step 8 Complete: {docs_created_count} Google Documents created.")
 
             # =========================================================================
             # FINALIZE JOB

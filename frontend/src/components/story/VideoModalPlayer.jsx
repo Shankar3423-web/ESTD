@@ -128,6 +128,7 @@ export default function VideoModalPlayer({
         ];
 
   const currentVideo = videos[activeIdx] || videos[0];
+  const currentEmbedUrl = currentVideo?.embedUrl || (currentVideo?.videoId ? `https://www.youtube-nocookie.com/embed/${currentVideo.videoId}` : null);
 
   const handleSelectPerspective = (idx) => {
     setActiveIdx(idx);
@@ -274,11 +275,11 @@ export default function VideoModalPlayer({
 
         {/* Real Video Player Frame */}
         <div className="video-player-frame">
-          {playerMode === 'youtube' && currentVideo.embedUrl ? (
+          {playerMode === 'youtube' && currentEmbedUrl ? (
             <div className="video-viewport-wrapper">
               <iframe
-                key={`yt-${currentVideo.id}-${activeIdx}-${currentVideo.videoId || currentVideo.embedUrl}`}
-                src={`${currentVideo.embedUrl}${currentVideo.embedUrl.includes('?') ? '&' : '?'}autoplay=1&mute=0&rel=0&modestbranding=1`}
+                key={`yt-${currentVideo.id}-${activeIdx}-${currentVideo.videoId || currentEmbedUrl}`}
+                src={`${currentEmbedUrl}${currentEmbedUrl.includes('?') ? '&' : '?'}autoplay=1&mute=0&rel=0&modestbranding=1`}
                 title={currentVideo.title}
                 className="video-iframe-element"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

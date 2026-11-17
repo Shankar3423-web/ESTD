@@ -4,6 +4,7 @@ from typing import Any, Dict, List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
+from backend.common.auth.security import verify_admin_api_key
 from backend.common.logging.logger import logger
 from backend.step6_mcp.exceptions import (
     MCPAuthenticationError,
@@ -80,6 +81,7 @@ def get_mcp_tools(service: MCPService = Depends(get_mcp_service)) -> Dict[str, L
     "/postgres/query",
     response_model=List[Dict[str, Any]],
     summary="Execute a safe read-only SQL query via PostgreSQL MCP",
+    dependencies=[Depends(verify_admin_api_key)],
 )
 def execute_postgres_query(
     request: SQLQueryRequest,

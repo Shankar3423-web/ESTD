@@ -14848,3 +14848,768 @@ button {
     gap: 6px;
   }
 }
+
+
+/* ==========================================================================
+   ESTDPOD ORIGINAL PODCAST & GUEST SHOWCASE STYLES
+   Inspired by premier guest carousels (e.g. Telugu Open Mic & YouTube Studio)
+   ========================================================================== */
+
+.estdpod-shelf-section {
+  position: relative;
+  width: 100%;
+  margin: 32px 0;
+  padding: 36px 0 40px;
+  background: radial-gradient(circle at 50% 0%, rgba(255, 42, 84, 0.08) 0%, rgba(10, 14, 22, 0.98) 70%);
+  border-top: 1px solid rgba(255, 42, 84, 0.18);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+}
+
+/* ── Compact single-episode variant ── */
+.estdpod-shelf-compact {
+  padding: 24px 0 28px;
+  margin: 20px 0;
+}
+
+.estdpod-banner-layout {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.estdpod-banner-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.estdpod-banner-title {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: #FFFFFF;
+  margin: 0;
+}
+
+.estdpod-banner-desc {
+  font-size: 15px;
+  color: #CBD5E1;
+  margin: 0;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.estdpod-banner-guest {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: #94A3B8;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  width: fit-content;
+}
+
+.estdpod-banner-guest strong {
+  color: #F8FAFC;
+}
+
+.estdpod-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.estdpod-banner-play-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  background: #FF2A54;
+  border: none;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(255, 42, 84, 0.35);
+}
+
+.estdpod-banner-play-btn:hover {
+  background: #E0224A;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(255, 42, 84, 0.45);
+}
+
+.estdpod-banner-card-wrap {
+  flex: 0 0 340px;
+}
+
+.estdpod-banner-card-wrap .estdpod-guest-card {
+  flex: unset;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .estdpod-banner-layout {
+    flex-direction: column;
+    gap: 20px;
+  }
+  .estdpod-banner-card-wrap {
+    flex: unset;
+    width: 100%;
+    max-width: 340px;
+  }
+  .estdpod-banner-title {
+    font-size: 22px;
+  }
+}
+
+.estdpod-shelf-container {
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Header Block */
+.estdpod-header-block {
+  margin-bottom: 24px;
+}
+
+.estdpod-header-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.estdpod-mic-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: rgba(255, 42, 84, 0.12);
+  border: 1px solid rgba(255, 42, 84, 0.35);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #FF2A54;
+  text-transform: uppercase;
+}
+
+.estdpod-yt-subscribe-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #FFFFFF;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.estdpod-yt-subscribe-btn:hover {
+  background: #FF0000;
+  border-color: #FF0000;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+.estdpod-main-heading {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: #FFFFFF;
+  margin: 0 0 6px;
+}
+
+.estdpod-heading-highlight {
+  color: #FF2A54;
+  background: linear-gradient(135deg, #FF2A54 0%, #FF6584 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.estdpod-sub-heading {
+  font-size: 14px;
+  color: #94A3B8;
+  margin: 0;
+  font-weight: 400;
+}
+
+/* Carousel Track & Controls */
+.estdpod-carousel-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.estdpod-nav-arrow {
+  position: absolute;
+  z-index: 10;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.estdpod-nav-arrow:hover {
+  background: #FF2A54;
+  border-color: #FF2A54;
+  transform: scale(1.08);
+}
+
+.estdpod-nav-left {
+  left: -16px;
+}
+
+.estdpod-nav-right {
+  right: -16px;
+}
+
+.estdpod-cards-track {
+  display: flex;
+  gap: 22px;
+  width: 100%;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding: 8px 4px 16px;
+  scrollbar-width: none;
+}
+
+.estdpod-cards-track::-webkit-scrollbar {
+  display: none;
+}
+
+/* Guest Card */
+.estdpod-guest-card {
+  flex: 0 0 320px;
+  display: flex;
+  flex-direction: column;
+  background: #0F1420;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.estdpod-guest-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(255, 42, 84, 0.45);
+  box-shadow: 0 12px 28px rgba(255, 42, 84, 0.15);
+}
+
+/* Poster Artwork */
+.estdpod-poster-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: #090D14;
+}
+
+.estdpod-poster-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.estdpod-guest-card:hover .estdpod-poster-image {
+  transform: scale(1.04);
+}
+
+.estdpod-poster-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0) 40%, rgba(15, 20, 32, 0.95) 100%);
+  pointer-events: none;
+}
+
+.estdpod-badges-row {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 2;
+}
+
+.estdpod-ep-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: 0.04em;
+}
+
+.estdpod-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #FF2A54;
+  animation: pulse 1.5s infinite;
+}
+
+.estdpod-duration-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #CBD5E1;
+}
+
+.estdpod-cat-tag {
+  position: absolute;
+  bottom: 8px;
+  left: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #F8FAFC;
+  z-index: 2;
+}
+
+.estdpod-play-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  background: rgba(0, 0, 0, 0.35);
+  transition: opacity 0.2s ease;
+  z-index: 3;
+}
+
+.estdpod-guest-card:hover .estdpod-play-overlay {
+  opacity: 1;
+}
+
+.estdpod-play-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #FF2A54;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(255, 42, 84, 0.5);
+  transform: scale(0.9);
+  transition: transform 0.2s ease;
+}
+
+.estdpod-guest-card:hover .estdpod-play-btn {
+  transform: scale(1);
+}
+
+.estdpod-play-icon {
+  margin-left: 3px;
+}
+
+/* Card Body */
+.estdpod-card-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 10px;
+}
+
+.estdpod-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #F8FAFC;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  height: 40px;
+}
+
+.estdpod-guest-meta {
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.estdpod-guest-name {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0 0 2px;
+}
+
+.estdpod-guest-role {
+  font-size: 12px;
+  color: #94A3B8;
+  margin: 0;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Card Footer */
+.estdpod-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.estdpod-listen-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #FF2A54;
+}
+
+.estdpod-yt-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #94A3B8;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.estdpod-yt-link:hover {
+  color: #FFFFFF;
+}
+
+/* Skeleton Loading */
+.estdpod-guest-card-skeleton {
+  flex: 0 0 320px;
+  height: 380px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* Modal Player Styles */
+.estdpod-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.estdpod-modal-dialog {
+  position: relative;
+  width: 100%;
+  max-width: 1060px;
+  max-height: 90vh;
+  background: #0E131F;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+}
+
+.estdpod-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 20;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #CBD5E1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.estdpod-modal-close:hover {
+  background: #FF2A54;
+  color: white;
+  transform: rotate(90deg);
+}
+
+.estdpod-modal-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  width: 100%;
+  height: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.estdpod-player-frame-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000000;
+}
+
+.estdpod-iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.estdpod-modal-details {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  background: #0C101A;
+}
+
+.estdpod-modal-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.estdpod-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.estdpod-modal-title {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.3;
+  color: #FFFFFF;
+  margin: 0;
+}
+
+/* Guest Box in Modal */
+.estdpod-guest-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+
+.estdpod-guest-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #1E293B;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.estdpod-guest-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #FF2A54;
+  margin: 0 0 2px;
+}
+
+.estdpod-guest-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0;
+}
+
+.estdpod-guest-sub {
+  font-size: 12px;
+  color: #94A3B8;
+  margin: 0;
+}
+
+.estdpod-guest-org {
+  font-size: 11.5px;
+  color: #64748B;
+  margin: 0;
+}
+
+/* Takeaways */
+.estdpod-section-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #64748B;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+}
+
+.estdpod-takeaways-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.estdpod-takeaway-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12px;
+  color: #CBD5E1;
+  line-height: 1.4;
+}
+
+.estdpod-time-marker {
+  display: inline-block;
+  padding: 1px 6px;
+  background: rgba(255, 42, 84, 0.15);
+  color: #FF2A54;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: monospace;
+  flex-shrink: 0;
+}
+
+.estdpod-desc-text {
+  font-size: 12px;
+  color: #94A3B8;
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.estdpod-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.estdpod-btn-youtube {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #FF0000;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.estdpod-btn-youtube:hover {
+  opacity: 0.9;
+}
+
+.estdpod-btn-share {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #CBD5E1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.estdpod-btn-share:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+}
+
+@media (max-width: 840px) {
+  .estdpod-modal-grid {
+    grid-template-columns: 1fr;
+  }
+  .estdpod-guest-card {
+    flex: 0 0 280px;
+  }
+}

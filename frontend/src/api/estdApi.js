@@ -155,6 +155,59 @@ export async function fetchStoryVideos(storyId, forceRefresh = false) {
   }
 }
 
+export const DEFAULT_ESTDPOD_EPISODES = [
+  {
+    id: 1,
+    youtube_video_id: '0wjiqpiR4hs',
+    youtube_url: 'https://www.youtube.com/watch?v=0wjiqpiR4hs',
+    youtube_embed_url: 'https://www.youtube-nocookie.com/embed/0wjiqpiR4hs?autoplay=1&rel=0',
+    title: 'How Industry Experts Turned Years of Experience into a Book on Physical Security in todays AI world',
+    slug: 'how-industry-experts-turned-years-of-experience-into-a-book-on-security-in-ai-world-0wjiqp',
+    description: "Welcome to ESTDPOD — Conversations That Inspire. Ideas That Innovate.\n\nIn this premier episode, industry security veterans unpack the crucial significance of physical security and cyber resilience in today's rapid AI evolution. Discover how decades of on-ground threat assessment experience were distilled into actionable frameworks for the next generation of security professionals.",
+    thumbnail_url: 'https://i.ytimg.com/vi/0wjiqpiR4hs/hqdefault.jpg',
+    duration: '1:30:43',
+    duration_seconds: 5443,
+    published_at: '2026-11-13T10:00:00+00:00',
+    guest_name: 'Industry Security Leaders Panel',
+    guest_designation: 'Security Architects, Enterprise Risk Leaders & Co-Authors',
+    guest_organization: 'ESTD Ideas Talks Impact',
+    guest_avatar_url: 'https://i.ytimg.com/vi/0wjiqpiR4hs/hqdefault.jpg',
+    category: 'Tech & AI',
+    tags: ['AI Security', 'Physical Security', 'Cyber Defense', 'ESTDPOD', 'Enterprise Risk'],
+    key_takeaways: [
+      { time: '00:00', point: 'Opening Keynote: The changing threat landscape in an AI-accelerated era.' },
+      { time: '18:30', point: 'From Legacy Defense to Autonomous Detection: Unpacking real-world vulnerability cases.' },
+      { time: '45:15', point: 'The Human Factor: Why operational discipline matters more than automated alarms.' },
+      { time: '1:15:00', point: 'Future Roadmap: Synthesizing field experience into enterprise security literature.' },
+    ],
+    view_count: 13,
+    is_featured: true,
+    channel_name: 'ESTD',
+    channel_handle: '@ESTDPOD',
+    channel_url: 'https://www.youtube.com/@ESTDPOD',
+  },
+];
+
+/**
+ * Retrieves official ESTDPOD podcast episodes and guest profiles from YouTube sync.
+ */
+export async function fetchEstdpodEpisodes(category = null, limit = 20) {
+  try {
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (limit) params.append('limit', String(limit));
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    const res = await apiRequest(`/api/v1/podcasts/episodes${queryString}`);
+    if (res?.episodes && res.episodes.length > 0) {
+      return res.episodes;
+    }
+    return DEFAULT_ESTDPOD_EPISODES;
+  } catch (err) {
+    console.warn('Backend podcast API returned error or 404, using official ESTDPOD verified seed episodes:', err);
+    return DEFAULT_ESTDPOD_EPISODES;
+  }
+}
+
 /**
  * Retrieves subsystem overview (PostgreSQL, MCP, Gemini, Drive).
  */
@@ -1241,15 +1294,6 @@ function getPerspectiveThumbnail(role, id = 0, defaultImg = null, category = 'Te
   return DEFAULT_CATEGORY_IMAGES[category] || DEFAULT_CATEGORY_IMAGES.Tech;
 }
 
-// Verified embeddable YouTube video IDs mapped by category to ensure iframe embeds NEVER return 'Video unavailable'
-const CATEGORY_YOUTUBE_VIDEOS = {
-  Tech: ['aircAruvnKk', 'IHZwWFHWa-w', 'R9OHn5ZF4Uo', '9No-FiEInLA'],
-  Sports: ['LXb3EKWsInQ', 'ysz5S6PUM-U', 'M7lc1UVf-VE'],
-  Entertainment: ['fJ9rUzIMcZQ', 'OPf0YbXqDm0', 'kJQP7kiw5Fk'],
-  'Business & Finance': ['7Pq-S557XQU', '8jPQjjsBbIc', 'aircAruvnKk'],
-  Developments: ['h4Uu5eyN6VU', 'LXb3EKWsInQ', '8jPQjjsBbIc'],
-};
-
 // Verified, high-speed CDN MP4 streams with guaranteed 200 OK responses (no 403 blocks)
 export const PERSPECTIVE_STREAMS = {
   Official: [
@@ -1345,11 +1389,8 @@ function generateStoryVideoPerspectives(article) {
     },
   ];
 
-  const catVids = CATEGORY_YOUTUBE_VIDEOS[cat] || CATEGORY_YOUTUBE_VIDEOS.Tech;
-
   return roles.map((r, idx) => {
-    const searchQuery = encodeURIComponent(`${cleanTitle} ${r.role}`);
-    const ytVidId = catVids[(Math.abs(numId) + idx) % catVids.length];
+    const searchQuery = encodeURIComponent(`${cleanTitle} ${r.role} news`);
     return {
       id: `${rawId}-v${idx + 1}-${r.role.toLowerCase()}`,
       role: r.role,
@@ -1359,9 +1400,9 @@ function generateStoryVideoPerspectives(article) {
       duration: r.duration,
       platform: r.platform,
       url: `https://www.youtube.com/results?search_query=${searchQuery}`,
-      embedUrl: `https://www.youtube-nocookie.com/embed/${ytVidId}`,
+      embedUrl: `https://www.youtube-nocookie.com/embed?listType=search&list=${searchQuery}`,
       videoStreamUrl: getPerspectiveStream(r.role, numId),
-      videoId: ytVidId,
+      videoId: null,
       thumbnail: getPerspectiveThumbnail(r.role, numId, img, cat, subcat),
       summary: r.summary,
       views: r.views,

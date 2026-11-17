@@ -10,7 +10,6 @@ import {
   Heart,
 } from 'lucide-react';
 import ImageWithFallback from '../common/ImageWithFallback';
-import ImpactChips from './ImpactChips';
 import { getCategoryMeta, slugify } from '../../constants/taxonomy';
 import { toggleStoryLike } from '../../api/estdApi';
 import { trackArticleRead } from '../../utils/readingHistory';
@@ -243,13 +242,6 @@ export default function StoryCard({
           {singleParagraph}
         </p>
       </div>
-
-      {/* 4b. IMPACT CHIPS ROW (The Sacred Story Contract) */}
-      {story.impactChips && story.impactChips.length > 0 && (
-        <div className="story-card-chips-wrap" onClick={(e) => e.stopPropagation()}>
-          <ImpactChips chips={story.impactChips.slice(0, 3)} accentColor={accentColor} />
-        </div>
-      )}
 
       {/* 5. FOOTER: READ MORE BUTTON + SHARE, SAVE, LIKE */}
       <div className="story-footer">

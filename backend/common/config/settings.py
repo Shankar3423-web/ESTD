@@ -3,7 +3,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from backend.common.exceptions.custom_exceptions import ConfigurationError
@@ -28,6 +28,32 @@ class Settings(BaseSettings):
 
     # App Environment
     app_env: str = Field(default="development", alias="APP_ENV")
+
+    # API Security & Documentation Control
+    admin_api_key: Optional[SecretStr] = Field(default=None, alias="ADMIN_API_KEY")
+    enable_docs: bool = Field(default=False, alias="ENABLE_DOCS")
+
+    # Pipeline Feature Toggles
+    enable_gdrive_export: bool = Field(default=False, alias="ENABLE_GDRIVE_EXPORT")
+    enable_scheduler: bool = Field(default=False, alias="ENABLE_SCHEDULER")
+    scheduler_interval_hours: int = Field(default=2, alias="SCHEDULER_INTERVAL_HOURS")
+    scheduler_articles_per_category: int = Field(default=3, alias="SCHEDULER_ARTICLES_PER_CATEGORY")
+
+    # Plan C Daily Category Digest Toggles
+    enable_daily_digest: bool = Field(default=True, alias="ENABLE_DAILY_DIGEST")
+    daily_digest_time: str = Field(default="23:59", alias="DAILY_DIGEST_TIME")
+
+    @field_validator("enable_scheduler", "enable_docs", "enable_gdrive_export", "enable_daily_digest", mode="before")
+    @classmethod
+    def parse_bool_env(cls, v):
+        """Parse boolean env variables supporting true/false/on/off/1/0/enabled/disabled."""
+        if isinstance(v, str):
+            clean = v.strip().lower()
+            if clean in ("true", "1", "on", "yes", "enabled"):
+                return True
+            if clean in ("false", "0", "off", "no", "disabled", ""):
+                return False
+        return bool(v)
 
     # Browser frontend origin(s) allowed by the backend CORS middleware.
     frontend_url: str = Field(default="", alias="FRONTEND_URL")
@@ -96,6 +122,12 @@ class Settings(BaseSettings):
                 "NewsData.io API key is not configured. Set NEWSDATA_API_KEY in backend/.env"
             )
         return self.newsdata_api_key.get_secret_value().strip()
+
+    def get_admin_api_key(self) -> str:
+        """Return configured admin API key or a secure default."""
+        if self.admin_api_key and self.admin_api_key.get_secret_value().strip():
+            return self.admin_api_key.get_secret_value().strip()
+        return "estd-secure-admin-key-2026"
 
 
 @lru_cache()

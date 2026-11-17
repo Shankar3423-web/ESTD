@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import WatchFilterBar from './WatchFilterBar';
 import WatchVideoCard from './WatchVideoCard';
+import EstdpodCarouselShelf from '../podcast/EstdpodCarouselShelf';
 import ErrorState from '../common/ErrorState';
 import { fetchStories } from '../../api/estdApi';
 import { CATEGORIES, getCategoryMeta, SUBCATEGORIES_BY_CATEGORY } from '../../constants/taxonomy';
@@ -106,12 +107,19 @@ export default function WatchHub({
 
   // Reset scroll to top whenever selected category changes
   useEffect(() => {
+    if (window.location.hash === '#estdpod') {
+      setTimeout(() => {
+        const el = document.getElementById('estdpod');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 300);
+      return;
+    }
     window.scrollTo({ top: 0, behavior: 'instant' });
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
     const mainEl = document.getElementById('main-content');
     if (mainEl) mainEl.scrollTop = 0;
-  }, [selectedCategory]);
+  }, [selectedCategory, searchParams]);
 
   // Canonical name for current category
   const canonicalCategoryName = useMemo(() => {
@@ -233,8 +241,15 @@ export default function WatchHub({
         totalVideosCount={allStories.length}
       />
 
-      {/* 2. CASE: User clicked a Category (Tech, Developments, Sports, Entertainment, Business & Finance) */}
-      {selectedCategory !== 'all' && (
+      {/* 2. CASE: User clicked ESTDPOD Podcasts chip */}
+      {selectedCategory === 'podcasts' && (
+        <section className="watch-podcasts-focus-view" style={{ marginTop: '24px' }}>
+          <EstdpodCarouselShelf />
+        </section>
+      )}
+
+      {/* 3. CASE: User clicked a Category (Tech, Developments, Sports, Entertainment, Business & Finance) */}
+      {selectedCategory !== 'all' && selectedCategory !== 'podcasts' && (
         <section className="watch-category-channel-view">
           {/* Refined Category Channel Header Banner */}
           <div
@@ -365,9 +380,13 @@ export default function WatchHub({
         </section>
       )}
 
-      {/* 3. CASE: User is on 'All' -> Continuous Clean YouTube Video Grid */}
+      {/* 3. CASE: User is on 'All' -> Podcast Shelf First, followed by Clean YouTube Video Grid */}
       {selectedCategory === 'all' && (
-        <div className="watch-main-youtube-feed">
+        <>
+          {/* ESTDPOD Studio Showcase Shelf First */}
+          <EstdpodCarouselShelf />
+
+          <div className="watch-main-youtube-feed">
           {/* Section Header */}
           <div className="watch-feed-section-header">
             <div className="watch-feed-title-wrap">
@@ -400,6 +419,7 @@ export default function WatchHub({
             })}
           </div>
         </div>
+        </>
       )}
     </div>
   );

@@ -10,6 +10,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    JSON,
     String,
     Text,
 )
@@ -28,9 +29,17 @@ class NewsArticle(Base):
 
     # Core Content
     title = Column(Text, nullable=False, doc="Headline or title of the news article")
+    slug = Column(
+        String(320),
+        nullable=True,
+        unique=True,
+        index=True,
+        doc="URL-friendly SEO slug generated from title and identifier",
+    )
     description = Column(Text, nullable=True, doc="Short synopsis or description")
     content = Column(Text, nullable=False, doc="Cleaned, normalized, and validated article body")
     url = Column(Text, nullable=False, doc="Original article URL")
+    canonical_url = Column(Text, nullable=True, doc="Resolved publisher destination canonical URL")
 
     # Identifiers & Duplicate Protection
     normalized_url = Column(
@@ -53,7 +62,29 @@ class NewsArticle(Base):
     source_type = Column(String(100), nullable=False, index=True, doc="Provider identifier: gnews, newsdata, rss")
     author = Column(String(255), nullable=True, doc="Author or creator if identified")
     published_at = Column(DateTime(timezone=True), nullable=True, index=True, doc="UTC publication timestamp")
+    source_published_at = Column(
+        DateTime(timezone=True),
+        nullable=True,
+        index=True,
+        doc="Direct publication timestamp reported by source publisher",
+    )
     image_url = Column(Text, nullable=True, doc="URL to primary article image")
+
+    # Semantic Entities & QA Lifecycle Status
+    entities = Column(
+        JSON,
+        default=dict,
+        nullable=True,
+        doc="Structured named entities: organizations, people, topics, locations",
+    )
+    qa_status = Column(
+        String(32),
+        default="PUBLISHED",
+        server_default="PUBLISHED",
+        nullable=False,
+        index=True,
+        doc="QA state: DRAFT, AI_GENERATED, APPROVED, PUBLISHED, REJECTED, FAILED",
+    )
 
     # Category & Subcategory Reference
     category = Column(String(100), nullable=False, index=True, doc="Canonical category name")

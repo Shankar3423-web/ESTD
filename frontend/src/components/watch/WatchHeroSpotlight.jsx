@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Play,
@@ -17,6 +17,7 @@ import {
   Flame,
 } from 'lucide-react';
 import { getCategoryMeta } from '../../constants/taxonomy';
+import { fetchStoryVideos } from '../../api/estdApi';
 import WatchSentimentPulse from './WatchSentimentPulse';
 
 /**
@@ -32,6 +33,25 @@ export default function WatchHeroSpotlight({
   const navigate = useNavigate();
   const [activePerspectiveIndex, setActivePerspectiveIndex] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [resolvedRail, setResolvedRail] = useState(story?.videoRail || []);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (story?.id) {
+      fetchStoryVideos(story.id)
+        .then((fresh) => {
+          if (isMounted && fresh && fresh.length > 0) {
+            setResolvedRail(fresh);
+          }
+        })
+        .catch((err) => {
+          console.warn('Could not load fresh video rail for hero:', err);
+        });
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [story?.id]);
 
   const catMeta = useMemo(() => {
     if (!story) return { color: '#00E5FF', label: 'Tech' };
@@ -40,8 +60,42 @@ export default function WatchHeroSpotlight({
 
   const accentColor = catMeta?.color || '#00E5FF';
 
-  const perspectives = story?.videoRail || [];
+  const perspectives = useMemo(() => {
+    if (resolvedRail && resolvedRail.length > 0) return resolvedRail;
+    if (story?.videoRail && story.videoRail.length > 0) return story.videoRail;
+    return [];
+  }, [resolvedRail, story?.videoRail]);
+
+  const cleanHeadline = useMemo(() => {
+    const raw = story?.headline || story?.title || story?.originalTitle || 'News Wire';
+    return raw.replace(/^(EXCLUSIVE|WATCH|LIVE|BREAKING|REPORT|UPDATE|EXPLAINER)\s*[:|-]\s*/i, '').trim();
+  }, [story]);
+
   const currentPerspective = perspectives[activePerspectiveIndex] || perspectives[0] || {};
+
+  const activeEmbedUrl = useMemo(() => {
+    const vidId = currentPerspective.videoId;
+    const isPlaceholder =
+      !vidId ||
+      vidId === 'aircAruvnKk' ||
+      vidId === 'fJ9rUzIMcZQ' ||
+      vidId === 'LXb3EKWsInQ' ||
+      vidId === '7Pq-S557XQU' ||
+      vidId === 'h4Uu5eyN6VU';
+
+    if (vidId && !isPlaceholder) {
+      return `https://www.youtube-nocookie.com/embed/${vidId}`;
+    }
+    if (
+      currentPerspective.embedUrl &&
+      !currentPerspective.embedUrl.includes('aircAruvnKk') &&
+      !currentPerspective.embedUrl.includes('fJ9rUzIMcZQ')
+    ) {
+      return currentPerspective.embedUrl;
+    }
+    // Dynamic search embed strictly tied to this story headline
+    return `https://www.youtube-nocookie.com/embed?listType=search&list=${encodeURIComponent(cleanHeadline + ' news')}`;
+  }, [currentPerspective, cleanHeadline]);
 
   const getRoleIcon = (role) => {
     switch (role?.toLowerCase()) {
@@ -86,10 +140,10 @@ export default function WatchHeroSpotlight({
         {/* Left Column: 16:9 Cinema Player Canvas */}
         <div className="watch-hero-player-column">
           <div className="watch-hero-canvas-frame">
-            {currentPerspective.embedUrl ? (
+            {activeEmbedUrl ? (
               <iframe
-                key={`hero-embed-${activePerspectiveIndex}-${currentPerspective.embedUrl}`}
-                src={`${currentPerspective.embedUrl}${currentPerspective.embedUrl.includes('?') ? '&' : '?'}autoplay=0&mute=1&controls=1&modestbranding=1`}
+                key={`hero-embed-${activePerspectiveIndex}-${activeEmbedUrl}`}
+                src={`${activeEmbedUrl}${activeEmbedUrl.includes('?') ? '&' : '?'}autoplay=0&mute=1&controls=1&modestbranding=1`}
                 title={currentPerspective.title || story.headline}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen

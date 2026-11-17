@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional, Union
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
+from backend.common.auth.security import verify_admin_api_key
 from backend.common.constants.categories import VALID_CATEGORIES
 from backend.common.exceptions.custom_exceptions import InvalidCategoryError
 from backend.database.connection.session import get_db
@@ -101,6 +102,7 @@ def list_subcategories(
     response_model=SingleArticleResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Persist a unique article into the knowledge source",
+    dependencies=[Depends(verify_admin_api_key)],
 )
 def store_article(
     payload: Dict[str, Any],
@@ -204,6 +206,7 @@ def list_articles(
     response_model=DeleteArticleResponse,
     status_code=status.HTTP_200_OK,
     summary="Delete an article from the knowledge source",
+    dependencies=[Depends(verify_admin_api_key)],
 )
 def delete_article(
     article_id: int,

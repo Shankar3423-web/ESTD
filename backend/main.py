@@ -10,7 +10,7 @@ if str(_PROJECT_ROOT) not in sys.path:
 if str(_BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(_BACKEND_DIR))
 
-from fastapi import FastAPI, Request, Response, status
+from fastapi import Depends, FastAPI, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -34,6 +34,7 @@ from backend.common.exceptions.custom_exceptions import (
     RSSSourceNotFoundError,
     RSSTimeoutError,
 )
+from backend.common.auth.security import verify_admin_api_key
 from backend.common.config.settings import get_settings
 from backend.common.logging.logger import logger
 from backend.step1_source_collection.apis.routes import router as source_collection_router
@@ -81,8 +82,10 @@ from backend.step6_mcp.exceptions import (
 )
 from backend.step7_content_generation.api.generation_routes import router as generation_router
 from backend.step8_gdrive_output.api.routes import router as gdrive_output_router
+from backend.step8_gdrive_output.api.digest_routes import router as digest_router
 from backend.pipeline.router import router as pipeline_router
 from backend.step9_video_rail.apis.video_routes import router as video_router
+from backend.step9_video_rail.apis.podcast_routes import router as podcast_router
 
 
 # Auto-run schema checks including likes_count and article_likes
@@ -94,7 +97,7 @@ except Exception as _init_exc:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifecycle manager ensuring database schema and reference data exist upon server startup."""
+    """Lifecycle manager ensuring database schema, reference data, and background scheduler exist."""
     try:
         init_db()
         from backend.database.connection.session import get_db_session
@@ -103,13 +106,34 @@ async def lifespan(app: FastAPI):
             CategoryRepository.seed_categories(session)
     except Exception as exc:
         logger.warning(f"Database initialization notice on startup: {exc}")
+
+    try:
+        from backend.pipeline.scheduler import content_scheduler
+        await content_scheduler.start()
+    except Exception as exc:
+        logger.warning(f"Scheduler startup notice: {exc}")
+
     yield
 
+    try:
+        from backend.pipeline.scheduler import content_scheduler
+        await content_scheduler.stop()
+    except Exception:
+        pass
+
+
+settings = get_settings()
+docs_url = "/docs" if settings.enable_docs else None
+redoc_url = "/redoc" if settings.enable_docs else None
+openapi_url = "/openapi.json" if settings.enable_docs else None
 
 app = FastAPI(
     title="ESTD - Steps 1–5 News Intelligence Engine",
     description="API for collecting, extracting, normalizing, deduplicating, and persisting news article knowledge.",
     version="1.0.0",
+    docs_url=docs_url,
+    redoc_url=redoc_url,
+    openapi_url=openapi_url,
     lifespan=lifespan,
 )
 
@@ -446,7 +470,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 # Core Endpoints
 # ============================================================================
 
-@app.get("/setup-likes", tags=["Health"])
+@app.get("/setup-likes", tags=["Health"], dependencies=[Depends(verify_admin_api_key)])
 def setup_likes_endpoint():
     try:
         from backend.database.connection.session import get_engine
@@ -532,11 +556,17 @@ app.include_router(generation_router)
 # Include Step 8 Google Docs & Drive Output routes
 app.include_router(gdrive_output_router)
 
+# Include Plan C Daily Category Digest routes
+app.include_router(digest_router)
+
 # Include Pipeline Orchestration routes for Verification Dashboard
 app.include_router(pipeline_router)
 
 # Include Step 9 Multi-Angle Video Rail routes
 app.include_router(video_router)
+
+# Include ESTDPOD YouTube Channel & Podcasts routes
+app.include_router(podcast_router)
 
 
 

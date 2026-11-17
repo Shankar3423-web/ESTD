@@ -4,6 +4,7 @@ import StoryCard from '../components/story/StoryCard';
 import VideoModalPlayer from '../components/story/VideoModalPlayer';
 import FeaturedNewsCarousel from '../components/story/FeaturedNewsCarousel';
 import FlashBitesBar from '../components/story/FlashBitesBar';
+import EstdpodCarouselShelf from '../components/podcast/EstdpodCarouselShelf';
 import WeeklyRadarDrop from '../components/story/WeeklyRadarDrop';
 import CategoryQuickRow from '../components/story/CategoryQuickRow';
 import FollowingStreamView from '../components/following/FollowingStreamView';
@@ -269,17 +270,20 @@ export default function HomePage({
             <FlashBitesBar stories={stories} />
           </div>
 
+          {/* Section 2.3: ESTDPOD Originals — Guest Showcase Carousel */}
+          <EstdpodCarouselShelf />
+
           {/* Section 2.5: The Daily Pack — Text Intelligence (The Sacred Story Contract) */}
           <section className="home-daily-pack-section">
             <div className="daily-pack-header">
               <div className="daily-pack-title-group">
                 <span className="daily-pack-badge">
                   <FileText size={14} />
-                  <span>THE DAILY PACK • TEXT INTELLIGENCE</span>
+                  <span>ESTD • TOP STORIES</span>
                 </span>
-                <h3 className="daily-pack-title">Today's Sacred Story Briefs (Finite Pack)</h3>
+                <h3 className="daily-pack-title">Today's Top Stories</h3>
                 <p className="daily-pack-subtitle">
-                  Spoken headline (≤ 12 words) • 50–70 word one-paragraph brief • 3–5 numerical impact chips. Zero walls of text.
+                  Curated headlines and briefings from verified sources worldwide.
                 </p>
               </div>
 

@@ -1,5 +1,7 @@
 from backend.database.models.article_like import ArticleLike
 from backend.database.models.category import Category
+from backend.database.models.daily_digest_record import DailyDigestRecord, DigestStatus
+from backend.database.models.estdpod_episode import EstdpodEpisode
 from backend.database.models.duplicate_index_record import DuplicateIndexRecord
 from backend.database.models.google_document_record import DocumentStatus, GoogleDocumentRecord
 from backend.database.models.news_article import NewsArticle
@@ -13,4 +15,7 @@ __all__ = [
     "DuplicateIndexRecord",
     "GoogleDocumentRecord",
     "DocumentStatus",
+    "DailyDigestRecord",
+    "DigestStatus",
+    "EstdpodEpisode",
 ]

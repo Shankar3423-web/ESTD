@@ -206,9 +206,13 @@ def refresh_access_token_if_needed(creds_path: Optional[Path] = None) -> str:
         raise MCPAuthenticationError("google_drive", f"Failed refreshing token: {exc}")
 
     if resp.status_code != 200:
-        if access_token:
+        # If token is expired and refresh failed, we cannot use it
+        if access_token and expires_at > (time.time() + 60):
             return access_token
-        raise MCPAuthenticationError("google_drive", f"Token refresh failed: {resp.text}")
+        raise MCPAuthenticationError(
+            "google_drive",
+            f"Google OAuth token refresh failed ({resp.status_code}: {resp.text}). Re-authentication or updated refresh token required."
+        )
 
     token_data = resp.json()
     new_token = token_data.get("access_token")

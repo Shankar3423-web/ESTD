@@ -6,6 +6,8 @@ from pydantic import BaseModel, Field
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
+from backend.common.auth.security import verify_admin_api_key
+from backend.common.config.settings import get_settings
 from backend.common.logging.logger import logger
 from backend.database.connection.session import get_db
 from backend.database.models.category import Category
@@ -36,6 +38,7 @@ router = APIRouter(prefix="/pipeline", tags=["Pipeline Orchestration & Verificat
     "/run",
     status_code=status.HTTP_202_ACCEPTED,
     summary="Trigger the complete ESTD backend pipeline (Steps 1–8)",
+    dependencies=[Depends(verify_admin_api_key)],
 )
 async def run_pipeline(payload: Optional[PipelineRunRequest] = None):
     """Trigger the real backend pipeline across Steps 1 to 8 in the background."""
@@ -106,12 +109,14 @@ def get_latest_pipeline_job():
     summary="Check current pipeline runner state",
 )
 def get_pipeline_status():
-    """Check whether a pipeline is actively running."""
+    """Check whether a pipeline is actively running and report scheduler status."""
+    from backend.pipeline.scheduler import content_scheduler
     latest_job = pipeline_orchestrator.get_latest_job()
     return {
         "is_running": pipeline_orchestrator.is_running(),
         "active_job_id": pipeline_orchestrator.active_job_id,
         "last_job": latest_job.model_dump() if latest_job else None,
+        "scheduler": content_scheduler.get_status(),
     }
 
 
@@ -132,7 +137,23 @@ def _build_article_card_items(articles: List[NewsArticle], session: Session) -> 
         doc = doc_records.get(a.id)
         doc_info = None
         pipeline_status = "Stored in PostgreSQL"
-        ai_status = "PENDING"
+        
+        # Determine real AI status from article QA status or cached Gemini summary
+        cached_summary = pipeline_orchestrator.generated_summaries.get(a.id)
+        article_qa = getattr(a, "qa_status", "PUBLISHED") or "PUBLISHED"
+
+        if cached_summary or article_qa in ("AI_GENERATED", "APPROVED"):
+            ai_status = "AI_GENERATED"
+            pipeline_status = "AI Generated ✓"
+        elif article_qa == "FAILED":
+            ai_status = "FAILED"
+            pipeline_status = "AI Generation Failed"
+        elif article_qa == "DRAFT":
+            ai_status = "DRAFT"
+            pipeline_status = "Draft (Pending QA)"
+        else:
+            ai_status = "INGESTED"
+            pipeline_status = "Stored in PostgreSQL"
 
         if doc:
             doc_info = ArticleGoogleDocInfo(
@@ -143,17 +164,7 @@ def _build_article_card_items(articles: List[NewsArticle], session: Session) -> 
                 completed_at=doc.completed_at,
             )
             if doc.status == DocumentStatus.CREATED.value:
-                pipeline_status = "Google Doc Created ✓"
-                ai_status = "AI_GENERATED"
-            elif doc.status == DocumentStatus.FAILED.value:
-                pipeline_status = "Google Doc Failed"
-                ai_status = "AI_GENERATED"
-
-        cached_summary = pipeline_orchestrator.generated_summaries.get(a.id)
-        if cached_summary:
-            ai_status = "AI_GENERATED"
-            if pipeline_status == "Stored in PostgreSQL":
-                pipeline_status = "AI Generated"
+                pipeline_status = f"{pipeline_status} (Doc Synced)"
 
         content_snippet = a.description or (
             (a.content[:240] + "...") if len(a.content) > 240 else a.content
@@ -163,17 +174,22 @@ def _build_article_card_items(articles: List[NewsArticle], session: Session) -> 
             ArticleCardItem(
                 id=a.id,
                 title=a.title,
+                slug=getattr(a, "slug", None),
                 category=a.category,
                 subcategory=a.subcategory,
                 source_name=a.source_name,
                 source_type=a.source_type,
                 url=a.url,
+                canonical_url=getattr(a, "canonical_url", None) or a.url,
                 image_url=a.image_url,
                 published_at=a.published_at,
+                source_published_at=getattr(a, "source_published_at", None) or a.published_at,
                 created_at=a.created_at,
                 content_snippet=content_snippet,
                 content=a.content,
                 executive_summary=cached_summary or a.description,
+                entities=getattr(a, "entities", {}) or {},
+                qa_status=article_qa,
                 ai_status=ai_status,
                 pipeline_status=pipeline_status,
                 likes_count=getattr(a, "likes_count", 0) or 0,
@@ -366,8 +382,24 @@ def get_system_overview(session: Session = Depends(get_db)):
     # 3. Gemini AI
     gemini_settings = get_gemini_settings()
     latest_job_temp = pipeline_orchestrator.get_latest_job()
-    ai_gen_count = latest_job_temp.metrics.ai_generated if latest_job_temp else 0
-    failed_count = latest_job_temp.metrics.failed if latest_job_temp else 0
+    
+    # Query database for verified AI approved/generated counts
+    ai_gen_count = (
+        session.query(NewsArticle)
+        .filter(NewsArticle.qa_status.in_(["APPROVED", "AI_GENERATED"]))
+        .count()
+    )
+    failed_count = (
+        session.query(NewsArticle)
+        .filter(NewsArticle.qa_status == "FAILED")
+        .count()
+    )
+    if latest_job_temp:
+        if latest_job_temp.metrics.ai_generated > 0 and ai_gen_count == 0:
+            ai_gen_count = latest_job_temp.metrics.ai_generated
+        if latest_job_temp.metrics.failed > 0:
+            failed_count += latest_job_temp.metrics.failed
+
     gemini_data = {
         "status": "CONNECTED" if gemini_settings.has_api_key() else "NOT_CONFIGURED",
         "model": gemini_settings.gemini_model,
@@ -378,7 +410,8 @@ def get_system_overview(session: Session = Depends(get_db)):
         "failed": failed_count,
     }
 
-    # 4. Google Drive & Docs Output
+    # 4. Google Drive & Docs Output (Decoupled & Optional)
+    settings = get_settings()
     docs_created = (
         session.query(GoogleDocumentRecord)
         .filter(GoogleDocumentRecord.status == DocumentStatus.CREATED.value)
@@ -391,14 +424,14 @@ def get_system_overview(session: Session = Depends(get_db)):
     )
 
     drive_data = {
-        "status": "CONNECTED",
+        "status": "CONNECTED" if settings.enable_gdrive_export else "DECOUPLED_OPTIONAL",
         "root_folder": "ESTD CONTENT",
         "categories": [
-            "Artificial Intelligence",
-            "Technology",
-            "Business",
-            "Education",
-            "Science",
+            "Tech",
+            "Entertainment",
+            "Business & Finance",
+            "Developments",
+            "Sports",
         ],
         "documents_created": docs_created,
         "documents_failed": docs_failed,

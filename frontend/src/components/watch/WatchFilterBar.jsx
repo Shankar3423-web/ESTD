@@ -7,6 +7,7 @@ import {
   Trophy,
   TrendingUp,
   Compass,
+  Mic,
 } from 'lucide-react';
 
 /**
@@ -20,6 +21,7 @@ export default function WatchFilterBar({
 }) {
   const categories = [
     { id: 'all', label: 'All', icon: Sparkles, color: '#00E5FF' },
+    { id: 'podcasts', label: 'ESTDPOD Podcasts', icon: Mic, color: '#FF2A54', badge: 'ORIGINALS' },
     { id: 'Tech', label: 'Tech', icon: Cpu, color: '#00E5FF' },
     { id: 'Entertainment', label: 'Entertainment', icon: Film, color: '#FF20B8' },
     { id: 'Business & Finance', label: 'Business & Finance', icon: TrendingUp, color: '#A855F7' },

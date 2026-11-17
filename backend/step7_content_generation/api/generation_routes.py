@@ -3,6 +3,7 @@ from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from backend.common.auth.security import verify_admin_api_key
 from backend.common.logging.logger import logger
 from backend.step7_content_generation.client.gemini_client import GeminiClient
 from backend.step7_content_generation.config.gemini_settings import (
@@ -56,6 +57,7 @@ def get_client() -> GeminiClient:
     response_model=GenerationResponse,
     status_code=status.HTTP_200_OK,
     summary="Generate news from existing ESTD knowledge source article via MCP",
+    dependencies=[Depends(verify_admin_api_key)],
 )
 def generate_article_news(
     request: ArticleGenerationRequest,
@@ -101,6 +103,7 @@ def generate_article_news(
     response_model=GeneratedNews,
     status_code=status.HTTP_200_OK,
     summary="Directly generate ESTD news from provided article data",
+    dependencies=[Depends(verify_admin_api_key)],
 )
 def generate_direct_news(
     request: DirectGenerationRequest,
