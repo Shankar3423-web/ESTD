@@ -90,11 +90,11 @@ def main():
     print_header("3. FIVE-CATEGORY LIVE GENERATION TEST (MCP -> GEMINI -> VALIDATION)")
     
     category_map = {
-        "Artificial Intelligence": 1,
-        "Technology": 4,
-        "Business": 5,
-        "Education": 6,
-        "Science": 8,
+        "Tech": 22,
+        "Entertainment": 199,
+        "Business & Finance": 71,
+        "Sports": 202,
+        "Developments": 207,
     }
 
     print(f"[*] Selected Article IDs across categories:")
@@ -147,10 +147,10 @@ def main():
     # 4. Anti-Hallucination & Source Grounding Verification
     # -------------------------------------------------------------------------
     print_header("4. ANTI-HALLUCINATION & SOURCE GROUNDING VERIFICATION")
-    # Test with Science article
-    sci_id = category_map["Science"]
+    # Test with Developments article
+    sci_id = category_map["Developments"]
     sci_raw = mcp_gen_service.fetch_article_via_mcp(sci_id)
-    sci_gen = generated_records["Science"]
+    sci_gen = generated_records["Developments"]
 
     print(f"[*] Raw Source Publisher: {sci_raw['source_name']}")
     print(f"[*] Raw Source URL:       {sci_raw['url']}")
@@ -165,7 +165,7 @@ def main():
     # 5. Duplicate Generation Cache Verification
     # -------------------------------------------------------------------------
     print_header("5. DUPLICATE GENERATION CACHE VERIFICATION")
-    first_id = eligible[0].id
+    first_id = category_map["Tech"]
     print(f"[*] Requesting Article ID {first_id} a second time without force_regenerate...")
     req_dup = ArticleGenerationRequest(article_id=first_id)
     cached_resp = mcp_gen_service.generate_from_mcp_article(req_dup, force_regenerate=False)

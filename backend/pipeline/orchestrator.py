@@ -413,7 +413,9 @@ class PipelineOrchestrator:
             step7.started_at = datetime.now(timezone.utc)
 
             generated_news_map = {}
-            for art_id in articles_to_generate_ids:
+            for idx, art_id in enumerate(articles_to_generate_ids):
+                if idx > 0:
+                    time.sleep(2.5)  # Gentle pacing between article generations to stay within RPM limits
                 try:
                     req = ArticleGenerationRequest(article_id=art_id)
                     gen_response = mcp_gen_service.generate_from_mcp_article(req)

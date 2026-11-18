@@ -9,6 +9,7 @@ from google.genai import types
 from pydantic import BaseModel
 
 from backend.common.logging.logger import logger
+from backend.step7_content_generation.client.groq_fallback_client import GroqFallbackClient
 from backend.step7_content_generation.config.gemini_settings import (
     GeminiSettings,
     get_gemini_settings,
@@ -34,10 +35,12 @@ class GeminiClient:
         self,
         settings: Optional[GeminiSettings] = None,
         client: Optional[genai.Client] = None,
+        groq_fallback: Optional[GroqFallbackClient] = None,
     ):
         self.settings = settings or get_gemini_settings()
         self._external_client = client
         self._client: Optional[genai.Client] = None
+        self.groq_fallback = groq_fallback or GroqFallbackClient(self.settings)
 
     def _get_client(self) -> genai.Client:
         """Lazily initialize and return the authenticated google-genai Client."""
@@ -48,7 +51,10 @@ class GeminiClient:
             api_key = self.settings.get_gemini_api_key()
             logger.info("Initializing Google Gemini client...")
             try:
-                self._client = genai.Client(api_key=api_key)
+                self._client = genai.Client(
+                    api_key=api_key,
+                    http_options={"timeout": self.settings.gemini_timeout_seconds},
+                )
             except Exception as exc:
                 safe_msg = self.settings.mask_secret(str(exc))
                 logger.error(f"Failed to initialize Gemini client: {safe_msg}")
@@ -138,22 +144,23 @@ class GeminiClient:
                         "Gemini API authentication failed. Verify GEMINI_API_KEY."
                     )
 
-                # 2. Model Not Found / Invalid Argument (NON-RETRYABLE)
+                # 2. Model Not Found / Invalid Argument
                 if status_code in (404, 400) or "NOT_FOUND" in raw_msg:
                     logger.error(f"Gemini model error: {raw_msg}")
-                    raise GeminiModelError(target_model, raw_msg)
+                    last_error = GeminiModelError(target_model, raw_msg)
+                    break
 
-                # 3. Rate Limit / Quota Exhaustion (RETRYABLE)
-                if status_code == 429 or "RESOURCE_EXHAUSTED" in raw_msg:
+                # 3. Rate Limit / Quota Exhaustion (429 or 402 Prepayment Depleted)
+                if status_code in (402, 429) or "RESOURCE_EXHAUSTED" in raw_msg or "credits are depleted" in raw_msg.lower():
                     logger.warning(
-                        f"Gemini rate limit encountered on attempt {attempt}: {raw_msg}"
+                        f"Gemini rate/quota limit encountered on attempt {attempt}: {raw_msg}"
                     )
                     last_error = GeminiRateLimitError(raw_msg)
-                    if attempt <= max_retries:
+                    if attempt <= max_retries and status_code != 402:
                         backoff = 2.0 ** attempt
                         time.sleep(backoff)
                         continue
-                    raise last_error
+                    break
 
                 # 4. Server Errors / Transient (RETRYABLE)
                 if status_code and status_code >= 500:
@@ -162,31 +169,49 @@ class GeminiClient:
                     if attempt <= max_retries:
                         time.sleep(1.5 * attempt)
                         continue
-                    raise last_error
+                    break
 
                 logger.error(f"Gemini unhandled APIError: {raw_msg}")
-                raise GenerationExecutionError(f"Gemini API failure: {raw_msg}")
+                last_error = GenerationExecutionError(f"Gemini API failure: {raw_msg}")
+                break
 
             except (TimeoutError, Exception) as exc:
                 raw_msg = self.settings.mask_secret(str(exc))
                 if isinstance(exc, (GeminiAuthenticationError, GeminiModelError, GeminiRateLimitError)):
-                    raise exc
+                    last_error = exc
+                    break
 
                 if "timeout" in raw_msg.lower():
                     last_error = GeminiTimeoutError(self.settings.gemini_timeout_seconds)
                     if attempt <= max_retries:
                         time.sleep(1.0)
                         continue
-                    raise last_error
+                    break
 
                 logger.warning(f"Unexpected generation failure on attempt {attempt}: {raw_msg}")
                 last_error = GenerationExecutionError(f"Content generation error: {raw_msg}")
                 if attempt <= max_retries:
                     time.sleep(1.0)
                     continue
-                raise last_error
+                break
 
         if last_error:
+            # Check Circuit Breaker: Automated Failover to Groq
+            if self.groq_fallback and self.groq_fallback.is_available():
+                logger.warning(
+                    f"[Circuit Breaker] Gemini primary engine unavailable ({type(last_error).__name__}: {last_error}). "
+                    "Failing over to Groq LPU engine..."
+                )
+                try:
+                    return self.groq_fallback.generate_structured(
+                        prompt=prompt,
+                        response_schema=response_schema,
+                        temperature=temp,
+                    )
+                except Exception as groq_exc:
+                    logger.error(f"[Circuit Breaker] Groq fallback also failed: {groq_exc}")
+                    raise last_error from groq_exc
+
             raise last_error
         raise GenerationExecutionError("Generation failed after maximum retries.")
 
@@ -227,4 +252,15 @@ class GeminiClient:
             raise GeminiConnectionError(f"Connection test failed: {safe_msg}")
         except Exception as exc:
             safe_msg = self.settings.mask_secret(str(exc))
+            if self.groq_fallback and self.groq_fallback.is_available():
+                logger.warning(
+                    f"Gemini test connectivity notice: {safe_msg}. Groq failover engine is active."
+                )
+                return {
+                    "status": "connected",
+                    "model": f"{target_model} (Groq Fallback Primed)",
+                    "latency_ms": 0.0,
+                    "response_received": True,
+                    "failover_active": True,
+                }
             raise GeminiConnectionError(f"Connection error: {safe_msg}")

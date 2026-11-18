@@ -16,8 +16,14 @@ class GeminiSettings(BaseSettings):
     # Gemini API Key loaded from backend/.env
     gemini_api_key: Optional[SecretStr] = Field(default=None, alias="GEMINI_API_KEY")
 
-    # Selected Model Name (defaulting to verified gemini-2.5-flash)
-    gemini_model: str = Field(default="gemini-2.5-flash", alias="GEMINI_MODEL")
+    # Selected Model Name (defaulting to verified gemini-3.8-flash)
+    gemini_model: str = Field(default="gemini-3.8-flash", alias="GEMINI_MODEL")
+
+    # Groq Fallback API Key loaded from backend/.env
+    groq_api_key: Optional[SecretStr] = Field(default=None, alias="GROQ_API_KEY")
+
+    # Groq Fallback Model Name
+    groq_model: str = Field(default="openai/gpt-oss-120b", alias="GROQ_MODEL")
 
     # Temperature for generation (lower temperature = higher factual adherence)
     gemini_temperature: float = Field(
@@ -69,19 +75,35 @@ class GeminiSettings(BaseSettings):
         return self.gemini_api_key.get_secret_value().strip()
 
     def has_api_key(self) -> bool:
-        """Check if an API key is configured without exposing it."""
+        """Check if a Gemini API key is configured without exposing it."""
         return bool(self.gemini_api_key and self.gemini_api_key.get_secret_value().strip())
 
+    def get_groq_api_key(self) -> Optional[str]:
+        """Return raw Groq API key if configured."""
+        if not self.groq_api_key:
+            return None
+        val = self.groq_api_key.get_secret_value().strip()
+        return val if val else None
+
+    def has_groq_api_key(self) -> bool:
+        """Check if Groq fallback API key is configured."""
+        return bool(self.get_groq_api_key())
+
     def mask_secret(self, text: str) -> str:
-        """Sanitize any occurrence of the API key from a string or log message."""
+        """Sanitize any occurrence of API keys from a string or log message."""
         if not text:
             return ""
         if self.gemini_api_key:
             raw_key = self.gemini_api_key.get_secret_value().strip()
             if raw_key and len(raw_key) > 4:
                 text = text.replace(raw_key, "[REDACTED_API_KEY]")
+        if self.groq_api_key:
+            raw_groq = self.groq_api_key.get_secret_value().strip()
+            if raw_groq and len(raw_groq) > 4:
+                text = text.replace(raw_groq, "[REDACTED_GROQ_KEY]")
         # Generic API key pattern matching
         text = re.sub(r"AIza[0-9A-Za-z-_]{35}", "[REDACTED_API_KEY]", text)
+        text = re.sub(r"gsk_[0-9A-Za-z-_]{30,}", "[REDACTED_GROQ_KEY]", text)
         return text
 
     def get_safe_config_summary(self) -> Dict[str, Any]:
@@ -89,6 +111,8 @@ class GeminiSettings(BaseSettings):
         return {
             "api_key_configured": self.has_api_key(),
             "model": self.gemini_model,
+            "groq_configured": self.has_groq_api_key(),
+            "groq_model": self.groq_model,
             "temperature": self.gemini_temperature,
             "max_retries": self.gemini_max_retries,
             "timeout_seconds": self.gemini_timeout_seconds,
