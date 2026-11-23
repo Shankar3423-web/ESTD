@@ -44,6 +44,10 @@ class PostgresMCPClient:
         npx_binary = "npx.cmd" if sys.platform == "win32" else "npx"
         cmd = [npx_binary, "-y", "@modelcontextprotocol/server-postgres", db_url]
 
+        # Ensure Node.js accepts PostgreSQL SSL certificates across production environments (e.g. Render)
+        env = os.environ.copy()
+        env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0"
+
         logger.info(f"Starting PostgreSQL MCP server process connecting to {safe_url}")
         try:
             self._proc = subprocess.Popen(
@@ -51,6 +55,7 @@ class PostgresMCPClient:
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                env=env,
                 text=True,
                 encoding="utf-8",
                 errors="replace",

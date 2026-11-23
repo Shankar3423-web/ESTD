@@ -415,8 +415,52 @@ DEFAULT_RSS_SOURCES: List[RSSSource] = [
     ),
 
     # ------------------------------------------------------------------------
-    # 4. Business & Finance
+    # 4. Business & Finance (Top-tier verified open feeds)
     # ------------------------------------------------------------------------
+    RSSSource(
+        source_id="the_hindu_business",
+        source_name="The Hindu - Business",
+        publisher="The Hindu Group",
+        feed_url="https://www.thehindu.com/business/feeder/default.rss",
+        category=ESTDCategory.BUSINESS_FINANCE.value,
+        subcategory="Economy & Macroeconomics",
+        language="en",
+        region="IN",
+        enabled=True,
+    ),
+    RSSSource(
+        source_id="indian_express_business",
+        source_name="The Indian Express - Business",
+        publisher="The Indian Express",
+        feed_url="https://indianexpress.com/section/business/feed/",
+        category=ESTDCategory.BUSINESS_FINANCE.value,
+        subcategory="Financial Markets & Banking",
+        language="en",
+        region="IN",
+        enabled=True,
+    ),
+    RSSSource(
+        source_id="guardian_business",
+        source_name="The Guardian - Business",
+        publisher="Guardian Media Group",
+        feed_url="https://www.theguardian.com/business/rss",
+        category=ESTDCategory.BUSINESS_FINANCE.value,
+        subcategory="Economy & Macroeconomics",
+        language="en",
+        region="GB",
+        enabled=True,
+    ),
+    RSSSource(
+        source_id="livemint_markets",
+        source_name="LiveMint - Markets",
+        publisher="HT Media",
+        feed_url="https://www.livemint.com/rss/markets",
+        category=ESTDCategory.BUSINESS_FINANCE.value,
+        subcategory="Financial Markets & Banking",
+        language="en",
+        region="IN",
+        enabled=True,
+    ),
     RSSSource(
         source_id="fortune_business",
         source_name="Fortune",
@@ -426,7 +470,7 @@ DEFAULT_RSS_SOURCES: List[RSSSource] = [
         subcategory="Corporate Leadership & Strategy",
         language="en",
         region="US",
-        enabled=True,
+        enabled=False,
     ),
     RSSSource(
         source_id="marketwatch_business",
@@ -437,7 +481,7 @@ DEFAULT_RSS_SOURCES: List[RSSSource] = [
         subcategory="Macroeconomics & Policy",
         language="en",
         region="US",
-        enabled=True,
+        enabled=False,
     ),
     RSSSource(
         source_id="yahoo_finance",
@@ -448,7 +492,7 @@ DEFAULT_RSS_SOURCES: List[RSSSource] = [
         subcategory="Markets & Investing",
         language="en",
         region="US",
-        enabled=True,
+        enabled=False,
     ),
 
     # ------------------------------------------------------------------------
@@ -722,7 +766,7 @@ DEFAULT_RSS_SOURCES: List[RSSSource] = [
         subcategory="Financial Markets & Banking",
         language="en",
         region="US",
-        enabled=True,
+        enabled=False,
     ),
     RSSSource(
         source_id="et_startups",

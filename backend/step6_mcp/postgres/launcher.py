@@ -27,9 +27,13 @@ def main() -> None:
     npx_binary = "npx.cmd" if sys.platform == "win32" else "npx"
     cmd = [npx_binary, "-y", "@modelcontextprotocol/server-postgres", db_url]
 
+    # Ensure Node.js accepts PostgreSQL SSL certificates across production environments (e.g. Render)
+    env = os.environ.copy()
+    env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0"
+
     # Run and forward stdio transparently
     try:
-        sys.exit(subprocess.call(cmd))
+        sys.exit(subprocess.call(cmd, env=env))
     except KeyboardInterrupt:
         sys.exit(0)
 

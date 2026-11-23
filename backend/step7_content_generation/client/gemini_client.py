@@ -51,9 +51,11 @@ class GeminiClient:
             api_key = self.settings.get_gemini_api_key()
             logger.info("Initializing Google Gemini client...")
             try:
+                # Note: google.genai HttpOptions.timeout is in milliseconds, so convert seconds * 1000
+                timeout_ms = int(self.settings.gemini_timeout_seconds * 1000)
                 self._client = genai.Client(
                     api_key=api_key,
-                    http_options={"timeout": self.settings.gemini_timeout_seconds},
+                    http_options={"timeout": timeout_ms},
                 )
             except Exception as exc:
                 safe_msg = self.settings.mask_secret(str(exc))

@@ -70,7 +70,7 @@ export default function AppShell({ savedStories, onToggleSave, onListen }) {
     [loadOverview]
   );
 
-  // Initial startup: check pipeline runner state & system overview (deferred slightly to prioritize feed paint)
+  // Initial startup: check pipeline runner state & system overview (deferred to avoid competing with initial feed load)
   useEffect(() => {
     const timer = setTimeout(() => {
       loadOverview();
@@ -88,7 +88,7 @@ export default function AppShell({ savedStories, onToggleSave, onListen }) {
         }
       }
       checkStatus();
-    }, 100);
+    }, 2500);
 
     return () => {
       clearTimeout(timer);
@@ -145,20 +145,53 @@ export default function AppShell({ savedStories, onToggleSave, onListen }) {
 
         {/* Content Viewport */}
         <main className="content-viewport" id="main-content">
-          <Outlet context={{ feedMode, onOpenDiagnostics: () => setIsDiagnosticsOpen(true) }} />
+          <React.Suspense
+            fallback={
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minHeight: '45vh',
+                  color: '#64748B',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  gap: '12px',
+                }}
+              >
+                <div
+                  style={{
+                    width: 20,
+                    height: 20,
+                    border: '2px solid rgba(0, 229, 255, 0.2)',
+                    borderTopColor: '#00E5FF',
+                    borderRadius: '50%',
+                    animation: 'spin 0.6s linear infinite',
+                  }}
+                />
+                <span>Loading ESTD Desk...</span>
+              </div>
+            }
+          >
+            <Outlet context={{ feedMode, onOpenDiagnostics: () => setIsDiagnosticsOpen(true) }} />
+          </React.Suspense>
         </main>
       </div>
 
       {/* Pipeline Verification Inspector Modal */}
-      <PipelineInspectorModal
-        isOpen={isDiagnosticsOpen}
-        onClose={() => setIsDiagnosticsOpen(false)}
-        activeJob={activeJob}
-        isRunning={isRunning}
-        overview={overview}
-        onRunPipeline={handleRunPipeline}
-        onRefresh={handleRefresh}
-      />
+      {isDiagnosticsOpen && (
+        <PipelineInspectorModal
+          isOpen={isDiagnosticsOpen}
+          onClose={() => setIsDiagnosticsOpen(false)}
+          activeJob={activeJob}
+          isRunning={isRunning}
+          overview={overview}
+          onRunPipeline={handleRunPipeline}
+          onRefresh={handleRefresh}
+        />
+      )}
     </div>
   );
 }

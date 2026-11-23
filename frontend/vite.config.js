@@ -7,4 +7,17 @@ export default defineConfig({
     port: 5173,
     host: 'localhost',
   },
+  build: {
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-router': ['react-router-dom'],
+          'vendor-icons': ['lucide-react'],
+        },
+      },
+    },
+  },
 });
+

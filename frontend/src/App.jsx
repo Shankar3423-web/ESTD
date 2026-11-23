@@ -1,16 +1,49 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AppShell from './components/layout/AppShell';
-import HomePage from './pages/HomePage';
-import InshortsPage from './pages/InshortsPage';
-import CategoryPage from './pages/CategoryPage';
-import StoryObject from './components/story/StoryObject';
-import WatchPage from './pages/WatchPage';
-import LivePage from './pages/LivePage';
-import SavedPage from './pages/SavedPage';
-import YouPage from './pages/YouPage';
-import SearchPage from './pages/SearchPage';
-import EmptyState from './components/common/EmptyState';
+
+// Route-level code splitting: pages load on-demand instead of bloating initial JS bundle
+const HomePage = lazy(() => import('./pages/HomePage'));
+const InshortsPage = lazy(() => import('./pages/InshortsPage'));
+const CategoryPage = lazy(() => import('./pages/CategoryPage'));
+const StoryObject = lazy(() => import('./components/story/StoryObject'));
+const WatchPage = lazy(() => import('./pages/WatchPage'));
+const LivePage = lazy(() => import('./pages/LivePage'));
+const SavedPage = lazy(() => import('./pages/SavedPage'));
+const YouPage = lazy(() => import('./pages/YouPage'));
+const SearchPage = lazy(() => import('./pages/SearchPage'));
+const EmptyState = lazy(() => import('./components/common/EmptyState'));
+
+function PageLoaderFallback() {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '45vh',
+        color: '#64748B',
+        fontSize: '12px',
+        fontWeight: 600,
+        letterSpacing: '0.08em',
+        textTransform: 'uppercase',
+        gap: '12px',
+      }}
+    >
+      <div
+        style={{
+          width: 20,
+          height: 20,
+          border: '2px solid rgba(0, 229, 255, 0.2)',
+          borderTopColor: '#00E5FF',
+          borderRadius: '50%',
+          animation: 'spin 0.6s linear infinite',
+        }}
+      />
+      <span>Loading ESTD Desk...</span>
+    </div>
+  );
+}
 
 export default function App() {
   // Locally persisted saved stories

@@ -29,12 +29,13 @@ export async function fetchSubcategories(categoryName = null) {
 }
 
 const _CLIENT_STORIES_CACHE = new Map();
+const _IN_FLIGHT_STORIES = new Map();
 const _STORIES_CACHE_TTL_MS = 60000; // 60 seconds
 
 /**
  * Retrieves processed articles from the pipeline endpoint with attached Google Document info,
  * subcategory, image URL, and full content.
- * Includes in-memory client-side TTL caching to eliminate repeated network latency.
+ * Includes in-memory client-side TTL caching & in-flight deduplication to eliminate repeated network latency.
  */
 export async function fetchStories({ category, subcategory, search, limit = 150, forceRefresh = false } = {}) {
   const queryParams = new URLSearchParams();
@@ -58,19 +59,48 @@ export async function fetchStories({ category, subcategory, search, limit = 150,
     if (cached && Date.now() - cached.timestamp < _STORIES_CACHE_TTL_MS) {
       return cached.items;
     }
+
+    // Check if a larger unfiltered dataset is already cached and can fulfill this request
+    if ((!category || category === 'All') && (!subcategory || subcategory === 'All') && !search) {
+      for (const [key, cacheEntry] of _CLIENT_STORIES_CACHE.entries()) {
+        if (
+          Date.now() - cacheEntry.timestamp < _STORIES_CACHE_TTL_MS &&
+          cacheEntry.items &&
+          cacheEntry.items.length >= (limit || 0) &&
+          !key.includes('category=') &&
+          !key.includes('search=')
+        ) {
+          return limit ? cacheEntry.items.slice(0, limit) : cacheEntry.items;
+        }
+      }
+    }
   }
 
-  const data = await apiRequest(`/pipeline/articles${queryStr}`);
-  const items = data?.items || [];
-  _SEEN_FEED_IMAGE_KEYS.clear();
+  // Deduplicate simultaneous requests
+  if (_IN_FLIGHT_STORIES.has(queryStr)) {
+    return _IN_FLIGHT_STORIES.get(queryStr);
+  }
 
-  const normalized = items.map((item, idx) => normalizeStoryItem(item, idx));
-  _CLIENT_STORIES_CACHE.set(queryStr, {
-    timestamp: Date.now(),
-    items: normalized,
-  });
+  const fetchPromise = (async () => {
+    try {
+      const data = await apiRequest(`/pipeline/articles${queryStr}`);
+      const items = data?.items || [];
+      _SEEN_FEED_IMAGE_KEYS.clear();
 
-  return normalized;
+      const normalized = items.map((item, idx) => normalizeStoryItem(item, idx));
+      _CLIENT_STORIES_CACHE.set(queryStr, {
+        timestamp: Date.now(),
+        items: normalized,
+      });
+
+      return normalized;
+    } finally {
+      _IN_FLIGHT_STORIES.delete(queryStr);
+    }
+  })();
+
+  _IN_FLIGHT_STORIES.set(queryStr, fetchPromise);
+  return fetchPromise;
 }
 
 /**
@@ -261,20 +291,9 @@ export function normalizeStoryItem(raw, idx = 0) {
   const headline = formatConversationalHeadline(raw.title);
   const resolvedImg = resolveUniqueArticleImage(raw, idx);
   const videoRail = generateStoryVideoPerspectives({ ...raw, image_url: resolvedImg });
-  const structuredArticle = parseStructuredArticleContent(
-    raw.content || raw.content_snippet || '',
-    raw.title || '',
-    raw.category || '',
-    raw.subcategory || '',
-    raw.published_at,
-    raw.source_name || 'Verified Source',
-    videoRail
-  );
-  const brief = structuredArticle.executiveBrief || formatOneParagraphBrief(raw.executive_summary || raw.content_snippet || raw.content);
+  const brief = formatOneParagraphBrief(raw.executive_summary || raw.content_snippet || raw.content);
   const impactChips = extractSourceGroundedImpactChips(raw.content || raw.content_snippet, raw.category, raw.subcategory);
-  const contextBeats = structuredArticle.timelineBeats && structuredArticle.timelineBeats.length >= 4
-    ? structuredArticle.timelineBeats
-    : extractContextBeats(raw.content || raw.content_snippet, raw.published_at);
+  const contextBeats = extractContextBeats(raw.content || raw.content_snippet, raw.published_at);
   const culturalPulse = extractCulturalPulse(raw);
   const editorialType = detectEditorialType(raw.title, raw.content || '');
 
@@ -305,7 +324,17 @@ export function normalizeStoryItem(raw, idx = 0) {
     contextBeats,
     videoRail,
     culturalPulse,
-    structuredArticle,
+    get structuredArticle() {
+      return parseStructuredArticleContent(
+        raw.content || raw.content_snippet || '',
+        raw.title || '',
+        raw.category || '',
+        raw.subcategory || '',
+        raw.published_at,
+        raw.source_name || 'Verified Source',
+        videoRail
+      );
+    },
   };
 }
 

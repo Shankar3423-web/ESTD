@@ -131,20 +131,8 @@ export default function ImageWithFallback({
         isolation: 'isolate',
       }}
     >
-      {/* Subtle non-blocking shimmer behind the image */}
-      {!isLoaded && (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'linear-gradient(90deg, #12141c 25%, #1c202c 50%, #12141c 75%)',
-            backgroundSize: '200% 100%',
-            animation: 'skeleton-shimmer 1.4s infinite ease-in-out',
-            zIndex: 1,
-            pointerEvents: 'none',
-          }}
-        />
-      )}
+      {/* GPU-composited hardware shimmer behind the image (Zero CPU repaints) */}
+      {!isLoaded && <div className="gpu-skeleton-shimmer" />}
 
       {/* Rendered Image — No crossOrigin to avoid CORS blocks, progressive streaming */}
       <img

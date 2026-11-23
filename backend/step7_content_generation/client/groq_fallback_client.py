@@ -94,7 +94,7 @@ class GroqFallbackClient:
                         {"role": "user", "content": prompt},
                     ],
                     "temperature": temp,
-                    "max_tokens": 4096,
+                    "max_tokens": 6144,
                     "response_format": {"type": "json_object"},
                 }
 
@@ -128,6 +128,10 @@ class GroqFallbackClient:
                     f"[Groq Fallback] Model '{model_name}' returned status {resp.status_code}: {safe_err[:120]}"
                 )
                 last_error = GenerationExecutionError(f"Groq {model_name} HTTP {resp.status_code}: {safe_err}")
+
+                # If rate-limited (429), backoff briefly before cascading to next fallback model
+                if resp.status_code == 429:
+                    time.sleep(2.0)
 
             except Exception as exc:
                 safe_msg = self.settings.mask_secret(str(exc))

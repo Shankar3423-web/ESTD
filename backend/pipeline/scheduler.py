@@ -161,6 +161,10 @@ class ContentEngineScheduler:
 
             # Calculate next run time and await next interval
             self.next_run_at = datetime.now(timezone.utc) + timedelta(seconds=interval_seconds)
+            logger.info(
+                f"[Scheduler] Pipeline cycle complete. Next scheduled execution at: "
+                f"{self.next_run_at.isoformat()} (in {settings.scheduler_interval_hours} hour(s))."
+            )
             try:
                 await asyncio.sleep(interval_seconds)
             except asyncio.CancelledError:

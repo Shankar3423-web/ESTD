@@ -16,8 +16,8 @@ class GeminiSettings(BaseSettings):
     # Gemini API Key loaded from backend/.env
     gemini_api_key: Optional[SecretStr] = Field(default=None, alias="GEMINI_API_KEY")
 
-    # Selected Model Name (defaulting to verified gemini-3.8-flash)
-    gemini_model: str = Field(default="gemini-3.8-flash", alias="GEMINI_MODEL")
+    # Selected Model Name (defaulting to highly stable and fast gemini-3.5-flash)
+    gemini_model: str = Field(default="gemini-3.5-flash", alias="GEMINI_MODEL")
 
     # Groq Fallback API Key loaded from backend/.env
     groq_api_key: Optional[SecretStr] = Field(default=None, alias="GROQ_API_KEY")

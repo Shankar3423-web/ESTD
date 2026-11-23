@@ -180,9 +180,9 @@ class PipelineOrchestrator:
             source_service = SourceCollectionService()
             all_collected_items: List[NewsItem] = []
 
-            # 1. GNews (Sampling up to first 2 categories to stay within API rate limit)
+            # 1. GNews (Distribute across categories including Business & Finance within API rate limits)
             try:
-                gnews_cats = categories[:2] if len(categories) >= 2 else categories
+                gnews_cats = [c for i, c in enumerate(categories) if i in (0, 1, 4)] if len(categories) >= 5 else categories[:3]
                 for cat in gnews_cats:
                     resp = await source_service.collect_from_gnews(category=cat, limit=2)
                     all_collected_items.extend(resp.items)
@@ -193,9 +193,9 @@ class PipelineOrchestrator:
                 job.sources["gnews"].status = "WARNING"
                 job.sources["gnews"].error = str(exc)[:150]
 
-            # 2. NewsData.io (Sampling up to 2 categories)
+            # 2. NewsData.io (Distribute across categories including Business & Finance within API rate limits)
             try:
-                newsdata_cats = categories[2:4] if len(categories) > 2 else categories
+                newsdata_cats = [c for i, c in enumerate(categories) if i in (2, 3, 4)] if len(categories) >= 5 else categories[2:]
                 for cat in newsdata_cats:
                     resp = await source_service.collect_from_newsdata(category=cat, limit=2)
                     all_collected_items.extend(resp.items)
@@ -210,7 +210,7 @@ class PipelineOrchestrator:
             try:
                 rss_count = 0
                 for cat in categories:
-                    resp = await source_service.collect_from_rss(category=cat, limit=2)
+                    resp = await source_service.collect_from_rss(category=cat, limit=max(8, target_per_category * 2))
                     all_collected_items.extend(resp.items)
                     rss_count += len(resp.items)
                 job.sources["rss"].status = "CONNECTED"
@@ -235,7 +235,7 @@ class PipelineOrchestrator:
             # Select up to target_per_category * 2 for scraping
             scraping_candidates: List[NewsItem] = []
             for cat, items in candidates_by_cat.items():
-                scraping_candidates.extend(items[: max(2, target_per_category * 2)])
+                scraping_candidates.extend(items[: max(4, target_per_category * 2)])
 
             # =========================================================================
             # STEP 2: Article Extraction / Scraping
@@ -429,7 +429,9 @@ class PipelineOrchestrator:
                             art_record = session.query(NewsArticle).filter(NewsArticle.id == art_id).first()
                             if art_record:
                                 art_record.description = gen_response.data.summary
-                                art_record.content = gen_response.data.formatted_body
+                                art_record.content = getattr(gen_response.data, "formatted_body", None) or getattr(gen_response.data, "content", "") or art_record.content
+                                if getattr(gen_response.data, "subcategory", None):
+                                    art_record.subcategory = gen_response.data.subcategory
                                 art_record.qa_status = "APPROVED"
                                 session.commit()
                     else:

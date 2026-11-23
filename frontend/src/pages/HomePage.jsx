@@ -17,6 +17,21 @@ import { fetchStories } from '../api/estdApi';
 import { CATEGORIES } from '../constants/taxonomy';
 import { useFollowedCategories } from '../utils/followedCategories';
 
+function getInitialFeedCache() {
+  try {
+    const cached = localStorage.getItem('estd_feed_cache');
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Verify cached stories has at least 4 unique categories so old 3-category cache is refreshed
+        const uniqueCats = new Set(parsed.map((s) => s.category));
+        if (uniqueCats.size >= 4) return parsed;
+      }
+    }
+  } catch {}
+  return [];
+}
+
 export default function HomePage({
   savedStories = [],
   onToggleSave,
@@ -37,34 +52,8 @@ export default function HomePage({
   const [selectedCategory, setSelectedCategory] = useState('All');
   
   // Instant load: initialize from localStorage cache if available so first paint is 0ms
-  const [stories, setStories] = useState(() => {
-    try {
-      const cached = localStorage.getItem('estd_feed_cache');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          // Verify cached stories has at least 4 unique categories so old 3-category cache is refreshed
-          const uniqueCats = new Set(parsed.map((s) => s.category));
-          if (uniqueCats.size >= 4) return parsed;
-        }
-      }
-    } catch {}
-    return [];
-  });
-  
-  const [loading, setLoading] = useState(() => {
-    try {
-      const cached = localStorage.getItem('estd_feed_cache');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const uniqueCats = new Set(parsed.map((s) => s.category));
-          if (uniqueCats.size >= 4) return false;
-        }
-      }
-    } catch {}
-    return true;
-  });
+  const [stories, setStories] = useState(getInitialFeedCache);
+  const [loading, setLoading] = useState(() => stories.length === 0);
   const [error, setError] = useState(null);
 
   // View Mode State: 'bento' (default magazine) vs 'inshorts' (card-by-card quick read)
@@ -137,6 +126,9 @@ export default function HomePage({
             setStories(finalStories);
             try {
               localStorage.setItem('estd_feed_cache', JSON.stringify(finalStories.slice(0, 100)));
+              window.dispatchEvent(
+                new CustomEvent('estd:feed-updated', { detail: finalStories.slice(0, 12) })
+              );
             } catch {}
           }
         } else {

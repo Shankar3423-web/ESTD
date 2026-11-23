@@ -65,11 +65,24 @@ export default function BreakingTickerBar({ onSelectStory }) {
       }
     }
 
-    loadTickerItems();
+    // Seamlessly consume feed updates from HomePage to avoid duplicate network load
+    const handleFeedUpdate = (e) => {
+      if (e?.detail && Array.isArray(e.detail) && e.detail.length > 0) {
+        setStories(e.detail);
+      }
+    };
+    window.addEventListener('estd:feed-updated', handleFeedUpdate);
+
+    // If ticker already has stories (e.g. from cache), defer network request by 4 seconds
+    const initialDelay = stories.length > 0 ? 4000 : 0;
+    const initialTimer = setTimeout(loadTickerItems, initialDelay);
+
     // Refresh wire headlines every 90 seconds
     const interval = setInterval(loadTickerItems, 90000);
     return () => {
       isMounted = false;
+      window.removeEventListener('estd:feed-updated', handleFeedUpdate);
+      clearTimeout(initialTimer);
       clearInterval(interval);
     };
   }, []);

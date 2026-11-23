@@ -28,9 +28,11 @@ export default function EstdpodCarouselShelf({ category = null }) {
         console.warn('Failed to load ESTDPOD episodes:', err);
       }
     }
-    loadEpisodes();
+    // Defer network call so main feed loads first; component already has DEFAULT_ESTDPOD_EPISODES
+    const timer = setTimeout(loadEpisodes, 1500);
     return () => {
       mounted = false;
+      clearTimeout(timer);
     };
   }, [category]);
 
