@@ -1,6 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AppShell from './components/layout/AppShell';
+import { prefetchAllCategories } from './api/estdApi';
 
 // Route-level code splitting: pages load on-demand instead of bloating initial JS bundle
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -46,6 +47,14 @@ function PageLoaderFallback() {
 }
 
 export default function App() {
+  // Pre-warm category feeds in the background during idle time so all tabs open instantaneously
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      prefetchAllCategories();
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Locally persisted saved stories
   const [savedStories, setSavedStories] = useState(() => {
     try {

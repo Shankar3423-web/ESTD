@@ -1,7 +1,7 @@
 """FastAPI router exposing pipeline orchestration and dashboard verification endpoints."""
 import time
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel, Field
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
@@ -202,7 +202,7 @@ def _build_article_card_items(articles: List[NewsArticle], session: Session) -> 
 
 # In-memory fast cache for dashboard articles to reduce latency from remote PostgreSQL
 _DASHBOARD_ARTICLES_CACHE: dict = {}
-_DASHBOARD_CACHE_TTL = 75.0  # seconds
+_DASHBOARD_CACHE_TTL = 180.0  # seconds (3 minutes fast cache)
 
 
 def clear_dashboard_cache():
@@ -220,9 +220,13 @@ def list_dashboard_articles(
     subcategory: Optional[str] = Query(default=None, description="Filter by canonical subcategory"),
     search: Optional[str] = Query(default=None, description="Search by title, source, subcategory, or content"),
     limit: int = Query(default=100, ge=1, le=200),
+    response: Response = None,
     session: Session = Depends(get_db),
 ):
     """Fetch stored articles and their associated Google Document links for dashboard display."""
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=300"
+
     cache_key = f"{category or 'All'}:{subcategory or 'All'}:{(search or '').strip().lower()}:{limit}"
     now = time.time()
     cached = _DASHBOARD_ARTICLES_CACHE.get(cache_key)

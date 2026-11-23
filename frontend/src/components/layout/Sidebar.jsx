@@ -17,6 +17,7 @@ import {
   Mic,
 } from 'lucide-react';
 import { CATEGORIES } from '../../constants/taxonomy';
+import { prefetchCategory } from '../../api/estdApi';
 
 export default function Sidebar({ onOpenDiagnostics, systemStatus }) {
   const location = useLocation();
@@ -150,6 +151,7 @@ export default function Sidebar({ onOpenDiagnostics, systemStatus }) {
             <NavLink
               key={item.path}
               to={item.path}
+              onMouseEnter={() => prefetchCategory(item.label)}
               className={`nav-link ${isActive ? 'active' : ''}`}
               style={{ '--accent-color': item.accent }}
             >

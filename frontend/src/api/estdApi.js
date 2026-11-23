@@ -16,21 +16,141 @@ export async function fetchCategories() {
 
 /**
  * Retrieves canonical subcategories (optionally filtered by parent category).
+ * Caches results in memory to eliminate repeated network calls when switching categories.
  */
+const _SUBCATEGORY_ITEMS_CACHE = new Map();
+
 export async function fetchSubcategories(categoryName = null) {
+  if (categoryName && _SUBCATEGORY_ITEMS_CACHE.has(categoryName)) {
+    return _SUBCATEGORY_ITEMS_CACHE.get(categoryName);
+  }
   try {
     const query = categoryName ? `?category=${encodeURIComponent(categoryName)}` : '';
     const res = await apiRequest(`/api/v1/knowledge/subcategories${query}`);
-    return res?.items || [];
+    const items = res?.items || [];
+    if (categoryName && items.length > 0) {
+      _SUBCATEGORY_ITEMS_CACHE.set(categoryName, items);
+    }
+    return items;
   } catch (err) {
     console.warn('Failed to load subcategories:', err);
     return [];
   }
 }
 
+// Central in-memory registry of normalized stories by ID
+const _NORMALIZED_STORIES_BY_ID = new Map();
+// Grouped stories by category for instant O(1) retrieval
+const _CATEGORY_STORIES_CACHE = new Map();
 const _CLIENT_STORIES_CACHE = new Map();
 const _IN_FLIGHT_STORIES = new Map();
-const _STORIES_CACHE_TTL_MS = 60000; // 60 seconds
+const _STORIES_CACHE_TTL_MS = 300000; // 5 minutes cache TTL
+
+/**
+ * Indexes normalized stories into central memory and category buckets.
+ */
+export function indexStoriesInCache(stories) {
+  if (!Array.isArray(stories) || stories.length === 0) return;
+  for (const story of stories) {
+    if (!story || !story.id) continue;
+    const idStr = String(story.id);
+    _NORMALIZED_STORIES_BY_ID.set(idStr, story);
+
+    const cat = story.category;
+    if (cat) {
+      if (!_CATEGORY_STORIES_CACHE.has(cat)) {
+        _CATEGORY_STORIES_CACHE.set(cat, []);
+      }
+      const list = _CATEGORY_STORIES_CACHE.get(cat);
+      if (!list.some((s) => String(s.id) === idStr)) {
+        list.push(story);
+      }
+    }
+  }
+}
+
+// Immediately warm cache on browser load from localStorage if available
+try {
+  const localFeed = localStorage.getItem('estd_feed_cache');
+  if (localFeed) {
+    const parsed = JSON.parse(localFeed);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      indexStoriesInCache(parsed);
+    }
+  }
+} catch (e) {
+  // Ignore localStorage parsing errors
+}
+
+/**
+ * Synchronously retrieves cached stories from memory or localStorage.
+ * Returns [] if none found, enabling 0ms instant render without waiting for network.
+ */
+export function getCachedStories({ category, subcategory, search, limit } = {}) {
+  let results = [];
+  if (category && category !== 'All') {
+    results = _CATEGORY_STORIES_CACHE.get(category) || [];
+    if (results.length === 0 && _NORMALIZED_STORIES_BY_ID.size > 0) {
+      results = Array.from(_NORMALIZED_STORIES_BY_ID.values()).filter(
+        (s) => (s.category || '').toLowerCase() === category.toLowerCase()
+      );
+      if (results.length > 0) {
+        _CATEGORY_STORIES_CACHE.set(category, results);
+      }
+    }
+  } else {
+    results = Array.from(_NORMALIZED_STORIES_BY_ID.values());
+  }
+
+  // Fallback to localStorage if in-memory store is empty
+  if (results.length === 0) {
+    try {
+      const localFeed = localStorage.getItem('estd_feed_cache');
+      if (localFeed) {
+        const parsed = JSON.parse(localFeed);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          indexStoriesInCache(parsed);
+          if (category && category !== 'All') {
+            results = parsed.filter(
+              (s) => (s.category || '').toLowerCase() === category.toLowerCase()
+            );
+          } else {
+            results = parsed;
+          }
+        }
+      }
+    } catch {}
+  }
+
+  if (subcategory && subcategory !== 'All') {
+    const subNorm = subcategory.toLowerCase().trim();
+    results = results.filter((s) => {
+      const storySub = (s.subcategory || '').toLowerCase().trim();
+      return (
+        storySub === subNorm ||
+        storySub.includes(subNorm) ||
+        subNorm.includes(storySub)
+      );
+    });
+  }
+
+  if (search && search.trim()) {
+    const q = search.trim().toLowerCase();
+    results = results.filter(
+      (s) =>
+        (s.headline || '').toLowerCase().includes(q) ||
+        (s.brief || '').toLowerCase().includes(q) ||
+        (s.sourceName || '').toLowerCase().includes(q) ||
+        (s.content || '').toLowerCase().includes(q)
+    );
+  }
+
+  if (limit && limit > 0) {
+    results = results.slice(0, limit);
+  }
+
+  return results;
+}
 
 /**
  * Retrieves processed articles from the pipeline endpoint with attached Google Document info,
@@ -55,12 +175,21 @@ export async function fetchStories({ category, subcategory, search, limit = 150,
   const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
 
   if (!forceRefresh) {
+    // 1. Exact query cache match
     const cached = _CLIENT_STORIES_CACHE.get(queryStr);
     if (cached && Date.now() - cached.timestamp < _STORIES_CACHE_TTL_MS) {
       return cached.items;
     }
 
-    // Check if a larger unfiltered dataset is already cached and can fulfill this request
+    // 2. Category-level memory cache satisfaction
+    if (category && category !== 'All' && (!subcategory || subcategory === 'All') && !search) {
+      const catStories = _CATEGORY_STORIES_CACHE.get(category);
+      if (catStories && catStories.length >= (limit ? Math.min(limit, 20) : 20)) {
+        return limit ? catStories.slice(0, limit) : catStories;
+      }
+    }
+
+    // 3. Check if a larger unfiltered dataset is already cached and can fulfill this request
     if ((!category || category === 'All') && (!subcategory || subcategory === 'All') && !search) {
       for (const [key, cacheEntry] of _CLIENT_STORIES_CACHE.entries()) {
         if (
@@ -93,6 +222,16 @@ export async function fetchStories({ category, subcategory, search, limit = 150,
         items: normalized,
       });
 
+      // Index newly arrived stories into central category buckets
+      indexStoriesInCache(normalized);
+
+      // If general feed, persist top items for 0ms initial load on next visit
+      if ((!category || category === 'All') && !search) {
+        try {
+          localStorage.setItem('estd_feed_cache', JSON.stringify(normalized.slice(0, 100)));
+        } catch {}
+      }
+
       return normalized;
     } finally {
       _IN_FLIGHT_STORIES.delete(queryStr);
@@ -101,6 +240,26 @@ export async function fetchStories({ category, subcategory, search, limit = 150,
 
   _IN_FLIGHT_STORIES.set(queryStr, fetchPromise);
   return fetchPromise;
+}
+
+/**
+ * Pre-warms a category in the background so opening that category is instantaneous.
+ */
+export async function prefetchCategory(categoryName) {
+  if (!categoryName || categoryName === 'All') return;
+  const existing = _CATEGORY_STORIES_CACHE.get(categoryName);
+  if (existing && existing.length >= 10) return existing;
+  return fetchStories({ category: categoryName, limit: 100 }).catch(() => []);
+}
+
+/**
+ * Pre-warms all 5 canonical categories in the background during idle time.
+ */
+export async function prefetchAllCategories() {
+  const categories = ['Tech', 'Entertainment', 'Business & Finance', 'Developments', 'Sports'];
+  for (const cat of categories) {
+    prefetchCategory(cat);
+  }
 }
 
 /**

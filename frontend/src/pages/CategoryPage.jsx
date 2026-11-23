@@ -8,7 +8,7 @@ import VideoModalPlayer from '../components/story/VideoModalPlayer';
 import EmptyState from '../components/common/EmptyState';
 import ErrorState from '../components/common/ErrorState';
 import SkeletonCard from '../components/story/SkeletonCard';
-import { fetchStories, fetchSubcategories } from '../api/estdApi';
+import { fetchStories, fetchSubcategories, getCachedStories } from '../api/estdApi';
 import {
   CATEGORIES,
   CATEGORY_SLUG_MAP,
@@ -16,6 +16,33 @@ import {
   slugify,
 } from '../constants/taxonomy';
 import { useFollowedCategories } from '../utils/followedCategories';
+
+/**
+ * High-performance, zero-latency subcategory in-memory filter
+ */
+function filterStoriesBySubcategory(list = [], subName = 'All') {
+  if (!subName || subName === 'All') return list;
+  const subNorm = subName.toLowerCase().trim();
+
+  // 1. Exact canonical subcategory match
+  const exact = list.filter(
+    (s) => (s.subcategory || '').toLowerCase().trim() === subNorm
+  );
+  if (exact.length > 0) return exact;
+
+  // 2. Keyword fallback across headline, brief, subcategory, content
+  const subKeywords = subNorm
+    .replace(/&/g, ' ')
+    .split(/\s+/)
+    .filter((w) => w.length > 2 && !['and', 'for', 'the', 'with'].includes(w));
+
+  const keywordMatched = list.filter((s) => {
+    const text = `${s.headline || ''} ${s.brief || ''} ${s.subcategory || ''} ${s.content || ''}`.toLowerCase();
+    return subKeywords.some((kw) => text.includes(kw));
+  });
+
+  return keywordMatched.length > 0 ? keywordMatched : list;
+}
 
 export default function CategoryPage({
   savedStories = [],
@@ -40,13 +67,17 @@ export default function CategoryPage({
   const accentColor = categoryMeta.color;
   const glowColor = categoryMeta.glow || `${accentColor}33`;
 
+  // Instant synchronous cache resolution: 0ms initial render without blank screen
+  const initialCategoryStories = getCachedStories({ category: canonicalName });
   const [subcategories, setSubcategories] = useState(
     SUBCATEGORIES_BY_CATEGORY[canonicalName] || []
   );
   const [selectedSubcategory, setSelectedSubcategory] = useState('All');
-  const [categoryStories, setCategoryStories] = useState([]);
-  const [stories, setStories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [categoryStories, setCategoryStories] = useState(initialCategoryStories);
+  const [stories, setStories] = useState(() =>
+    filterStoriesBySubcategory(initialCategoryStories, 'All')
+  );
+  const [loading, setLoading] = useState(initialCategoryStories.length === 0);
   const [error, setError] = useState(null);
 
   // Video Lightbox Modal State
@@ -54,7 +85,7 @@ export default function CategoryPage({
   const [modalVideoIndex, setModalVideoIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Load canonical subcategories dynamically from backend
+  // Load canonical subcategories dynamically (with in-memory memoization)
   useEffect(() => {
     let isMounted = true;
     async function loadSubs() {
@@ -89,11 +120,26 @@ export default function CategoryPage({
     }
   }, [subcategorySlug, subcategories]);
 
-  // Fetch all category stories
+  // Zero-latency in-memory subcategory filtering (0ms, no network delay)
+  useEffect(() => {
+    setStories(filterStoriesBySubcategory(categoryStories, selectedSubcategory));
+  }, [selectedSubcategory, categoryStories]);
+
+  // Fetch category stories with Stale-While-Revalidate: render cached instantly, revalidate silently
   useEffect(() => {
     let isMounted = true;
-    async function loadCategoryFeed() {
+
+    // Instantly show cached category stories if available (no blank screen, no skeleton flash)
+    const cached = getCachedStories({ category: canonicalName });
+    if (cached.length > 0) {
+      setCategoryStories(cached);
+      setStories(filterStoriesBySubcategory(cached, selectedSubcategory));
+      setLoading(false);
+    } else {
       setLoading(true);
+    }
+
+    async function loadCategoryFeed() {
       setError(null);
       try {
         const allCategoryData = await fetchStories({
@@ -101,49 +147,14 @@ export default function CategoryPage({
           limit: 100,
         });
 
-        if (isMounted) {
-          setCategoryStories(allCategoryData || []);
-
-          if (selectedSubcategory === 'All') {
-            setStories(allCategoryData || []);
-          } else {
-            const subNorm = selectedSubcategory.toLowerCase().trim();
-            // 1. Exact subcategory match
-            const exactFiltered = (allCategoryData || []).filter(
-              (s) => (s.subcategory || '').toLowerCase().trim() === subNorm
-            );
-
-            if (exactFiltered.length > 0) {
-              setStories(exactFiltered);
-            } else {
-              // 2. Semantic topic keywords fallback across category wire
-              const subKeywords = subNorm
-                .replace(/&/g, ' ')
-                .split(/\s+/)
-                .filter((w) => w.length > 2 && !['and', 'for', 'the', 'with'].includes(w));
-
-              const topicFiltered = (allCategoryData || []).filter((s) => {
-                const text = `${s.headline || ''} ${s.brief || ''} ${s.subcategory || ''} ${s.content || ''}`.toLowerCase();
-                return subKeywords.some((kw) => text.includes(kw));
-              });
-
-              if (topicFiltered.length > 0) {
-                setStories(topicFiltered);
-              } else {
-                const directSubData = await fetchStories({
-                  category: canonicalName,
-                  subcategory: selectedSubcategory,
-                  limit: 50,
-                });
-                if (isMounted) {
-                  setStories(directSubData && directSubData.length > 0 ? directSubData : (allCategoryData || []).slice(0, 6));
-                }
-              }
-            }
-          }
+        if (isMounted && allCategoryData && allCategoryData.length > 0) {
+          setCategoryStories(allCategoryData);
+          setStories(filterStoriesBySubcategory(allCategoryData, selectedSubcategory));
         }
       } catch (err) {
-        if (isMounted) setError(err.message || 'Failed to load category feed.');
+        if (isMounted && (!cached || cached.length === 0)) {
+          setError(err.message || 'Failed to load category feed.');
+        }
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -153,7 +164,7 @@ export default function CategoryPage({
     return () => {
       isMounted = false;
     };
-  }, [canonicalName, selectedSubcategory]);
+  }, [canonicalName]);
 
   const handleSelectSubcategory = (sub) => {
     setSelectedSubcategory(sub);

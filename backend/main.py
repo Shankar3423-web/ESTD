@@ -138,6 +138,11 @@ app = FastAPI(
 )
 
 
+from starlette.middleware.gzip import GZipMiddleware
+
+# Compress JSON and API responses over 1KB to accelerate frontend loading
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
 # CORS middleware for development and production
 frontend_origins = [
     origin.strip().rstrip("/")
