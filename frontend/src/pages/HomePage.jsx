@@ -173,7 +173,7 @@ export default function HomePage({
   };
 
   return (
-    <div className="home-page-container">
+    <div className={`home-page-container ${viewMode === 'inshorts' ? 'inshorts-active' : ''}`}>
       {/* Loading Skeleton Grid */}
       {loading && (
         <div className="home-stories-grid">

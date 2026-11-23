@@ -13170,14 +13170,17 @@ button {
 
 .inshorts-desk-container {
   width: 100%;
-  max-width: 1160px;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 0px 16px 12px;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
   outline: none;
   box-sizing: border-box;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .inshorts-desk-empty {
@@ -13206,12 +13209,15 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 7px 14px;
+  gap: 12px;
+  padding: 4px 12px;
   background: rgba(18, 20, 28, 0.75);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  height: 36px;
+  box-sizing: border-box;
 }
 
 .inshorts-tracker-left {
@@ -13354,15 +13360,15 @@ button {
 /* 2. The Main Inshorts Desktop Card — Perfectly Balanced & Viewport Optimized */
 .inshorts-desk-card {
   display: grid;
-  grid-template-columns: 380px minmax(0, 1fr);
-  gap: 20px;
-  height: 465px;
-  min-height: 465px;
-  max-height: 465px;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+  max-height: 100%;
   background: #0E1017;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  padding: 16px;
+  border-radius: 14px;
+  padding: 12px 14px;
   box-shadow: 0 16px 44px rgba(0, 0, 0, 0.5), 0 0 28px rgba(0, 229, 255, 0.05);
   position: relative;
   overflow: hidden;
@@ -13572,7 +13578,8 @@ button {
 .inshorts-desk-content-col {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  justify-content: space-between;
+  gap: 6px;
   height: 100%;
   min-height: 0;
   min-width: 0;
@@ -13586,8 +13593,8 @@ button {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 7px;
-  font-size: 11.5px;
+  gap: 6px;
+  font-size: 11px;
   flex-shrink: 0;
 }
 
@@ -13616,7 +13623,7 @@ button {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.07);
   color: #CBD5E1;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 600;
 }
 
@@ -13625,14 +13632,14 @@ button {
   background: transparent;
   border: none;
   padding: 0 4px;
-  font-size: 11.5px;
+  font-size: 11px;
 }
 
 /* Headline — Clear, Authoritative Spoken Title */
 .inshorts-headline {
-  font-size: 21px;
+  font-size: clamp(16px, 1.3vw, 19.5px);
   font-weight: 800;
-  line-height: 1.3;
+  line-height: 1.25;
   color: #FFFFFF;
   margin: 0;
   cursor: pointer;
@@ -13644,7 +13651,7 @@ button {
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-height: 56px;
+  max-height: 50px;
   flex-shrink: 0;
 }
 
@@ -13656,8 +13663,8 @@ button {
 .inshorts-summary-box {
   background: rgba(255, 255, 255, 0.035);
   border-left: 3.5px solid var(--card-accent, #00E5FF);
-  padding: 9px 13px;
-  border-radius: 0 10px 10px 0;
+  padding: 6px 12px;
+  border-radius: 0 8px 8px 0;
   min-width: 0;
   overflow: hidden;
   box-sizing: border-box;
@@ -13665,14 +13672,14 @@ button {
 }
 
 .inshorts-summary-text {
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: 13.5px;
+  line-height: 1.45;
   color: #E2E8F0;
   margin: 0;
   overflow-wrap: break-word;
   word-break: normal;
   display: -webkit-box;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -13682,21 +13689,21 @@ button {
 .inshorts-beats-preview {
   background: rgba(7, 8, 12, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 8px 12px;
+  border-radius: 10px;
+  padding: 5px 12px;
   min-width: 0;
   box-sizing: border-box;
   flex-shrink: 0;
 }
 
 .inshorts-beats-header {
-  margin-bottom: 5px;
+  margin-bottom: 3px;
 }
 
 .inshorts-beats-title {
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 800;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.09em;
   color: #94A3B8;
   text-transform: uppercase;
 }
@@ -13704,50 +13711,48 @@ button {
 .inshorts-beats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px 14px;
+  gap: 3px 12px;
   min-width: 0;
 }
 
 .inshorts-beat-item {
   display: flex;
-  align-items: flex-start;
-  gap: 7px;
-  font-size: 12px;
-  line-height: 1.35;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  line-height: 1.3;
   min-width: 0;
   overflow: hidden;
 }
 
 .inshorts-beat-num {
   font-weight: 800;
-  font-size: 10px;
+  font-size: 9.5px;
   letter-spacing: 0.04em;
   flex-shrink: 0;
-  margin-top: 1px;
   padding: 1px 4px;
-  border-radius: 4px;
+  border-radius: 3px;
   background: rgba(255, 255, 255, 0.08);
 }
 
 .inshorts-beat-content {
   min-width: 0;
-  overflow-wrap: break-word;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .inshorts-beat-label {
   color: #E2E8F0;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 11px;
   margin-right: 4px;
 }
 
 .inshorts-beat-text {
   color: #94A3B8;
-  font-size: 12px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  font-size: 11px;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -13756,35 +13761,37 @@ button {
 .inshorts-footer-dock {
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  padding-top: 10px;
+  gap: 6px;
+  padding-top: 6px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   margin-top: auto;
   min-width: 0;
   width: 100%;
+  flex-shrink: 0;
 }
 
 .inshorts-primary-actions {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
 }
 
 .inshorts-read-full-btn {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 7px 15px;
-  border-radius: 9px;
+  gap: 6px;
+  padding: 5px 13px;
+  border-radius: 8px;
   border: none;
   color: #04070E;
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 800;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
+  height: 30px;
   box-shadow: 0 4px 14px rgba(0, 229, 255, 0.25);
   transition: transform 0.15s ease, filter 0.15s ease;
 }
@@ -13797,17 +13804,18 @@ button {
 .inshorts-icon-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px 11px;
-  border-radius: 8px;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 7px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.04);
   color: #CBD5E1;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
+  height: 30px;
   transition: all 0.15s ease;
 }
 
@@ -13825,15 +13833,16 @@ button {
 .inshorts-shortcuts-hint {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 6px 14px;
-  font-size: 11px;
+  flex-wrap: nowrap;
+  gap: 4px 12px;
+  font-size: 10.5px;
   color: #94A3B8;
-  padding: 4px 10px;
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: 6px;
+  padding: 3px 8px;
+  background: rgba(0, 0, 0, 0.28);
+  border-radius: 5px;
   border: 1px solid rgba(255, 255, 255, 0.05);
   min-width: 0;
+  line-height: 1.25;
 }
 
 .inshorts-shortcuts-label {
@@ -13851,7 +13860,7 @@ button {
   gap: 4px;
   white-space: nowrap;
   color: #94A3B8;
-  font-size: 11px;
+  font-size: 10.5px;
 }
 
 .inshorts-shortcuts-hint kbd {
@@ -13859,7 +13868,7 @@ button {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 4px;
-  padding: 1px 5px;
+  padding: 1px 4px;
   font-family: inherit;
   font-size: 9.5px;
   font-weight: 700;
@@ -13868,18 +13877,18 @@ button {
   line-height: 1.2;
 }
 
-/* 3. End of Pack Celebration & Forward Portal Card — Matching Height */
+/* 3. End of Pack Celebration & Forward Portal Card — Flexible Viewport Fit */
 .inshorts-end-container {
-  height: 465px;
-  min-height: 465px;
-  max-height: 465px;
+  flex: 1;
+  min-height: 0;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  max-width: 1160px;
+  max-width: 1180px;
   margin: 0 auto;
   box-sizing: border-box;
 }
@@ -13887,12 +13896,12 @@ button {
 .inshorts-end-card {
   max-width: 580px;
   width: 100%;
-  height: 100%;
-  max-height: 410px;
+  flex: 1;
+  min-height: 0;
   background: #0E1017;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 18px;
-  padding: 22px 28px;
+  border-radius: 16px;
+  padding: 18px 24px;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -14068,12 +14077,12 @@ button {
 
 @media (max-width: 1080px) {
   .inshorts-desk-card {
-    grid-template-columns: 360px minmax(0, 1fr);
-    gap: 14px;
-    padding: 12px;
-    height: 465px;
-    min-height: 465px;
-    max-height: 465px;
+    grid-template-columns: 330px minmax(0, 1fr);
+    gap: 12px;
+    padding: 10px 12px;
+    flex: 1;
+    min-height: 0;
+    max-height: 100%;
   }
 }
 
@@ -14246,54 +14255,67 @@ button {
 .inshorts-page-wrapper {
   width: 100%;
   max-width: 1180px;
+  height: 100%;
+  max-height: 100%;
   margin: 0 auto;
-  padding: 2px 16px 12px;
+  padding: 0 12px 4px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  overflow: hidden;
+  box-sizing: border-box;
+  flex: 1;
+  min-height: 0;
 }
 
 .inshorts-page-header {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 8px 14px;
+  gap: 5px;
+  padding: 5px 12px;
   background: rgba(18, 20, 28, 0.65);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
+  border-radius: 10px;
+  flex-shrink: 0;
 }
 
 .inshorts-page-title-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
 }
 
 .inshorts-badge-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .inshorts-badge-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
+  gap: 5px;
+  padding: 3px 9px;
   border-radius: 9999px;
   background: rgba(184, 255, 59, 0.14);
   border: 1px solid rgba(184, 255, 59, 0.4);
   color: #B8FF3B;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.06em;
+  flex-shrink: 0;
 }
 
 .inshorts-keyboard-hint {
-  font-size: 12px;
+  font-size: 11px;
   color: #94A3B8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .inshorts-keyboard-hint strong {
@@ -14303,15 +14325,17 @@ button {
 .inshorts-switch-bento-btn {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 7px 14px;
-  border-radius: 9px;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #E2E8F0;
-  font-size: 12.5px;
+  font-size: 11.5px;
   font-weight: 700;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: all 0.2s ease;
 }
 
@@ -14323,25 +14347,31 @@ button {
 .inshorts-cat-filters {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   overflow-x: auto;
   padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.inshorts-cat-filters::-webkit-scrollbar {
+  display: none;
 }
 
 .inshorts-cat-filter-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
+  gap: 5px;
+  padding: 4px 11px;
   border-radius: 9999px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.03);
   color: #94A3B8;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
 .inshorts-cat-filter-btn:hover {
@@ -14353,6 +14383,51 @@ button {
   background: rgba(255, 255, 255, 0.12);
   color: #FFFFFF;
   border-color: rgba(255, 255, 255, 0.22);
+}
+
+/* Zero-Scroll Viewport Optimization for Inshorts */
+.app-shell.inshorts-shell-locked,
+body:has(.inshorts-page-wrapper),
+body:has(.inshorts-active) {
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+.app-main.inshorts-main-locked,
+body:has(.inshorts-page-wrapper) .app-main,
+body:has(.inshorts-active) .app-main {
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+.content-viewport.inshorts-viewport-locked,
+body:has(.inshorts-page-wrapper) .content-viewport,
+body:has(.inshorts-active) .content-viewport {
+  height: calc(100vh - var(--topbar-height, 64px) - 43px);
+  max-height: calc(100vh - var(--topbar-height, 64px) - 43px);
+  padding: 0 16px 4px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-page-container.inshorts-active {
+  height: 100%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  gap: 6px;
+  flex: 1;
+  min-height: 0;
+}
+
+.home-page-container.inshorts-active .home-view-toggle-bar {
+  flex-shrink: 0;
+  margin-bottom: 2px;
+  padding: 4px 10px;
 }
 
 .cat-filter-dot {

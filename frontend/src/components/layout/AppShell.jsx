@@ -122,8 +122,12 @@ export default function AppShell({ savedStories, onToggleSave, onListen }) {
     }
   };
 
+  const isDeskInshorts =
+    location.pathname.startsWith('/inshorts') ||
+    location.pathname.startsWith('/swipe');
+
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${isDeskInshorts ? 'inshorts-shell-locked' : ''}`}>
       {/* Persistent Left Sidebar */}
       <Sidebar
         onOpenDiagnostics={() => setIsDiagnosticsOpen(true)}
@@ -131,7 +135,7 @@ export default function AppShell({ savedStories, onToggleSave, onListen }) {
       />
 
       {/* Main Container */}
-      <div className="app-main">
+      <div className={`app-main ${isDeskInshorts ? 'inshorts-main-locked' : ''}`}>
         {/* Top Navigation Bar */}
         <TopBar
           feedMode={feedMode}
@@ -144,7 +148,10 @@ export default function AppShell({ savedStories, onToggleSave, onListen }) {
         {location.pathname.replace(/\/+$/, '') !== '/live' && <BreakingTickerBar />}
 
         {/* Content Viewport */}
-        <main className="content-viewport" id="main-content">
+        <main
+          className={`content-viewport ${isDeskInshorts ? 'inshorts-viewport-locked' : ''}`}
+          id="main-content"
+        >
           <React.Suspense
             fallback={
               <div

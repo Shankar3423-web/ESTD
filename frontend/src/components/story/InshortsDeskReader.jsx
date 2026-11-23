@@ -342,8 +342,11 @@ export default function InshortsDeskReader({
     return [0, 1, 2, 3].map((idx) => {
       const b = rawBeats[idx] || {};
       const fallback = defaultBeatFallbacks[idx];
-      const title = b.title || b.label || b.heading || fallback.title;
-      const detail = b.detail || b.text || b.summary || b.description || (typeof b === 'string' ? b : '') || fallback.detail;
+      let title = b.title || b.label || b.heading || fallback.title;
+      let detail = b.detail || b.text || b.summary || b.description || (typeof b === 'string' ? b : '') || fallback.detail;
+      // Clean leading markdown headers (#, ##, ###), bold/italic marks, and stray bullets
+      title = String(title).replace(/^#+\s*/, '').replace(/^[*_\s-]+/, '').trim();
+      detail = String(detail).replace(/^#+\s*/, '').replace(/^[*_\s-]+/, '').trim();
       return {
         title,
         detail,
@@ -390,12 +393,12 @@ export default function InshortsDeskReader({
   const nextCatMeta = nextCategory ? getCategoryMeta(nextCategory) : null;
   const nextAccent = nextCatMeta?.color || '#00E5FF';
 
-  // Clean brief: strip redundant headline prefix if duplicated in raw text
+  // Clean brief: strip redundant headline prefix if duplicated in raw text, and strip markdown headers
   const cleanBrief = useMemo(() => {
     const raw = activeStory?.brief || activeStory?.contentSnippet || activeStory?.content || '';
     const headline = (activeStory?.headline || '').trim();
     if (!raw) return '';
-    let text = raw.trim();
+    let text = raw.trim().replace(/^#+\s*/, '');
     if (headline && text.toLowerCase().startsWith(headline.toLowerCase())) {
       text = text.slice(headline.length).replace(/^[:.\s-]+/, '').trim();
     }
