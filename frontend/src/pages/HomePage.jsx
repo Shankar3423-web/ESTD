@@ -79,6 +79,17 @@ export default function HomePage({
   const [modalVideoIndex, setModalVideoIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Progressive below-the-fold mounting to slash Total Blocking Time (TBT) and speed up FCP/LCP
+  const [showBelowFold, setShowBelowFold] = useState(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      const handle = window.requestIdleCallback(() => setShowBelowFold(true), { timeout: 300 });
+      return () => window.cancelIdleCallback(handle);
+    }
+    const timer = setTimeout(() => setShowBelowFold(true), 150);
+    return () => clearTimeout(timer);
+  }, []);
+
   // If activeFollowingCategory is no longer followed, reset to 'All'
   useEffect(() => {
     if (
@@ -262,8 +273,8 @@ export default function HomePage({
             <FlashBitesBar stories={stories} />
           </div>
 
-          {/* Section 2.3: ESTDPOD Originals — Guest Showcase Carousel */}
-          <EstdpodCarouselShelf />
+          {/* Section 2.3: ESTDPOD Originals — Guest Showcase Carousel (Progressively mounted) */}
+          {showBelowFold && <EstdpodCarouselShelf />}
 
           {/* Section 2.5: The Daily Pack — Text Intelligence (The Sacred Story Contract) */}
           <section className="home-daily-pack-section">
@@ -306,99 +317,103 @@ export default function HomePage({
             </div>
           </section>
 
-          {/* Section 3: Category Pulse Rows */}
-          {selectedCategory === 'All' ? (
-            <div className="home-pulse-hubs-container">
-              {/* Tech Pulse */}
-              <CategoryQuickRow
-                categoryName="Tech"
-                titleOverride="Tech Pulse"
-                subtitle="AI breakthroughs, enterprise cloud, consumer hardware & semiconductors"
-                stories={stories}
-                savedStories={savedStories}
-                onToggleSave={onToggleSave}
-                watchLaterStories={watchLaterStories}
-                onToggleWatchLater={onToggleWatchLater}
-              />
+          {/* Section 3: Category Pulse Rows & Extended Content (Deferred below fold) */}
+          {showBelowFold && (
+            <>
+              {selectedCategory === 'All' ? (
+                <div className="home-pulse-hubs-container">
+                  {/* Tech Pulse */}
+                  <CategoryQuickRow
+                    categoryName="Tech"
+                    titleOverride="Tech Pulse"
+                    subtitle="AI breakthroughs, enterprise cloud, consumer hardware & semiconductors"
+                    stories={stories}
+                    savedStories={savedStories}
+                    onToggleSave={onToggleSave}
+                    watchLaterStories={watchLaterStories}
+                    onToggleWatchLater={onToggleWatchLater}
+                  />
 
-              {/* Entertainment Pulse */}
-              <CategoryQuickRow
-                categoryName="Entertainment"
-                titleOverride="Entertainment Pulse"
-                subtitle="Cinema, streaming, digital storytelling & creator culture"
-                stories={stories}
-                savedStories={savedStories}
-                onToggleSave={onToggleSave}
-                watchLaterStories={watchLaterStories}
-                onToggleWatchLater={onToggleWatchLater}
-              />
+                  {/* Entertainment Pulse */}
+                  <CategoryQuickRow
+                    categoryName="Entertainment"
+                    titleOverride="Entertainment Pulse"
+                    subtitle="Cinema, streaming, digital storytelling & creator culture"
+                    stories={stories}
+                    savedStories={savedStories}
+                    onToggleSave={onToggleSave}
+                    watchLaterStories={watchLaterStories}
+                    onToggleWatchLater={onToggleWatchLater}
+                  />
 
-              {/* Sports Pulse */}
-              <CategoryQuickRow
-                categoryName="Sports"
-                titleOverride="Sports Pulse"
-                subtitle="Cricket, football, badminton, motorsport & Olympic athletics"
-                stories={stories}
-                savedStories={savedStories}
-                onToggleSave={onToggleSave}
-                watchLaterStories={watchLaterStories}
-                onToggleWatchLater={onToggleWatchLater}
-              />
+                  {/* Sports Pulse */}
+                  <CategoryQuickRow
+                    categoryName="Sports"
+                    titleOverride="Sports Pulse"
+                    subtitle="Cricket, football, badminton, motorsport & Olympic athletics"
+                    stories={stories}
+                    savedStories={savedStories}
+                    onToggleSave={onToggleSave}
+                    watchLaterStories={watchLaterStories}
+                    onToggleWatchLater={onToggleWatchLater}
+                  />
 
-              {/* Education Pulse */}
-              <CategoryQuickRow
-                categoryName="Developments"
-                subcategoryName="Education"
-                titleOverride="Education Pulse"
-                subtitle="Curriculum reforms, university admissions, exam scrutiny & NEP policy updates"
-                accentColor="#38BDF8"
-                seeAllLink="/category/developments/education-and-learning-policy"
-                stories={stories}
-                savedStories={savedStories}
-                onToggleSave={onToggleSave}
-                watchLaterStories={watchLaterStories}
-                onToggleWatchLater={onToggleWatchLater}
-              />
+                  {/* Education Pulse */}
+                  <CategoryQuickRow
+                    categoryName="Developments"
+                    subcategoryName="Education"
+                    titleOverride="Education Pulse"
+                    subtitle="Curriculum reforms, university admissions, exam scrutiny & NEP policy updates"
+                    accentColor="#38BDF8"
+                    seeAllLink="/category/developments/education-and-learning-policy"
+                    stories={stories}
+                    savedStories={savedStories}
+                    onToggleSave={onToggleSave}
+                    watchLaterStories={watchLaterStories}
+                    onToggleWatchLater={onToggleWatchLater}
+                  />
 
-              {/* Business & Markets Pulse */}
-              <CategoryQuickRow
-                categoryName="Business & Finance"
-                titleOverride="Business & Markets Pulse"
-                subtitle="Financial markets, venture capital, earnings & corporate strategy"
-                stories={stories}
-                savedStories={savedStories}
-                onToggleSave={onToggleSave}
-                watchLaterStories={watchLaterStories}
-                onToggleWatchLater={onToggleWatchLater}
-              />
+                  {/* Business & Markets Pulse */}
+                  <CategoryQuickRow
+                    categoryName="Business & Finance"
+                    titleOverride="Business & Markets Pulse"
+                    subtitle="Financial markets, venture capital, earnings & corporate strategy"
+                    stories={stories}
+                    savedStories={savedStories}
+                    onToggleSave={onToggleSave}
+                    watchLaterStories={watchLaterStories}
+                    onToggleWatchLater={onToggleWatchLater}
+                  />
 
-              {/* Developments & Science Pulse */}
-              <CategoryQuickRow
-                categoryName="Developments"
-                excludeSubcategory="Education"
-                titleOverride="Developments & Science Pulse"
-                subtitle="Public policy, health sciences, clean energy transitions & geopolitics"
-                stories={stories}
-                savedStories={savedStories}
-                onToggleSave={onToggleSave}
-                watchLaterStories={watchLaterStories}
-                onToggleWatchLater={onToggleWatchLater}
-              />
-            </div>
-          ) : (
-            <CategoryQuickRow
-              categoryName={selectedCategory}
-              titleOverride={`${selectedCategory === 'Business & Finance' ? 'Business' : selectedCategory} Pulse`}
-              stories={stories}
-              savedStories={savedStories}
-              onToggleSave={onToggleSave}
-              watchLaterStories={watchLaterStories}
-              onToggleWatchLater={onToggleWatchLater}
-            />
+                  {/* Developments & Science Pulse */}
+                  <CategoryQuickRow
+                    categoryName="Developments"
+                    excludeSubcategory="Education"
+                    titleOverride="Developments & Science Pulse"
+                    subtitle="Public policy, health sciences, clean energy transitions & geopolitics"
+                    stories={stories}
+                    savedStories={savedStories}
+                    onToggleSave={onToggleSave}
+                    watchLaterStories={watchLaterStories}
+                    onToggleWatchLater={onToggleWatchLater}
+                  />
+                </div>
+              ) : (
+                <CategoryQuickRow
+                  categoryName={selectedCategory}
+                  titleOverride={`${selectedCategory === 'Business & Finance' ? 'Business' : selectedCategory} Pulse`}
+                  stories={stories}
+                  savedStories={savedStories}
+                  onToggleSave={onToggleSave}
+                  watchLaterStories={watchLaterStories}
+                  onToggleWatchLater={onToggleWatchLater}
+                />
+              )}
+
+              {/* Section 4: The Radar — What's Dropping This Week (Gen-Z Forward Calendar) */}
+              {selectedCategory === 'All' && <WeeklyRadarDrop />}
+            </>
           )}
-
-          {/* Section 4: The Radar — What's Dropping This Week (Gen-Z Forward Calendar) */}
-          {selectedCategory === 'All' && <WeeklyRadarDrop />}
             </>
           )}
         </>

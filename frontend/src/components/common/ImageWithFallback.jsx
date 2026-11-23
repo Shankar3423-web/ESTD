@@ -13,11 +13,11 @@ const CATEGORY_ICONS = {
 };
 
 const SIZE_WIDTHS = {
-  hero: 840,
-  card: 520,
-  row: 400,
-  thumb: 140,
-  auto: 520,
+  hero: 720,
+  card: 380,
+  row: 320,
+  thumb: 120,
+  auto: 380,
 };
 
 /**
@@ -138,9 +138,11 @@ export default function ImageWithFallback({
       <img
         src={optimizedSrc}
         alt={alt}
+        width={targetWidth}
+        height={Math.round((targetWidth * 9) / 16)}
         loading={priority ? 'eager' : 'lazy'}
-        decoding="async"
-        fetchPriority={priority ? 'high' : 'auto'}
+        decoding={priority ? 'sync' : 'async'}
+        fetchPriority={priority ? 'high' : 'low'}
         referrerPolicy="no-referrer"
         className={className}
         onLoad={() => setIsLoaded(true)}
@@ -148,6 +150,7 @@ export default function ImageWithFallback({
         style={{
           width: '100%',
           height: '100%',
+          aspectRatio,
           objectFit: 'cover',
           display: 'block',
           position: 'relative',

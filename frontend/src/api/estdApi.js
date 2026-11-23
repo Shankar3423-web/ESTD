@@ -449,11 +449,7 @@ export function normalizeStoryItem(raw, idx = 0) {
   const catMeta = getCategoryMeta(raw.category);
   const headline = formatConversationalHeadline(raw.title);
   const resolvedImg = resolveUniqueArticleImage(raw, idx);
-  const videoRail = generateStoryVideoPerspectives({ ...raw, image_url: resolvedImg });
   const brief = formatOneParagraphBrief(raw.executive_summary || raw.content_snippet || raw.content);
-  const impactChips = extractSourceGroundedImpactChips(raw.content || raw.content_snippet, raw.category, raw.subcategory);
-  const contextBeats = extractContextBeats(raw.content || raw.content_snippet, raw.published_at);
-  const culturalPulse = extractCulturalPulse(raw);
   const editorialType = detectEditorialType(raw.title, raw.content || '');
 
   return {
@@ -471,7 +467,7 @@ export function normalizeStoryItem(raw, idx = 0) {
     sourceType: raw.source_type || 'news',
     sourceUrl: raw.url,
     author: raw.author || null,
-    imageUrl: optimizeImageUrl(resolvedImg, 640),
+    imageUrl: optimizeImageUrl(resolvedImg, 420),
     publishedAt: raw.published_at,
     createdAt: raw.created_at,
     ingestedAt: raw.created_at,
@@ -479,10 +475,34 @@ export function normalizeStoryItem(raw, idx = 0) {
     pipelineStatus: raw.pipeline_status || 'Stored in PostgreSQL',
     aiStatus: raw.ai_status || 'AI_GENERATED',
     likesCount: typeof raw.likes_count === 'number' ? raw.likes_count : 0,
-    impactChips,
-    contextBeats,
-    videoRail,
-    culturalPulse,
+    _videoRail: undefined,
+    _impactChips: undefined,
+    _contextBeats: undefined,
+    _culturalPulse: undefined,
+    get videoRail() {
+      if (this._videoRail === undefined) {
+        this._videoRail = generateStoryVideoPerspectives({ ...raw, image_url: resolvedImg });
+      }
+      return this._videoRail;
+    },
+    get impactChips() {
+      if (this._impactChips === undefined) {
+        this._impactChips = extractSourceGroundedImpactChips(raw.content || raw.content_snippet, raw.category, raw.subcategory);
+      }
+      return this._impactChips;
+    },
+    get contextBeats() {
+      if (this._contextBeats === undefined) {
+        this._contextBeats = extractContextBeats(raw.content || raw.content_snippet, raw.published_at);
+      }
+      return this._contextBeats;
+    },
+    get culturalPulse() {
+      if (this._culturalPulse === undefined) {
+        this._culturalPulse = extractCulturalPulse(raw);
+      }
+      return this._culturalPulse;
+    },
     get structuredArticle() {
       return parseStructuredArticleContent(
         raw.content || raw.content_snippet || '',
@@ -491,7 +511,7 @@ export function normalizeStoryItem(raw, idx = 0) {
         raw.subcategory || '',
         raw.published_at,
         raw.source_name || 'Verified Source',
-        videoRail
+        this.videoRail
       );
     },
   };
@@ -1357,28 +1377,42 @@ const PERSPECTIVE_THUMBNAILS = {
 };
 /**
  * Optimizes an image URL for high performance and fast rendering.
- * Automatically converts bulky Unsplash images to lightweight, responsive WebP dimensions.
+ * Automatically converts bulky Unsplash and external news images to lightweight, responsive WebP dimensions.
  */
-export function optimizeImageUrl(url, width = 640) {
+export function optimizeImageUrl(url, width = 420) {
   if (!url || typeof url !== 'string') return '';
-  if (url.includes('images.unsplash.com')) {
-    let clean = url;
+  const trimmed = url.trim();
+  if (trimmed.startsWith('data:') || trimmed.startsWith('blob:')) return trimmed;
+
+  if (trimmed.includes('images.unsplash.com')) {
+    let clean = trimmed;
     if (/w=\d+/.test(clean)) {
       clean = clean.replace(/w=\d+/, `w=${width}`);
     } else {
       clean += (clean.includes('?') ? '&' : '?') + `w=${width}`;
     }
     if (/q=\d+/.test(clean)) {
-      clean = clean.replace(/q=\d+/, 'q=75');
+      clean = clean.replace(/q=\d+/, 'q=70');
     } else {
-      clean += '&q=75';
+      clean += '&q=70';
     }
     if (!clean.includes('auto=format')) {
       clean += '&auto=format';
     }
+    if (!clean.includes('fit=crop')) {
+      clean += '&fit=crop';
+    }
     return clean;
   }
-  return url;
+
+  // Route heavy external publisher images through global Cloudflare-backed WebP proxy wsrv.nl
+  // Saves 70-90% bandwidth, guarantees WebP format, and resizes to exact requested width
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    if (trimmed.includes('wsrv.nl')) return trimmed;
+    return `https://wsrv.nl/?url=${encodeURIComponent(trimmed)}&w=${width}&q=70&output=webp&we=1`;
+  }
+
+  return trimmed;
 }
 
 const _SEEN_FEED_IMAGE_KEYS = new Set();
