@@ -23,6 +23,13 @@ def build_news_generation_prompt(
     author_str = f"Author: {author}\n" if author else ""
     pub_str = f"Published Date: {published_at}\n" if published_at else ""
     desc_str = f"Original Summary: {description}\n" if description else ""
+    from backend.common.constants.categories import CATEGORY_SUBCATEGORIES_MAP
+    canonical_subs = CATEGORY_SUBCATEGORIES_MAP.get(category, ())
+    subcat_options = ", ".join(f'"{s}"' for s in canonical_subs) if canonical_subs else ""
+    subcat_guidance = (
+        f"Allowed Canonical Subcategories for {category}: [{subcat_options}]\n"
+        if subcat_options else ""
+    )
     subcat_str = f"Target Subcategory: {subcategory}\n" if subcategory else ""
     custom_inst_str = (
         f"\nEDITORIAL GUIDANCE:\n{custom_instructions}\n" if custom_instructions else ""
@@ -51,8 +58,9 @@ CRITICAL FACTUAL SAFETY & GROUNDING RULES (ZERO HALLUCINATION):
    - DO NOT use generic AI filler, fluff, or boilerplate phrasing.
    - DO NOT repeat the executive summary verbatim inside the article body.
    - DO NOT repeat identical paragraphs across sections.
-4. CATEGORY FIDELITY:
+4. CATEGORY & SUBCATEGORY FIDELITY:
    - The output category MUST be EXACTLY: "{category}". Do NOT alter or substitute it.
+   - The output subcategory MUST be strictly selected from the allowed subcategories for this category: [{subcat_options}].
 5. SOURCE ATTRIBUTION:
    - Set source_name to: "{source_name_str}"
    - Set source_url to: "{source_url}"
@@ -86,7 +94,7 @@ REQUIRED ESTD PUBLICATION ARTICLE STRUCTURE & QUALITY STANDARDS:
 SOURCE ARTICLE DETAILS:
 ================================================================================
 Target Category: {category}
-{subcat_str}Original Title: {title}
+{subcat_guidance}{subcat_str}Original Title: {title}
 {desc_str}{author_str}{pub_str}Publisher: {source_name_str}
 Source URL: {source_url}
 

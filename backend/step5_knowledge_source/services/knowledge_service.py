@@ -220,16 +220,21 @@ class KnowledgeSourceService:
                 if not category_record:
                     raise CategoryNotFoundError(canonical_cat)
 
-            # Resolve subcategory FK if provided
-            subcat_record = None
-            resolved_subcat_name = subcategory_name
-            if subcategory_name:
-                from backend.database.repositories.category_repository import SubcategoryRepository
-                try:
-                    resolved_subcat_name = resolve_subcategory(subcategory_name, canonical_cat)
-                    subcat_record = SubcategoryRepository.get_by_name(sess, resolved_subcat_name)
-                except Exception:
-                    subcat_record = SubcategoryRepository.get_by_name(sess, subcategory_name)
+            # Deterministically resolve canonical subcategory and FK ID
+            from backend.common.taxonomy.subcategory_classifier import (
+                SUBCATEGORY_ID_MAP,
+                classify_article_subcategory,
+            )
+            from backend.database.repositories.category_repository import SubcategoryRepository
+
+            resolved_subcat_name, fallback_id = classify_article_subcategory(
+                category=canonical_cat,
+                title=title or "",
+                content=content or description or "",
+                current_sub=subcategory_name,
+            )
+            subcat_record = SubcategoryRepository.get_by_name(sess, resolved_subcat_name)
+            subcat_id_to_store = subcat_record.id if subcat_record else fallback_id
 
             # Parse timestamps to timezone-aware UTC datetime
             published_at_dt = self._parse_datetime(published_at_str)
@@ -256,7 +261,7 @@ class KnowledgeSourceService:
                 category=canonical_cat,
                 category_id=category_record.id,
                 subcategory=subcat_record.name if subcat_record else resolved_subcat_name,
-                subcategory_id=subcat_record.id if subcat_record else None,
+                subcategory_id=subcat_id_to_store,
                 original_source_category=original_source_category,
                 language=language or "en",
                 region=region,

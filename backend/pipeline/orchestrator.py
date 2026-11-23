@@ -430,8 +430,23 @@ class PipelineOrchestrator:
                             if art_record:
                                 art_record.description = gen_response.data.summary
                                 art_record.content = getattr(gen_response.data, "formatted_body", None) or getattr(gen_response.data, "content", "") or art_record.content
-                                if getattr(gen_response.data, "subcategory", None):
-                                    art_record.subcategory = gen_response.data.subcategory
+                                # Guarantee canonical subcategory and FK resolution
+                                from backend.common.taxonomy.subcategory_classifier import (
+                                    classify_article_subcategory,
+                                )
+                                from backend.database.repositories.category_repository import SubcategoryRepository
+
+                                candidate_sub = getattr(gen_response.data, "subcategory", None) or art_record.subcategory
+                                resolved_sub, sub_id = classify_article_subcategory(
+                                    category=art_record.category,
+                                    title=art_record.title or "",
+                                    content=art_record.content or art_record.description or "",
+                                    current_sub=candidate_sub,
+                                )
+                                art_record.subcategory = resolved_sub
+                                sub_rec = SubcategoryRepository.get_by_name(session, resolved_sub)
+                                art_record.subcategory_id = sub_rec.id if sub_rec else sub_id
+
                                 art_record.qa_status = "APPROVED"
                                 session.commit()
                     else:
