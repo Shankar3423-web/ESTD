@@ -102,29 +102,38 @@ def init_db(engine: Optional[Engine] = None) -> None:
     logger.info("Ensuring all database tables exist in metadata...")
     Base.metadata.create_all(bind=target_engine)
 
-    # Ensure likes_count column and article_likes table exist
+    # Ensure likes_count column and article_likes table exist (safely check without exclusive table locks)
     try:
         from sqlalchemy import text
-        with target_engine.begin() as conn:
-            conn.execute(text("""
-                ALTER TABLE news_articles 
-                ADD COLUMN IF NOT EXISTS likes_count INTEGER DEFAULT 0 NOT NULL;
-            """))
-            conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS article_likes (
-                    id SERIAL PRIMARY KEY,
-                    article_id BIGINT NOT NULL REFERENCES news_articles(id) ON DELETE CASCADE,
-                    client_id VARCHAR(128) NOT NULL,
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-                    CONSTRAINT uq_article_client_like UNIQUE (article_id, client_id)
-                );
-            """))
-            conn.execute(text("""
-                CREATE INDEX IF NOT EXISTS ix_article_likes_article_id ON article_likes(article_id);
-            """))
-            conn.execute(text("""
-                CREATE INDEX IF NOT EXISTS ix_article_likes_client_id ON article_likes(client_id);
-            """))
+        with target_engine.connect() as conn:
+            col_exists = conn.execute(text("""
+                SELECT 1 FROM information_schema.columns 
+                WHERE table_name='news_articles' AND column_name='likes_count';
+            """)).scalar()
+            if not col_exists:
+                with target_engine.begin() as bconn:
+                    bconn.execute(text("""
+                        ALTER TABLE news_articles 
+                        ADD COLUMN IF NOT EXISTS likes_count INTEGER DEFAULT 0 NOT NULL;
+                    """))
+
+            tbl_exists = conn.execute(text("""
+                SELECT 1 FROM information_schema.tables 
+                WHERE table_name='article_likes';
+            """)).scalar()
+            if not tbl_exists:
+                with target_engine.begin() as bconn:
+                    bconn.execute(text("""
+                        CREATE TABLE IF NOT EXISTS article_likes (
+                            id SERIAL PRIMARY KEY,
+                            article_id BIGINT NOT NULL REFERENCES news_articles(id) ON DELETE CASCADE,
+                            client_id VARCHAR(128) NOT NULL,
+                            created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+                            CONSTRAINT uq_article_client_like UNIQUE (article_id, client_id)
+                        );
+                        CREATE INDEX IF NOT EXISTS ix_article_likes_article_id ON article_likes(article_id);
+                        CREATE INDEX IF NOT EXISTS ix_article_likes_client_id ON article_likes(client_id);
+                    """))
     except Exception as exc:
         logger.warning(f"Notice on ensuring likes schema: {exc}")
 

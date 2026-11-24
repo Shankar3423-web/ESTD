@@ -255,7 +255,7 @@ export default function LivePage({
               <span
                 key={`ticker-${item.id}-${idx}`}
                 className="live-marquee-item"
-                onClick={() => navigate(`/story/${item.id}`)}
+                onClick={() => navigate(`/story/${item.id}`, { state: { story: item } })}
               >
                 
                 <span className="live-ticker-tag" style={{ color: item.liveStatus.color }}>
@@ -271,7 +271,7 @@ export default function LivePage({
 
       {/* Floating Ingestion Alert Toast */}
       {newUpdateAlert && (
-        <div className="live-new-ingest-toast" onClick={() => navigate(`/story/${newUpdateAlert.id}`)}>
+        <div className="live-new-ingest-toast" onClick={() => navigate(`/story/${newUpdateAlert.id}`, { state: { story: newUpdateAlert } })}>
           <div className="live-ingest-toast-icon">
             <Zap size={16} fill="#00E5FF" color="#00E5FF" />
           </div>
@@ -503,7 +503,7 @@ export default function LivePage({
                     {/* Headline */}
                     <h2
                       className="live-event-headline"
-                      onClick={() => navigate(`/story/${item.id}`)}
+                      onClick={() => navigate(`/story/${item.id}`, { state: { story: item } })}
                     >
                       {item.headline}
                     </h2>
@@ -567,7 +567,7 @@ export default function LivePage({
                       <button
                         type="button"
                         className="live-action-read-btn"
-                        onClick={() => navigate(`/story/${item.id}`)}
+                        onClick={() => navigate(`/story/${item.id}`, { state: { story: item } })}
                       >
                         <span>Read Full Story</span>
                         <ChevronRight size={14} />

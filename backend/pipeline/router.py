@@ -204,10 +204,15 @@ def _build_article_card_items(articles: List[NewsArticle], session: Session) -> 
 _DASHBOARD_ARTICLES_CACHE: dict = {}
 _DASHBOARD_CACHE_TTL = 180.0  # seconds (3 minutes fast cache)
 
+# In-memory cache for article likes status
+_LIKES_CACHE: dict = {}
+_LIKES_CACHE_TTL = 120.0  # 120 seconds TTL
+
 
 def clear_dashboard_cache():
-    """Clear cached articles when pipeline finishes or like count mutates."""
+    """Clear cached articles and likes when pipeline finishes or like count mutates."""
     _DASHBOARD_ARTICLES_CACHE.clear()
+    _LIKES_CACHE.clear()
 
 
 @router.get(
@@ -326,6 +331,14 @@ def get_article_likes(
     session: Session = Depends(get_db),
 ):
     """Retrieve verified like count and user like status from PostgreSQL."""
+    cid = (client_id or "anonymous").strip()
+    cache_key = f"{article_id}:{cid}"
+    now = time.time()
+    if cache_key in _LIKES_CACHE:
+        c_time, c_data = _LIKES_CACHE[cache_key]
+        if now - c_time < _LIKES_CACHE_TTL:
+            return c_data
+
     article = session.query(NewsArticle).filter(NewsArticle.id == article_id).first()
     if not article:
         raise HTTPException(
@@ -337,16 +350,18 @@ def get_article_likes(
     if client_id:
         is_liked = (
             session.query(ArticleLike)
-            .filter(ArticleLike.article_id == article_id, ArticleLike.client_id == client_id.strip())
+            .filter(ArticleLike.article_id == article_id, ArticleLike.client_id == cid)
             .first()
             is not None
         )
 
-    return {
+    res = {
         "article_id": article_id,
         "likes_count": article.likes_count or 0,
         "liked": is_liked,
     }
+    _LIKES_CACHE[cache_key] = (now, res)
+    return res
 
 
 _OVERVIEW_CACHE = None

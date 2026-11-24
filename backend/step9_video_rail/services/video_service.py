@@ -15,6 +15,7 @@ logger = logging.getLogger("estd.step9.video_service")
 
 # In-memory persistent cache for resolved video rails keyed by article_id
 _VIDEO_CACHE: Dict[int, List[Dict[str, Any]]] = {}
+_SEARCH_QUERY_CACHE: Dict[str, List[Dict[str, Any]]] = {}
 
 # Canonical 5 perspective roles in ESTD
 CANONICAL_ROLES = ["Official", "Broadcast", "Analysis", "Creator", "Fan"]   
@@ -74,11 +75,15 @@ def clean_headline_for_search(title: str) -> str:
     return cleaned
 
 
-def search_youtube_videos(query: str, max_results: int = 10, timeout: float = 6.0) -> List[Dict[str, Any]]:
+def search_youtube_videos(query: str, max_results: int = 10, timeout: float = 2.5) -> List[Dict[str, Any]]:
     """Query YouTube public search and extract structured video items (video_id, title, channel, duration, etc.)."""
     clean_q = clean_headline_for_search(query)
     if not clean_q:
         return []
+
+    # Fast in-memory cache check
+    if clean_q in _SEARCH_QUERY_CACHE:
+        return _SEARCH_QUERY_CACHE[clean_q][:max_results]
 
     encoded_query = urllib.parse.quote_plus(clean_q)
     url = f"https://www.youtube.com/results?search_query={encoded_query}"
@@ -93,7 +98,8 @@ def search_youtube_videos(query: str, max_results: int = 10, timeout: float = 6.
     }
 
     try:
-        with httpx.Client(timeout=timeout, follow_redirects=True) as client:
+        client_timeout = httpx.Timeout(timeout, connect=1.5)
+        with httpx.Client(timeout=client_timeout, follow_redirects=True) as client:
             resp = client.get(url, headers=headers)
             if resp.status_code != 200:
                 logger.warning(f"YouTube search returned status {resp.status_code} for query: {clean_q}")
@@ -210,6 +216,9 @@ def search_youtube_videos(query: str, max_results: int = 10, timeout: float = 6.
                 if len(videos) >= max_results:
                     break
 
+    if videos:
+        _SEARCH_QUERY_CACHE[clean_q] = videos
+
     return videos
 
 
@@ -262,17 +271,7 @@ def resolve_story_video_rail(
         return _VIDEO_CACHE[article_id]
 
     cleaned_title = clean_headline_for_search(title)
-    discovered_videos = search_youtube_videos(cleaned_title, max_results=10)
-
-    # If primary search was sparse, attempt a refined search using subcategory keywords
-    if len(discovered_videos) < 3 and subcategory:
-        secondary_query = f"{cleaned_title} {subcategory}"
-        more_vids = search_youtube_videos(secondary_query, max_results=6)
-        existing_ids = {v["video_id"] for v in discovered_videos}
-        for mv in more_vids:
-            if mv["video_id"] not in existing_ids:
-                discovered_videos.append(mv)
-                existing_ids.add(mv["video_id"])
+    discovered_videos = search_youtube_videos(cleaned_title, max_results=5)
 
     perspectives: List[Dict[str, Any]] = []
 

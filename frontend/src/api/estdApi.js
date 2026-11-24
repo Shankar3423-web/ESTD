@@ -297,17 +297,67 @@ export async function askEstdIntelligence({ query, category, subcategory, limit 
 }
 
 /**
+ * Synchronously retrieves a cached story by primary key ID from memory or local storage.
+ * Enables instantaneous 0ms display when navigating to /story/:id.
+ */
+export function getCachedStoryById(storyId) {
+  if (!storyId) return null;
+  const idStr = String(storyId);
+  const fromMem = _NORMALIZED_STORIES_BY_ID.get(idStr);
+  if (fromMem) return fromMem;
+
+  // Fallback to localStorage feed cache
+  try {
+    const localFeed = localStorage.getItem('estd_feed_cache');
+    if (localFeed) {
+      const parsed = JSON.parse(localFeed);
+      if (Array.isArray(parsed)) {
+        const found = parsed.find((s) => String(s.id) === idStr);
+        if (found) {
+          const norm = normalizeStoryItem(found);
+          _NORMALIZED_STORIES_BY_ID.set(idStr, norm);
+          return norm;
+        }
+      }
+    }
+  } catch {}
+
+  // Fallback to saved stories
+  try {
+    const saved = localStorage.getItem('estd_saved_stories');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) {
+        const found = parsed.find((s) => String(s.id) === idStr);
+        if (found) {
+          const norm = normalizeStoryItem(found);
+          _NORMALIZED_STORIES_BY_ID.set(idStr, norm);
+          return norm;
+        }
+      }
+    }
+  } catch {}
+
+  return null;
+}
+
+/**
  * Retrieves a single article by primary key ID and attaches its Google Document status.
+ * Non-blocking: Video rail is fetched asynchronously in the background so article content opens instantaneously.
  */
 export async function fetchStoryById(storyId) {
-  const [articleRes, docRes, videoRes] = await Promise.all([
+  const cached = getCachedStoryById(storyId);
+
+  // Fast-path: Only fetch article data and document record in parallel.
+  // Video rail is non-blocking and fetched in the background so article displays instantly.
+  const [articleRes, docRes] = await Promise.all([
     apiRequest(`/api/v1/knowledge/articles/${storyId}`),
     apiRequest(`/step8/documents/${storyId}`).catch(() => null),
-    apiRequest(`/api/v1/videos/story/${storyId}`).catch(() => null),
   ]);
 
   const article = articleRes?.data;
   if (!article) {
+    if (cached) return cached;
     throw new Error(`Story #${storyId} not found`);
   }
 
@@ -315,7 +365,7 @@ export async function fetchStoryById(storyId) {
     ...article,
     content_snippet: article.description || article.content?.slice(0, 240) + '...',
     executive_summary: article.description,
-    video_rail: videoRes?.video_rail || null,
+    video_rail: cached?.videoRail || null,
     google_doc: docRes?.data
       ? {
           status: docRes.data.status,
@@ -326,6 +376,18 @@ export async function fetchStoryById(storyId) {
         }
       : null,
   });
+
+  // Save in memory registry for subsequent O(1) instant retrieval
+  indexStoriesInCache([normalized]);
+
+  // Non-blocking background fetch of video perspectives
+  fetchStoryVideos(storyId)
+    .then((videos) => {
+      if (Array.isArray(videos) && videos.length > 0) {
+        normalized._videoRail = videos;
+      }
+    })
+    .catch(() => {});
 
   return normalized;
 }

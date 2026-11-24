@@ -42,6 +42,8 @@ import {
   toggleStoryLike,
   fetchStoryLikes,
   parseStructuredArticleContent,
+  getCachedStoryById,
+  getCachedStories,
 } from '../../api/estdApi';
 import { getCategoryMeta, slugify } from '../../constants/taxonomy';
 import { trackArticleRead } from '../../utils/readingHistory';
@@ -76,12 +78,18 @@ export default function StoryObject({
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [story, setStory] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Instant 0ms render from router state or memory cache
+  const locationStory = location.state?.story;
+  const initialStory = (locationStory && String(locationStory.id) === String(storyId))
+    ? locationStory
+    : getCachedStoryById(storyId);
+
+  const [story, setStory] = useState(initialStory || null);
+  const [loading, setLoading] = useState(!initialStory);
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
   const [quoteCopied, setQuoteCopied] = useState(false);
-  const [allStories, setAllStories] = useState([]);
+  const [allStories, setAllStories] = useState(() => getCachedStories({ limit: 60 }) || []);
 
   // Video Modal State
   const [modalVideoIndex, setModalVideoIndex] = useState(0);
@@ -95,7 +103,7 @@ export default function StoryObject({
   const [showAudioPlayer, setShowAudioPlayer] = useState(shouldListen);
 
   // Interactive Likes State
-  const [likesCount, setLikesCount] = useState(0);
+  const [likesCount, setLikesCount] = useState(initialStory?.likesCount || 0);
   const [hasLiked, setHasLiked] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
 
@@ -113,35 +121,61 @@ export default function StoryObject({
 
   useEffect(() => {
     let isMounted = true;
-    async function loadStory() {
+
+    // Fast check for cached story
+    const currentCached = (location.state?.story && String(location.state.story.id) === String(storyId))
+      ? location.state.story
+      : getCachedStoryById(storyId);
+
+    if (currentCached) {
+      setStory(currentCached);
+      setLoading(false);
+      trackArticleRead(currentCached);
+      setLikesCount(currentCached.likesCount || 0);
+    } else {
       setLoading(true);
+    }
+
+    // Instantly hydrate feed stories from cache if empty
+    const cachedList = getCachedStories({ limit: 60 });
+    if (cachedList && cachedList.length > 0) {
+      setAllStories(cachedList);
+    }
+
+    async function loadStory() {
       setError(null);
       try {
         const data = await fetchStoryById(storyId);
         if (isMounted) {
           setStory(data);
-trackArticleRead(data);
+          trackArticleRead(data);
           setLikesCount(data.likesCount || 0);
+          setLoading(false); // Unblock display immediately!
         }
 
-        // Fetch feed stories for adjacent, related, and subcategory navigation
-        const list = await fetchStories({ limit: 60 });
-        if (isMounted) setAllStories(list);
-
-        // Fetch live likes status from PostgreSQL
-        try {
-          const likesRes = await fetchStoryLikes(storyId);
-          if (isMounted && likesRes) {
-            setLikesCount(likesRes.likes_count || data.likesCount || 0);
-            setHasLiked(Boolean(likesRes.has_liked));
-          }
-        } catch {
-          // Non-critical if like check fails
+        // Fetch feed stories for adjacent/related in background if not already loaded
+        if (!cachedList || cachedList.length === 0) {
+          fetchStories({ limit: 60 })
+            .then((list) => {
+              if (isMounted && list && list.length > 0) setAllStories(list);
+            })
+            .catch(() => {});
         }
+
+        // Fetch live likes status from PostgreSQL in background without blocking
+        fetchStoryLikes(storyId)
+          .then((likesRes) => {
+            if (isMounted && likesRes) {
+              setLikesCount(likesRes.likes_count ?? (data && data.likesCount) ?? 0);
+              setHasLiked(Boolean(likesRes.has_liked));
+            }
+          })
+          .catch(() => {});
       } catch (err) {
-        if (isMounted) setError(err.message || 'Story could not be loaded.');
-      } finally {
-        if (isMounted) setLoading(false);
+        if (isMounted && !currentCached) {
+          setError(err.message || 'Story could not be loaded.');
+          setLoading(false);
+        }
       }
     }
 
@@ -149,7 +183,7 @@ trackArticleRead(data);
       loadStory();
     }
 
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'instant' });
 
     return () => {
       isMounted = false;
@@ -403,7 +437,7 @@ trackArticleRead(data);
                   {prevStory && (
                     <button
                       className="action-icon-btn adjacent-btn"
-                      onClick={() => navigate(`/story/${prevStory.id}`)}
+                      onClick={() => navigate(`/story/${prevStory.id}`, { state: { story: prevStory } })}
                       title={`Previous: ${prevStory.headline}`}
                     >
                       <ChevronLeft size={14} />
@@ -413,7 +447,7 @@ trackArticleRead(data);
                   {nextStory && (
                     <button
                       className="action-icon-btn adjacent-btn"
-                      onClick={() => navigate(`/story/${nextStory.id}`)}
+                      onClick={() => navigate(`/story/${nextStory.id}`, { state: { story: nextStory } })}
                       title={`Next: ${nextStory.headline}`}
                     >
                       <span className="adjacent-label">Next</span>
@@ -1094,7 +1128,7 @@ trackArticleRead(data);
                     <div
                       key={item.id}
                       className="related-story-card"
-                      onClick={() => navigate(`/story/${item.id}`)}
+                      onClick={() => navigate(`/story/${item.id}`, { state: { story: item } })}
                     >
                       <h5>{item.headline}</h5>
                       <div className="related-story-meta">
@@ -1122,7 +1156,7 @@ trackArticleRead(data);
                     <div
                       key={item.id}
                       className="related-story-card"
-                      onClick={() => navigate(`/story/${item.id}`)}
+                      onClick={() => navigate(`/story/${item.id}`, { state: { story: item } })}
                     >
                       <h5>{item.headline}</h5>
                       <div className="related-story-meta">

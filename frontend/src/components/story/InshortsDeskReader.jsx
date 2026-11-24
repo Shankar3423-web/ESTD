@@ -237,7 +237,7 @@ export default function InshortsDeskReader({
             handleRestart();
           }
         } else if (activeStory) {
-          navigate(`/story/${activeStory.id}`);
+          navigate(`/story/${activeStory.id}`, { state: { story: activeStory } });
         }
       }
     };
@@ -764,7 +764,7 @@ export default function InshortsDeskReader({
           {/* Spoken Headline (<= 12 words) */}
           <h2
             className="inshorts-headline"
-            onClick={() => navigate(`/story/${activeStory.id}`)}
+            onClick={() => navigate(`/story/${activeStory.id}`, { state: { story: activeStory } })}
             title="Read complete story deep dive"
           >
             {activeStory.headline}
@@ -803,7 +803,7 @@ export default function InshortsDeskReader({
               <button
                 type="button"
                 className="inshorts-read-full-btn"
-                onClick={() => navigate(`/story/${activeStory.id}`)}
+                onClick={() => navigate(`/story/${activeStory.id}`, { state: { story: activeStory } })}
                 style={{
                   background: `linear-gradient(135deg, ${accentColor} 0%, #0070F3 100%)`,
                 }}

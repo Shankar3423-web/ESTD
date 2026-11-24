@@ -7,7 +7,9 @@ import { prefetchAllCategories } from './api/estdApi';
 const HomePage = lazy(() => import('./pages/HomePage'));
 const InshortsPage = lazy(() => import('./pages/InshortsPage'));
 const CategoryPage = lazy(() => import('./pages/CategoryPage'));
-const StoryObject = lazy(() => import('./components/story/StoryObject'));
+// Pre-warm StoryObject chunk immediately so opening any article has 0 network bundle download delay
+const storyObjectPromise = import('./components/story/StoryObject');
+const StoryObject = lazy(() => storyObjectPromise);
 const WatchPage = lazy(() => import('./pages/WatchPage'));
 const LivePage = lazy(() => import('./pages/LivePage'));
 const SavedPage = lazy(() => import('./pages/SavedPage'));

@@ -119,7 +119,7 @@ export default function TrendingStrip({ stories = [] }) {
             <article
               key={story.id || index}
               className="trending-card"
-              onClick={() => navigate(`/story/${story.id}`)}
+              onClick={() => navigate(`/story/${story.id}`, { state: { story } })}
               style={{ '--story-accent': accentColor }}
             >
               <span className="trending-rank">{rank}</span>

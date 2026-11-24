@@ -115,7 +115,7 @@ export default function FlashBiteModal({
   const handleReadFull = () => {
     if (!currentStory) return;
     if (onClose) onClose();
-    navigate(`/story/${currentStory.id}`);
+    navigate(`/story/${currentStory.id}`, { state: { story: currentStory } });
   };
 
   if (!isOpen || !currentStory) return null;

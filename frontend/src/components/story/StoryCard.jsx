@@ -64,7 +64,7 @@ export default function StoryCard({
   const handleOpenStory = (e) => {
     if (e.target.closest('button') && !e.target.closest('.story-read-more-btn')) return;
     trackArticleRead(story);
-    navigate(`/story/${story.id}`);
+    navigate(`/story/${story.id}`, { state: { story } });
   };
 
   const handleShare = async (e) => {

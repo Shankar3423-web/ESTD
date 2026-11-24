@@ -549,7 +549,7 @@ export default function YouPage({
               {savedStories.map((story) => (
                 <div
                   key={story.id}
-                  onClick={() => navigate(`/story/${story.id}`)}
+                  onClick={() => navigate(`/story/${story.id}`, { state: { story } })}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -864,7 +864,7 @@ export default function YouPage({
               {readArticles.map((article) => (
                 <div
                   key={article.id}
-                  onClick={() => navigate(`/story/${article.id}`)}
+                  onClick={() => navigate(`/story/${article.id}`, { state: { story: article } })}
                   style={{
                     display: 'flex',
                     alignItems: 'center',

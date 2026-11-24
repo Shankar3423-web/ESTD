@@ -395,7 +395,7 @@ export default function CategoryQuickRow({
             <article
               key={story.id}
               className="cqr-card"
-              onClick={() => navigate(`/story/${story.id}`)}
+              onClick={() => navigate(`/story/${story.id}`, { state: { story } })}
             >
               {/* Image with crisp high-contrast subcategory badge on top */}
               <div className="cqr-image-container">

@@ -102,7 +102,7 @@ export default function BreakingTickerBar({ onSelectStory }) {
     if (onSelectStory) {
       onSelectStory(story.id);
     } else {
-      navigate(`/story/${story.id}`);
+      navigate(`/story/${story.id}`, { state: { story } });
     }
   };
 

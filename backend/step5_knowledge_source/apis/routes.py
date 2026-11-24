@@ -1,5 +1,6 @@
 """FastAPI routes for Step 5 Knowledge Source API."""
-from typing import Any, Dict, List, Optional, Union
+import time
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
@@ -41,6 +42,18 @@ router = APIRouter(
 )
 
 service = KnowledgeSourceService()
+
+# High-speed in-memory caches to eliminate transatlantic database round trips
+_ARTICLE_RESPONSE_CACHE: Dict[int, Tuple[float, SingleArticleResponse]] = {}
+_ARTICLE_CACHE_TTL = 300.0  # 5 minutes
+_LIST_RESPONSE_CACHE: Dict[str, Tuple[float, ArticleListResponse]] = {}
+_LIST_CACHE_TTL = 60.0  # 60 seconds
+
+def _invalidate_knowledge_cache(article_id: Optional[int] = None):
+    """Invalidate cached articles and list payloads when content updates."""
+    if article_id and article_id in _ARTICLE_RESPONSE_CACHE:
+        _ARTICLE_RESPONSE_CACHE.pop(article_id, None)
+    _LIST_RESPONSE_CACHE.clear()
 
 
 @router.get(
@@ -137,6 +150,7 @@ def store_article(
         raise InvalidArticleDataError(f"Validation error for article creation: {exc}")
 
     article = service.create_article(request_obj, session=session)
+    _invalidate_knowledge_cache()
     return SingleArticleResponse(
         status="success",
         data=ArticleResponse.model_validate(article),
@@ -154,11 +168,19 @@ def get_article(
     session: Session = Depends(get_db),
 ):
     """Retrieve a single article from the knowledge source by its primary key ID."""
+    now = time.time()
+    if article_id in _ARTICLE_RESPONSE_CACHE:
+        cached_time, cached_res = _ARTICLE_RESPONSE_CACHE[article_id]
+        if now - cached_time < _ARTICLE_CACHE_TTL:
+            return cached_res
+
     article = service.get_article_by_id(article_id, session=session)
-    return SingleArticleResponse(
+    response_obj = SingleArticleResponse(
         status="success",
         data=ArticleResponse.model_validate(article),
     )
+    _ARTICLE_RESPONSE_CACHE[article_id] = (now, response_obj)
+    return response_obj
 
 
 @router.get(
@@ -179,6 +201,13 @@ def list_articles(
     session: Session = Depends(get_db),
 ):
     """Retrieve filtered, paginated articles stored in the PostgreSQL knowledge source."""
+    now = time.time()
+    cache_key = f"{category}:{subcategory}:{source}:{source_type}:{start_date}:{end_date}:{page}:{page_size}"
+    if cache_key in _LIST_RESPONSE_CACHE:
+        cached_time, cached_res = _LIST_RESPONSE_CACHE[cache_key]
+        if now - cached_time < _LIST_CACHE_TTL:
+            return cached_res
+
     articles, pagination = service.list_articles(
         category=category,
         subcategory=subcategory,
@@ -192,13 +221,27 @@ def list_articles(
     )
 
     items = [ArticleResponse.model_validate(art) for art in articles]
-    return ArticleListResponse(
+    response_obj = ArticleListResponse(
         status="success",
         data=ArticleListPayload(
             items=items,
             pagination=pagination,
         ),
     )
+    _LIST_RESPONSE_CACHE[cache_key] = (now, response_obj)
+
+    # Pre-seed individual articles so clicking any article from this list loads in <1ms
+    for art in articles:
+        if art.id:
+            _ARTICLE_RESPONSE_CACHE[art.id] = (
+                now,
+                SingleArticleResponse(
+                    status="success",
+                    data=ArticleResponse.model_validate(art),
+                ),
+            )
+
+    return response_obj
 
 
 @router.delete(
@@ -214,6 +257,7 @@ def delete_article(
 ):
     """Delete an article by ID from the knowledge source."""
     service.delete_article(article_id, session=session)
+    _invalidate_knowledge_cache(article_id)
     return DeleteArticleResponse(
         status="success",
         message=f"Article {article_id} deleted successfully.",

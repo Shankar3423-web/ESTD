@@ -118,7 +118,7 @@ export default function FeaturedNewsCarousel({
       {/* ── Slide ── */}
       <div
         className="fnc-slide"
-        onClick={() => navigate(`/story/${current.id}`)}
+        onClick={() => navigate(`/story/${current.id}`, { state: { story: current } })}
         style={{ cursor: 'pointer' }}
       >
         {/* Background Image */}

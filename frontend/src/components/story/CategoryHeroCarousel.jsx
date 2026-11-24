@@ -167,7 +167,7 @@ export default function CategoryHeroCarousel({
       {/* Slide Visual & Overlay */}
       <div
         className="chc-slide"
-        onClick={() => navigate(`/story/${current.id}`)}
+        onClick={() => navigate(`/story/${current.id}`, { state: { story: current } })}
       >
         {/* Background Image Container */}
         <div className="chc-image-wrapper">
@@ -239,7 +239,7 @@ export default function CategoryHeroCarousel({
                 className="chc-read-btn"
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate(`/story/${current.id}`);
+                  navigate(`/story/${current.id}`, { state: { story: current } });
                 }}
                 style={{
                   background: accentColor,
