@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Play, CheckCircle2, Bookmark, Clock } from 'lucide-react';
 import ImageWithFallback from '../common/ImageWithFallback';
 import { getCategoryMeta } from '../../constants/taxonomy';
@@ -6,7 +6,7 @@ import { getCategoryMeta } from '../../constants/taxonomy';
 /**
  * WatchVideoCard: High-polish 16:9 Video Card for ESTD Watch Hub Shelves.
  */
-export default function WatchVideoCard({
+const WatchVideoCard = memo(function WatchVideoCard({
   video,
   story,
   onPlay,
@@ -132,5 +132,7 @@ export default function WatchVideoCard({
       </div>
     </div>
   );
-}
+});
+
+export default WatchVideoCard;
 

@@ -131,17 +131,32 @@ export default function ImageWithFallback({
         isolation: 'isolate',
       }}
     >
-      {/* GPU-composited hardware shimmer behind the image (Zero CPU repaints) */}
-      {!isLoaded && <div className="gpu-skeleton-shimmer" />}
+      {/* Static dark placeholder; GPU shimmer only on priority hero images to avoid offscreen animation overhead */}
+      {!isLoaded && (
+        <div
+          className={priority ? 'gpu-skeleton-shimmer' : undefined}
+          style={
+            priority
+              ? undefined
+              : {
+                  position: 'absolute',
+                  inset: 0,
+                  background: '#12141c',
+                  pointerEvents: 'none',
+                  zIndex: 1,
+                }
+          }
+        />
+      )}
 
-      {/* Rendered Image — No crossOrigin to avoid CORS blocks, progressive streaming */}
+      {/* Rendered Image — Always async decoding to prevent main-thread paint blocking */}
       <img
         src={optimizedSrc}
         alt={alt}
         width={targetWidth}
         height={Math.round((targetWidth * 9) / 16)}
         loading={priority ? 'eager' : 'lazy'}
-        decoding={priority ? 'sync' : 'async'}
+        decoding="async"
         fetchPriority={priority ? 'high' : 'low'}
         referrerPolicy="no-referrer"
         className={className}

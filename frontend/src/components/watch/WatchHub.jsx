@@ -20,7 +20,7 @@ import WatchFilterBar from './WatchFilterBar';
 import WatchVideoCard from './WatchVideoCard';
 import EstdpodCarouselShelf from '../podcast/EstdpodCarouselShelf';
 import ErrorState from '../common/ErrorState';
-import { fetchStories } from '../../api/estdApi';
+import { fetchStories, getCachedStories } from '../../api/estdApi';
 import { CATEGORIES, getCategoryMeta, SUBCATEGORIES_BY_CATEGORY } from '../../constants/taxonomy';
 import { matchCategory, interleaveStoriesByCategory } from '../../utils/watchUtils';
 export { matchCategory, interleaveStoriesByCategory } from '../../utils/watchUtils';
@@ -49,8 +49,8 @@ export default function WatchHub({
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [allStories, setAllStories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [allStories, setAllStories] = useState(() => getCachedStories({ limit: 150 }));
+  const [loading, setLoading] = useState(() => allStories.length === 0);
   const [error, setError] = useState(null);
 
   // Active top navigation category (initialized from URL query ?category=...)
@@ -66,11 +66,11 @@ export default function WatchHub({
     setSelectedCategory(cat);
   }, [searchParams]);
 
-  // Load all stories across all categories (limit=150 returns all 117 articles)
+  // Load all stories across all categories (uses warm cache for 0ms mount)
   useEffect(() => {
     let isMounted = true;
     async function loadHubStories() {
-      setLoading(true);
+      if (allStories.length === 0) setLoading(true);
       setError(null);
       try {
         const list = await fetchStories({ limit: 150 });
@@ -78,7 +78,7 @@ export default function WatchHub({
           setAllStories(list || []);
         }
       } catch (err) {
-        if (isMounted) setError(err.message || 'Failed to load video catalog.');
+        if (isMounted && allStories.length === 0) setError(err.message || 'Failed to load video catalog.');
       } finally {
         if (isMounted) setLoading(false);
       }

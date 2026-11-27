@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Radio,
@@ -22,8 +22,41 @@ import {
 } from 'lucide-react';
 import ImageWithFallback from '../components/common/ImageWithFallback';
 import FlashBiteModal from '../components/story/FlashBiteModal';
-import { fetchStories } from '../api/estdApi';
+import { fetchStories, getCachedStories } from '../api/estdApi';
 import { getCategoryMeta } from '../constants/taxonomy';
+
+/**
+ * Isolated 1-second countdown badge so ticking every second does not re-render
+ * the entire LivePage timeline.
+ */
+function LiveCountdownBadge({ autoPolling, resetTick, onPollDue }) {
+  const [countdown, setCountdown] = useState(30);
+
+  useEffect(() => {
+    setCountdown(30);
+  }, [resetTick]);
+
+  useEffect(() => {
+    if (!autoPolling) return;
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          onPollDue();
+          return 30;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [autoPolling, onPollDue]);
+
+  return (
+    <div className="live-countdown-badge">
+      <Clock size={13} className={autoPolling ? 'live-spin-slow' : ''} />
+      <span>Auto-Update: {autoPolling ? `${countdown}s` : 'PAUSED'}</span>
+    </div>
+  );
+}
 
 /**
  * Format the exact publication or ingest timestamp from the database.
@@ -72,12 +105,13 @@ export default function LivePage({
 }) {
   const navigate = useNavigate();
 
-  const [activeUpdates, setActiveUpdates] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [activeUpdates, setActiveUpdates] = useState(() => getCachedStories({ limit: 150 }));
+  const [loading, setLoading] = useState(() => activeUpdates.length === 0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState('All');
   const [autoPolling, setAutoPolling] = useState(true);
-  const [countdown, setCountdown] = useState(30);
+  const [pollResetTick, setPollResetTick] = useState(0);
+  const [visibleCount, setVisibleCount] = useState(25);
   const [newUpdateAlert, setNewUpdateAlert] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
 
@@ -89,12 +123,12 @@ export default function LivePage({
   const knownStoryIdsRef = useRef(new Set());
 
   // Core fetch function
-  const loadLiveFeed = async (silent = false) => {
-    if (!silent) setLoading(true);
-    else setIsRefreshing(true);
+  const loadLiveFeed = useCallback(async (silent = false) => {
+    if (!silent && activeUpdates.length === 0) setLoading(true);
+    else if (silent) setIsRefreshing(true);
 
     try {
-      const stories = await fetchStories({ limit: 150 });
+      const stories = await fetchStories({ limit: 150, forceRefresh: silent });
       if (stories && stories.length > 0) {
         // Detect newly ingested stories if not first load
         if (knownStoryIdsRef.current.size > 0) {
@@ -114,14 +148,14 @@ export default function LivePage({
     } finally {
       setLoading(false);
       setIsRefreshing(false);
-      setCountdown(30);
+      setPollResetTick((t) => t + 1);
     }
-  };
+  }, []);
 
   // Initial load
   useEffect(() => {
     loadLiveFeed(false);
-  }, []);
+  }, [loadLiveFeed]);
 
   // Demo simulator for manual real-time ingest testing
   const handleSimulateIngest = () => {
@@ -145,22 +179,14 @@ export default function LivePage({
     setTimeout(() => setNewUpdateAlert(null), 8000);
   };
 
-  // 30-Second Countdown & Auto-Polling Loop
+  const handlePollDue = useCallback(() => {
+    loadLiveFeed(true);
+  }, [loadLiveFeed]);
+
+  // Reset pagination when filter changes
   useEffect(() => {
-    if (!autoPolling) return;
-
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          loadLiveFeed(true);
-          return 30;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [autoPolling]);
+    setVisibleCount(25);
+  }, [activeFilter]);
 
   // Compute live status & synthetic urgency for chronological timeline
   const timelineItems = useMemo(() => {
@@ -228,17 +254,43 @@ export default function LivePage({
     }
   };
 
-  const filterChips = [
-    { key: 'All', label: 'All Live Wire', count: activeUpdates.length },
-    { key: 'BREAKING', label: '🔴 Breaking Only', count: timelineItems.filter((i) => i.liveStatus.type === 'BREAKING').length },
-    { key: 'DEVELOPING', label: '⚡ Developing', count: timelineItems.filter((i) => i.liveStatus.type === 'DEVELOPING').length },
-    { key: 'VERIFIED', label: '🟢 Verified', count: timelineItems.filter((i) => i.liveStatus.type === 'VERIFIED').length },
-    { key: 'Tech', label: 'Tech Wire', count: timelineItems.filter((i) => (i.category || '').toLowerCase() === 'tech').length, color: '#00E5FF' },
-    { key: 'Sports', label: 'Sports Wire', count: timelineItems.filter((i) => (i.category || '').toLowerCase() === 'sports').length, color: '#B8FF3B' },
-    { key: 'Entertainment', label: 'Entertainment Wire', count: timelineItems.filter((i) => (i.category || '').toLowerCase() === 'entertainment').length, color: '#FF20B8' },
-    { key: 'Business & Finance', label: 'Business & Finance', count: timelineItems.filter((i) => (i.category || '').toLowerCase().includes('business')).length, color: '#A855F7' },
-    { key: 'Developments', label: 'Developments Wire', count: timelineItems.filter((i) => (i.category || '').toLowerCase() === 'developments').length, color: '#FFB020' },
-  ];
+  const filterChips = useMemo(() => {
+    let breaking = 0;
+    let developing = 0;
+    let verified = 0;
+    let tech = 0;
+    let sports = 0;
+    let ent = 0;
+    let biz = 0;
+    let dev = 0;
+    for (const i of timelineItems) {
+      if (i.liveStatus.type === 'BREAKING') breaking++;
+      else if (i.liveStatus.type === 'DEVELOPING') developing++;
+      else verified++;
+
+      const cat = (i.category || '').toLowerCase();
+      if (cat === 'tech') tech++;
+      else if (cat === 'sports') sports++;
+      else if (cat === 'entertainment') ent++;
+      else if (cat.includes('business')) biz++;
+      else if (cat === 'developments') dev++;
+    }
+    return [
+      { key: 'All', label: 'All Live Wire', count: activeUpdates.length },
+      { key: 'BREAKING', label: '🔴 Breaking Only', count: breaking },
+      { key: 'DEVELOPING', label: '⚡ Developing', count: developing },
+      { key: 'VERIFIED', label: '🟢 Verified', count: verified },
+      { key: 'Tech', label: 'Tech Wire', count: tech, color: '#00E5FF' },
+      { key: 'Sports', label: 'Sports Wire', count: sports, color: '#B8FF3B' },
+      { key: 'Entertainment', label: 'Entertainment Wire', count: ent, color: '#FF20B8' },
+      { key: 'Business & Finance', label: 'Business & Finance', count: biz, color: '#A855F7' },
+      { key: 'Developments', label: 'Developments Wire', count: dev, color: '#FFB020' },
+    ];
+  }, [timelineItems, activeUpdates.length]);
+
+  const savedIdSet = useMemo(() => new Set(savedStories.map((s) => String(s.id))), [savedStories]);
+  const watchLaterIdSet = useMemo(() => new Set(watchLaterStories.map((s) => String(s.id))), [watchLaterStories]);
+  const visibleTimeline = useMemo(() => filteredTimeline.slice(0, visibleCount), [filteredTimeline, visibleCount]);
 
   return (
     <div className="live-page-container">
@@ -306,10 +358,11 @@ export default function LivePage({
         {/* Polling & Manual Refresh Controls */}
         <div className="live-terminal-controls-col">
           <div className="live-polling-control-wrap">
-            <div className="live-countdown-badge">
-              <Clock size={13} className={autoPolling ? 'live-spin-slow' : ''} />
-              <span>Auto-Update: {autoPolling ? `${countdown}s` : 'PAUSED'}</span>
-            </div>
+            <LiveCountdownBadge
+              autoPolling={autoPolling}
+              resetTick={pollResetTick}
+              onPollDue={handlePollDue}
+            />
 
             <button
               type="button"
@@ -398,11 +451,11 @@ export default function LivePage({
 
           {/* Timeline Event Cards */}
           <div className="live-timeline-items-wrapper">
-            {filteredTimeline.map((item) => {
+            {visibleTimeline.map((item) => {
               const catMeta = item.categoryMeta || getCategoryMeta(item.category);
               const accentColor = catMeta.color || '#00E5FF';
-              const isSaved = savedStories.some((s) => String(s.id) === String(item.id));
-              const isWatchLater = watchLaterStories.some((s) => String(s.id) === String(item.id));
+              const isSaved = savedIdSet.has(String(item.id));
+              const isWatchLater = watchLaterIdSet.has(String(item.id));
 
               return (
                 <div key={item.id} className="live-timeline-event-row">
@@ -529,7 +582,7 @@ export default function LivePage({
                           </div>
                         </div>
                         <span className="live-media-duration-badge">
-                          {item.videoRail?.[0]?.duration || '4:15'}
+                          {item._videoRail?.[0]?.duration || '4:15'}
                         </span>
                       </div>
 
@@ -578,6 +631,17 @@ export default function LivePage({
               );
             })}
           </div>
+          {filteredTimeline.length > visibleCount && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
+              <button
+                type="button"
+                className="live-manual-refresh-btn"
+                onClick={() => setVisibleCount((c) => c + 25)}
+              >
+                <span>Load More Events ({filteredTimeline.length - visibleCount} remaining)</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
 

@@ -111,9 +111,9 @@ class ContentEngineScheduler:
         settings = get_settings()
         interval_seconds = max(300, settings.scheduler_interval_hours * 3600)  # Min 5 min
 
-        # Initial warm-up delay of 30 seconds to allow full application initialization
-        self.next_run_at = datetime.now(timezone.utc) + timedelta(seconds=30)
-        await asyncio.sleep(30)
+        # Initial warm-up delay of 5 minutes so cold starts prioritize live user requests
+        self.next_run_at = datetime.now(timezone.utc) + timedelta(seconds=300)
+        await asyncio.sleep(300)
 
         while self._running:
             try:

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import InshortsDeskReader from '../components/story/InshortsDeskReader';
 import ErrorState from '../components/common/ErrorState';
-import { fetchStories } from '../api/estdApi';
+import { fetchStories, getCachedStories } from '../api/estdApi';
 import { CATEGORIES } from '../constants/taxonomy';
 import { Zap, LayoutGrid, Sparkles, ArrowRight } from 'lucide-react';
 
@@ -29,8 +29,10 @@ export default function InshortsPage({
   const initialCategory = searchParams.get('category') || 'All';
 
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
-  const [stories, setStories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [stories, setStories] = useState(() =>
+    getCachedStories({ category: initialCategory === 'All' ? undefined : initialCategory, limit: 60 })
+  );
+  const [loading, setLoading] = useState(() => stories.length === 0);
   const [error, setError] = useState(null);
 
   // Canonical sequence of verticals for seamless auto-advance
@@ -43,31 +45,45 @@ export default function InshortsPage({
 
   useEffect(() => {
     let isMounted = true;
-    async function loadStories() {
+    const cached = getCachedStories({
+      category: selectedCategory === 'All' ? undefined : selectedCategory,
+      limit: 60,
+    });
+    if (cached.length > 0) {
+      setStories(cached);
+      setLoading(false);
+    } else {
       setLoading(true);
+    }
+
+    async function loadStories() {
       setError(null);
       try {
         if (selectedCategory === 'All') {
-          const categories = ['Tech', 'Entertainment', 'Sports', 'Developments', 'Business & Finance'];
-          const categoryResults = await Promise.all(
-            categories.map((cat) => fetchStories({ category: cat, limit: 12 }).catch(() => []))
-          );
+          const allStories = await fetchStories({ limit: 150 });
+          const byCat = {};
+          for (const s of allStories) {
+            const cat = s.category || 'General';
+            if (!byCat[cat]) byCat[cat] = [];
+            byCat[cat].push(s);
+          }
+          const categories = Object.keys(byCat);
           const mixed = [];
-          const maxCount = Math.max(...categoryResults.map((r) => r.length), 0);
+          const maxCount = Math.max(...categories.map((c) => byCat[c].length), 0);
           for (let i = 0; i < maxCount; i++) {
-            for (let c = 0; c < categoryResults.length; c++) {
-              if (i < categoryResults[c].length) {
-                mixed.push(categoryResults[c][i]);
+            for (const cat of categories) {
+              if (i < byCat[cat].length) {
+                mixed.push(byCat[cat][i]);
               }
             }
           }
-          if (isMounted) setStories(mixed);
+          if (isMounted) setStories(mixed.length > 0 ? mixed.slice(0, 60) : allStories.slice(0, 60));
         } else {
           const data = await fetchStories({ category: selectedCategory, limit: 30 });
           if (isMounted) setStories(data);
         }
       } catch (err) {
-        if (isMounted) setError(err.message || 'Failed to load Inshorts stories.');
+        if (isMounted && cached.length === 0) setError(err.message || 'Failed to load Inshorts stories.');
       } finally {
         if (isMounted) setLoading(false);
       }

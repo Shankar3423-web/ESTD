@@ -262,8 +262,7 @@ button {
   height: var(--topbar-height);
   position: sticky;
   top: 0;
-  background: rgba(7, 8, 11, 0.85);
-  backdrop-filter: blur(16px);
+  background: rgba(7, 8, 11, 0.96);
   border-bottom: 1px solid var(--border-subtle);
   padding: 0 var(--space-xl);
   display: flex;
@@ -710,9 +709,7 @@ button {
 .fnc-source-name {
   padding: 4px 11px;
   border-radius: 9999px;
-  background: rgba(10, 13, 20, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(10, 13, 20, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.22);
   color: #ffffff;
   font-weight: 650;
@@ -727,9 +724,7 @@ button {
   gap: 4px;
   padding: 4px 11px;
   border-radius: 9999px;
-  background: rgba(10, 13, 20, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(10, 13, 20, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.18);
   color: #e2e8f0;
   font-size: 0.72rem;
@@ -774,9 +769,7 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: rgba(10, 12, 18, 0.84);
-  backdrop-filter: blur(20px) saturate(200%);
-  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  background: rgba(10, 12, 18, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: 24px;
   color: #FFFFFF;
@@ -784,7 +777,7 @@ button {
   font-size: 0.80rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease;
   white-space: nowrap;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.16);
   letter-spacing: 0.2px;
@@ -842,13 +835,11 @@ button {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: rgba(10, 12, 18, 0.84);
-  backdrop-filter: blur(20px) saturate(200%);
-  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  background: rgba(10, 12, 18, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.24);
   color: #FFFFFF;
   cursor: pointer;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 
@@ -1395,14 +1386,12 @@ button {
   flex: 0 0 255px;
   width: 255px;
   min-width: 245px;
-  background: rgba(18, 20, 26, 0.78);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: #12141C;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
   display: flex;
   flex-direction: column;
   scroll-snap-align: start;
@@ -1449,9 +1438,7 @@ button {
   border-radius: 6px;
   font-size: 0.70rem;
   font-weight: 700;
-  background: rgba(7, 8, 11, 0.92);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(7, 8, 11, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.22);
   color: #FFFFFF;
   z-index: 10;
@@ -15671,5 +15658,63 @@ button {
   }
   .estdpod-guest-card {
     flex: 0 0 280px;
+  }
+}
+
+/* ============================================================================
+   Performance, GPU Compositing & Layout Containment
+   ============================================================================ */
+
+.category-quick-section,
+.weekly-radar-section,
+.estdpod-shelf-section,
+.home-daily-pack-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 420px;
+}
+
+.story-card,
+.cqr-card,
+.watch-video-card,
+.live-event-card,
+.featured-news-carousel {
+  contain: layout style paint;
+}
+
+.live-timeline-event-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 240px;
+}
+
+/* Avoid expensive backdrop-filter compositing on scrollable cards & repeating pills */
+.story-card,
+.squircle-card,
+.watch-video-card,
+.live-event-card,
+.weekly-radar-card,
+.story-videos-badge,
+.story-subcategory-capsule,
+.watch-card-duration-badge,
+.watch-reel-duration-badge {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Smooth GPU-only scroll tracks */
+.category-quick-track,
+.flash-bites-track,
+.estdpod-cards-track {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-marquee-track,
+  .live-marquee-content-track,
+  .gpu-skeleton-shimmer::after,
+  .sidebar-live-dot,
+  .ticker-live-dot-pulse,
+  .live-timeline-pulsing-node {
+    animation: none !important;
   }
 }

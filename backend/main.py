@@ -88,11 +88,7 @@ from backend.step9_video_rail.apis.video_routes import router as video_router
 from backend.step9_video_rail.apis.podcast_routes import router as podcast_router
 
 
-# Auto-run schema checks including likes_count and article_likes
-try:
-    init_db()
-except Exception as _init_exc:
-    logger.warning(f"Immediate schema initialization notice: {_init_exc}")
+# Schema checks run inside lifespan to avoid double remote DB round-trips on startup.
 
 
 @asynccontextmanager

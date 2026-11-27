@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Sparkles, Check, Plus } from 'lucide-react';
 import StoryCard from '../components/story/StoryCard';
@@ -84,6 +84,21 @@ export default function CategoryPage({
   const [modalStory, setModalStory] = useState(null);
   const [modalVideoIndex, setModalVideoIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Incremental rendering batch size so large categories don't dump 90+ cards into DOM at once
+  const [visibleCount, setVisibleCount] = useState(15);
+  useEffect(() => {
+    setVisibleCount(15);
+  }, [canonicalName, selectedSubcategory]);
+
+  const savedIdSet = useMemo(
+    () => new Set(savedStories.map((s) => String(s.id))),
+    [savedStories]
+  );
+  const watchLaterIdSet = useMemo(
+    () => new Set(watchLaterStories.map((s) => String(s.id))),
+    [watchLaterStories]
+  );
 
   // Load canonical subcategories dynamically (with in-memory memoization)
   useEffect(() => {
@@ -184,8 +199,10 @@ export default function CategoryPage({
 
   // Top 4 to 5 stories for Hero Showcase
   const heroStories = stories.slice(0, 5);
-  // Subsequent news cards (follow hero)
+  // Subsequent news cards (follow hero), sliced progressively for fast mount & smooth scrolling
   const subsequentStories = stories.length > 5 ? stories.slice(5) : stories;
+  const visibleSubsequentStories = subsequentStories.slice(0, visibleCount);
+  const hasMoreStories = subsequentStories.length > visibleCount;
 
   return (
     <div
@@ -333,20 +350,41 @@ export default function CategoryPage({
             </div>
 
             <div className="category-stories-grid category-squircle-grid">
-              {subsequentStories.map((story) => (
+              {visibleSubsequentStories.map((story) => (
                 <StoryCard
                   key={story.id}
                   story={story}
-                  isSaved={savedStories.some((s) => String(s.id) === String(story.id))}
+                  isSaved={savedIdSet.has(String(story.id))}
                   onToggleSave={onToggleSave}
                   watchLaterStories={watchLaterStories}
-                  isWatchLater={watchLaterStories.some((s) => String(s.id) === String(story.id))}
+                  isWatchLater={watchLaterIdSet.has(String(story.id))}
                   onToggleWatchLater={onToggleWatchLater}
                   onListen={onListen}
                   accentColor={accentColor}
                 />
               ))}
             </div>
+
+            {hasMoreStories && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 28 }}>
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount((c) => c + 15)}
+                  style={{
+                    padding: '10px 24px',
+                    borderRadius: 999,
+                    background: `${accentColor}18`,
+                    border: `1px solid ${accentColor}55`,
+                    color: accentColor,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Load More Stories ({subsequentStories.length - visibleCount} remaining)
+                </button>
+              </div>
+            )}
           </section>
         </>
       )}

@@ -10,7 +10,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
-import { fetchStories } from '../../api/estdApi';
+import { fetchStories, getCachedStories } from '../../api/estdApi';
 import { getCategoryMeta } from '../../constants/taxonomy';
 import { formatCleanHeadline, formatCleanTopicName } from '../../utils/flashBitesUtils';
 import FlashBiteModal from '../story/FlashBiteModal';
@@ -27,16 +27,7 @@ import FlashBiteModal from '../story/FlashBiteModal';
  */
 export default function BreakingTickerBar({ onSelectStory }) {
   const navigate = useNavigate();
-  const [stories, setStories] = useState(() => {
-    try {
-      const cached = localStorage.getItem('estd_feed_cache');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed.slice(0, 12);
-      }
-    } catch {}
-    return [];
-  });
+  const [stories, setStories] = useState(() => getCachedStories({ limit: 12 }));
   const [loading, setLoading] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     try {
@@ -73,8 +64,8 @@ export default function BreakingTickerBar({ onSelectStory }) {
     };
     window.addEventListener('estd:feed-updated', handleFeedUpdate);
 
-    // If ticker already has stories (e.g. from cache), defer network request by 4 seconds
-    const initialDelay = stories.length > 0 ? 4000 : 0;
+    // Defer network call so HomePage's primary feed request warms cache first
+    const initialDelay = stories.length > 0 ? 5000 : 1200;
     const initialTimer = setTimeout(loadTickerItems, initialDelay);
 
     // Refresh wire headlines every 90 seconds

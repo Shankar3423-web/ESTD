@@ -45,6 +45,73 @@ const _CATEGORY_STORIES_CACHE = new Map();
 const _CLIENT_STORIES_CACHE = new Map();
 const _IN_FLIGHT_STORIES = new Map();
 const _STORIES_CACHE_TTL_MS = 300000; // 5 minutes cache TTL
+let _FEED_WARMED_AT = 0;
+
+// Single-parse in-memory cache for liked story IDs (avoids JSON.parse per card)
+let _LIKED_STORIES_MAP = null;
+function getLikedStoriesMap() {
+  if (_LIKED_STORIES_MAP !== null) return _LIKED_STORIES_MAP;
+  try {
+    const raw = localStorage.getItem('estd_liked_stories');
+    _LIKED_STORIES_MAP = raw ? JSON.parse(raw) : {};
+  } catch {
+    _LIKED_STORIES_MAP = {};
+  }
+  return _LIKED_STORIES_MAP;
+}
+
+export function isStoryLikedLocally(storyId) {
+  if (!storyId) return false;
+  return Boolean(getLikedStoriesMap()[storyId]);
+}
+
+export function setStoryLikedLocally(storyId, liked) {
+  if (!storyId) return;
+  const map = getLikedStoriesMap();
+  map[storyId] = Boolean(liked);
+  try {
+    localStorage.setItem('estd_liked_stories', JSON.stringify(map));
+  } catch {}
+}
+
+/**
+ * Persists a lightweight subset of feed stories to localStorage asynchronously
+ * during browser idle time so main-thread rendering is never blocked.
+ */
+let _persistFeedTimer = null;
+export function persistFeedCacheAsync(stories) {
+  if (!Array.isArray(stories) || stories.length === 0) return;
+  const persist = () => {
+    try {
+      const compact = stories.slice(0, 60).map((s) => ({
+        id: s.id,
+        title: s.originalTitle || s.headline,
+        headline: s.headline,
+        category: s.category,
+        subcategory: s.subcategory,
+        source_name: s.sourceName,
+        source_type: s.sourceType,
+        url: s.sourceUrl,
+        author: s.author,
+        image_url: s.rawImageUrl || s.imageUrl,
+        published_at: s.publishedAt,
+        created_at: s.createdAt,
+        content_snippet: s.contentSnippet || s.brief,
+        likes_count: s.likesCount || 0,
+        pipeline_status: s.pipelineStatus,
+        ai_status: s.aiStatus,
+      }));
+      localStorage.setItem('estd_feed_cache', JSON.stringify(compact));
+    } catch {}
+  };
+
+  if (_persistFeedTimer) clearTimeout(_persistFeedTimer);
+  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+    _persistFeedTimer = window.requestIdleCallback(persist, { timeout: 1000 });
+  } else {
+    _persistFeedTimer = setTimeout(persist, 150);
+  }
+}
 
 /**
  * Indexes normalized stories into central memory and category buckets.
@@ -54,6 +121,11 @@ export function indexStoriesInCache(stories) {
   for (const story of stories) {
     if (!story || !story.id) continue;
     const idStr = String(story.id);
+    const existing = _NORMALIZED_STORIES_BY_ID.get(idStr);
+    // Preserve full content if already loaded from detail view
+    if (existing && existing.content && (!story.content || story.content.length < existing.content.length)) {
+      story.content = existing.content;
+    }
     _NORMALIZED_STORIES_BY_ID.set(idStr, story);
 
     const cat = story.category;
@@ -62,20 +134,26 @@ export function indexStoriesInCache(stories) {
         _CATEGORY_STORIES_CACHE.set(cat, []);
       }
       const list = _CATEGORY_STORIES_CACHE.get(cat);
-      if (!list.some((s) => String(s.id) === idStr)) {
+      const existingIdx = list.findIndex((s) => String(s.id) === idStr);
+      if (existingIdx === -1) {
         list.push(story);
+      } else {
+        list[existingIdx] = story;
       }
     }
   }
 }
 
-// Immediately warm cache on browser load from localStorage if available
+// Immediately warm cache ONCE on browser load from localStorage if available
 try {
   const localFeed = localStorage.getItem('estd_feed_cache');
   if (localFeed) {
     const parsed = JSON.parse(localFeed);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      indexStoriesInCache(parsed);
+      const normalized = parsed.map((item, idx) =>
+        item && item.headline && item.categoryMeta ? item : normalizeStoryItem(item, idx)
+      );
+      indexStoriesInCache(normalized);
     }
   }
 } catch (e) {
@@ -181,10 +259,11 @@ export async function fetchStories({ category, subcategory, search, limit = 150,
       return cached.items;
     }
 
-    // 2. Category-level memory cache satisfaction
+    // 2. Category-level memory cache satisfaction when general feed is warm
     if (category && category !== 'All' && (!subcategory || subcategory === 'All') && !search) {
       const catStories = _CATEGORY_STORIES_CACHE.get(category);
-      if (catStories && catStories.length >= (limit ? Math.min(limit, 20) : 20)) {
+      const isWarm = Date.now() - _FEED_WARMED_AT < _STORIES_CACHE_TTL_MS;
+      if (catStories && ((isWarm && catStories.length > 0) || catStories.length >= (limit ? Math.min(limit, 20) : 20))) {
         return limit ? catStories.slice(0, limit) : catStories;
       }
     }
@@ -225,11 +304,12 @@ export async function fetchStories({ category, subcategory, search, limit = 150,
       // Index newly arrived stories into central category buckets
       indexStoriesInCache(normalized);
 
-      // If general feed, persist top items for 0ms initial load on next visit
+      // If general feed, mark categories warm and persist compact subset asynchronously
       if ((!category || category === 'All') && !search) {
-        try {
-          localStorage.setItem('estd_feed_cache', JSON.stringify(normalized.slice(0, 100)));
-        } catch {}
+        if (normalized.length >= 30) {
+          _FEED_WARMED_AT = Date.now();
+        }
+        persistFeedCacheAsync(normalized);
       }
 
       return normalized;
@@ -243,23 +323,26 @@ export async function fetchStories({ category, subcategory, search, limit = 150,
 }
 
 /**
- * Pre-warms a category in the background so opening that category is instantaneous.
+ * Pre-warms a category in the background only if not already cached from main feed.
  */
 export async function prefetchCategory(categoryName) {
   if (!categoryName || categoryName === 'All') return;
   const existing = _CATEGORY_STORIES_CACHE.get(categoryName);
-  if (existing && existing.length >= 10) return existing;
+  if (existing && (existing.length >= 10 || Date.now() - _FEED_WARMED_AT < _STORIES_CACHE_TTL_MS)) {
+    return existing;
+  }
   return fetchStories({ category: categoryName, limit: 100 }).catch(() => []);
 }
 
 /**
- * Pre-warms all 5 canonical categories in the background during idle time.
+ * No-op when main feed already warms all 5 categories in a single request;
+ * only fetches if general feed has not loaded yet.
  */
 export async function prefetchAllCategories() {
-  const categories = ['Tech', 'Entertainment', 'Business & Finance', 'Developments', 'Sports'];
-  for (const cat of categories) {
-    prefetchCategory(cat);
+  if (Date.now() - _FEED_WARMED_AT < _STORIES_CACHE_TTL_MS || _IN_FLIGHT_STORIES.size > 0) {
+    return;
   }
+  return fetchStories({ limit: 150 }).catch(() => []);
 }
 
 /**
@@ -509,14 +592,14 @@ export async function fetchStoryLikes(storyId, clientId = null) {
  */
 export function normalizeStoryItem(raw, idx = 0) {
   const catMeta = getCategoryMeta(raw.category);
-  const headline = formatConversationalHeadline(raw.title);
+  const headline = formatConversationalHeadline(raw.title || raw.headline);
   const resolvedImg = resolveUniqueArticleImage(raw, idx);
   const brief = formatOneParagraphBrief(raw.executive_summary || raw.content_snippet || raw.content);
-  const editorialType = detectEditorialType(raw.title, raw.content || '');
+  const editorialType = detectEditorialType(raw.title || raw.headline || '', raw.content || '');
 
-  return {
+  const storyObj = {
     id: raw.id,
-    originalTitle: raw.title,
+    originalTitle: raw.title || raw.headline,
     headline,
     category: raw.category,
     categoryMeta: catMeta,
@@ -529,6 +612,7 @@ export function normalizeStoryItem(raw, idx = 0) {
     sourceType: raw.source_type || 'news',
     sourceUrl: raw.url,
     author: raw.author || null,
+    rawImageUrl: resolvedImg,
     imageUrl: optimizeImageUrl(resolvedImg, 420),
     publishedAt: raw.published_at,
     createdAt: raw.created_at,
@@ -537,46 +621,94 @@ export function normalizeStoryItem(raw, idx = 0) {
     pipelineStatus: raw.pipeline_status || 'Stored in PostgreSQL',
     aiStatus: raw.ai_status || 'AI_GENERATED',
     likesCount: typeof raw.likes_count === 'number' ? raw.likes_count : 0,
-    _videoRail: undefined,
-    _impactChips: undefined,
-    _contextBeats: undefined,
-    _culturalPulse: undefined,
-    get videoRail() {
-      if (this._videoRail === undefined) {
-        this._videoRail = generateStoryVideoPerspectives({ ...raw, image_url: resolvedImg });
-      }
-      return this._videoRail;
-    },
-    get impactChips() {
-      if (this._impactChips === undefined) {
-        this._impactChips = extractSourceGroundedImpactChips(raw.content || raw.content_snippet, raw.category, raw.subcategory);
-      }
-      return this._impactChips;
-    },
-    get contextBeats() {
-      if (this._contextBeats === undefined) {
-        this._contextBeats = extractContextBeats(raw.content || raw.content_snippet, raw.published_at);
-      }
-      return this._contextBeats;
-    },
-    get culturalPulse() {
-      if (this._culturalPulse === undefined) {
-        this._culturalPulse = extractCulturalPulse(raw);
-      }
-      return this._culturalPulse;
-    },
-    get structuredArticle() {
-      return parseStructuredArticleContent(
-        raw.content || raw.content_snippet || '',
-        raw.title || '',
-        raw.category || '',
-        raw.subcategory || '',
-        raw.published_at,
-        raw.source_name || 'Verified Source',
-        this.videoRail
-      );
-    },
   };
+
+  let _videoRail;
+  let _impactChips;
+  let _contextBeats;
+  let _culturalPulse;
+  let _structuredArticle;
+
+  // Non-enumerable lazy getters: JSON.stringify will never trigger heavy text synthesis
+  Object.defineProperties(storyObj, {
+    videoRail: {
+      enumerable: false,
+      configurable: true,
+      get() {
+        if (_videoRail === undefined) {
+          _videoRail = generateStoryVideoPerspectives({ ...raw, image_url: resolvedImg });
+        }
+        return _videoRail;
+      },
+      set(val) {
+        _videoRail = val;
+      },
+    },
+    _videoRail: {
+      enumerable: false,
+      configurable: true,
+      get() {
+        return _videoRail;
+      },
+      set(val) {
+        _videoRail = val;
+      },
+    },
+    impactChips: {
+      enumerable: false,
+      configurable: true,
+      get() {
+        if (_impactChips === undefined) {
+          _impactChips = extractSourceGroundedImpactChips(
+            raw.content || raw.content_snippet,
+            raw.category,
+            raw.subcategory
+          );
+        }
+        return _impactChips;
+      },
+    },
+    contextBeats: {
+      enumerable: false,
+      configurable: true,
+      get() {
+        if (_contextBeats === undefined) {
+          _contextBeats = extractContextBeats(raw.content || raw.content_snippet, raw.published_at);
+        }
+        return _contextBeats;
+      },
+    },
+    culturalPulse: {
+      enumerable: false,
+      configurable: true,
+      get() {
+        if (_culturalPulse === undefined) {
+          _culturalPulse = extractCulturalPulse(raw);
+        }
+        return _culturalPulse;
+      },
+    },
+    structuredArticle: {
+      enumerable: false,
+      configurable: true,
+      get() {
+        if (_structuredArticle === undefined) {
+          _structuredArticle = parseStructuredArticleContent(
+            raw.content || raw.content_snippet || '',
+            raw.title || raw.headline || '',
+            raw.category || '',
+            raw.subcategory || '',
+            raw.published_at,
+            raw.source_name || 'Verified Source',
+            this.videoRail
+          );
+        }
+        return _structuredArticle;
+      },
+    },
+  });
+
+  return storyObj;
 }
 
 /**
@@ -1470,7 +1602,11 @@ export function optimizeImageUrl(url, width = 420) {
   // Route heavy external publisher images through global Cloudflare-backed WebP proxy wsrv.nl
   // Saves 70-90% bandwidth, guarantees WebP format, and resizes to exact requested width
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-    if (trimmed.includes('wsrv.nl')) return trimmed;
+    if (trimmed.includes('wsrv.nl')) {
+      return /([?&])w=\d+/.test(trimmed)
+        ? trimmed.replace(/([?&])w=\d+/, `$1w=${width}`)
+        : `${trimmed}&w=${width}`;
+    }
     return `https://wsrv.nl/?url=${encodeURIComponent(trimmed)}&w=${width}&q=70&output=webp&we=1`;
   }
 

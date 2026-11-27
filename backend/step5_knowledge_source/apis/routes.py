@@ -48,6 +48,10 @@ _ARTICLE_RESPONSE_CACHE: Dict[int, Tuple[float, SingleArticleResponse]] = {}
 _ARTICLE_CACHE_TTL = 300.0  # 5 minutes
 _LIST_RESPONSE_CACHE: Dict[str, Tuple[float, ArticleListResponse]] = {}
 _LIST_CACHE_TTL = 60.0  # 60 seconds
+_CATEGORIES_CACHE: Optional[Tuple[float, CategoryListResponse]] = None
+_SUBCATEGORIES_CACHE: Dict[str, Tuple[float, SubcategoryListResponse]] = {}
+_TAXONOMY_CACHE_TTL = 600.0  # 10 minutes
+
 
 def _invalidate_knowledge_cache(article_id: Optional[int] = None):
     """Invalidate cached articles and list payloads when content updates."""
@@ -79,15 +83,23 @@ def get_health():
     status_code=status.HTTP_200_OK,
     summary="List canonical reference categories",
 )
-def list_categories(session: Session = Depends(get_db)):
+def list_categories(response: Response, session: Session = Depends(get_db)):
     """Retrieve all 5 canonical categories seeded in PostgreSQL."""
+    global _CATEGORIES_CACHE
+    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=600"
+    now = time.time()
+    if _CATEGORIES_CACHE and (now - _CATEGORIES_CACHE[0] < _TAXONOMY_CACHE_TTL):
+        return _CATEGORIES_CACHE[1]
+
     categories = service.list_categories(session=session)
     items = [CategoryResponse.model_validate(cat) for cat in categories]
-    return CategoryListResponse(
+    res = CategoryListResponse(
         status="success",
         total=len(items),
         items=items,
     )
+    _CATEGORIES_CACHE = (now, res)
+    return res
 
 
 @router.get(
@@ -97,17 +109,28 @@ def list_categories(session: Session = Depends(get_db)):
     summary="List canonical reference subcategories",
 )
 def list_subcategories(
+    response: Response,
     category: Optional[str] = Query(default=None, description="Optional parent category filter"),
     session: Session = Depends(get_db),
 ):
     """Retrieve canonical subcategories, optionally filtered by parent category."""
+    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=600"
+    cache_key = category or "__all__"
+    now = time.time()
+    if cache_key in _SUBCATEGORIES_CACHE:
+        cached_time, cached_res = _SUBCATEGORIES_CACHE[cache_key]
+        if now - cached_time < _TAXONOMY_CACHE_TTL:
+            return cached_res
+
     subcategories = service.list_subcategories(category=category, session=session)
     items = [SubcategoryResponse.model_validate(sub) for sub in subcategories]
-    return SubcategoryListResponse(
+    res = SubcategoryListResponse(
         status="success",
         total=len(items),
         items=items,
     )
+    _SUBCATEGORIES_CACHE[cache_key] = (now, res)
+    return res
 
 
 @router.post(
@@ -165,9 +188,11 @@ def store_article(
 )
 def get_article(
     article_id: int,
+    response: Response,
     session: Session = Depends(get_db),
 ):
     """Retrieve a single article from the knowledge source by its primary key ID."""
+    response.headers["Cache-Control"] = "public, max-age=120, stale-while-revalidate=300"
     now = time.time()
     if article_id in _ARTICLE_RESPONSE_CACHE:
         cached_time, cached_res = _ARTICLE_RESPONSE_CACHE[article_id]

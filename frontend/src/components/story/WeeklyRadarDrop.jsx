@@ -204,20 +204,8 @@ export default function WeeklyRadarDrop() {
   // Calendar dropdown active menu
   const [calendarMenuOpenId, setCalendarMenuOpenId] = useState(null);
 
-  // Live Launched Reminder Popup State
+  // Live Launched Reminder Popup State (triggered explicitly on user click, never unexpectedly on page load)
   const [activeAlertPopup, setActiveAlertPopup] = useState(null);
-
-  // Check if any armed reminder should popup on load
-  useEffect(() => {
-    // If radar-1 is reminded, trigger the live reminder notification toast
-    if (reminders.has('radar-1')) {
-      const timer = setTimeout(() => {
-        const item = RADAR_ITEMS.find((r) => r.id === 'radar-1');
-        if (item) setActiveAlertPopup(item);
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, []);
 
   const toggleReminder = async (item) => {
     const id = item.id;

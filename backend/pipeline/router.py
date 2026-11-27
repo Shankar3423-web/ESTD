@@ -3,7 +3,7 @@ import time
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel, Field
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from backend.common.auth.security import verify_admin_api_key
@@ -120,88 +120,210 @@ def get_pipeline_status():
     }
 
 
-def _build_article_card_items(articles: List[NewsArticle], session: Session) -> List[ArticleCardItem]:
-    """Helper to convert NewsArticle records to ArticleCardItem with Google Doc and Video metadata."""
-    article_ids = [a.id for a in articles]
-    doc_records: dict[int, GoogleDocumentRecord] = {}
-    if article_ids:
-        docs = (
-            session.query(GoogleDocumentRecord)
-            .filter(GoogleDocumentRecord.article_id.in_(article_ids))
-            .all()
-        )
-        doc_records = {d.article_id: d for d in docs}
+def _build_card_item_from_fields(
+    *,
+    article_id: int,
+    title: str,
+    slug: Optional[str],
+    category: str,
+    subcategory: Optional[str],
+    source_name: Optional[str],
+    source_type: str,
+    url: str,
+    canonical_url: Optional[str],
+    image_url: Optional[str],
+    published_at,
+    source_published_at,
+    created_at,
+    description: Optional[str],
+    content_text: Optional[str],
+    include_content: bool,
+    entities: Optional[dict],
+    qa_status: Optional[str],
+    likes_count: Optional[int],
+    doc: Optional[GoogleDocumentRecord],
+) -> ArticleCardItem:
+    """Build an ArticleCardItem from either an ORM NewsArticle or a projected row."""
+    doc_info = None
+    cached_summary = pipeline_orchestrator.generated_summaries.get(article_id)
+    article_qa = qa_status or "PUBLISHED"
 
-    items = []
-    for a in articles:
-        doc = doc_records.get(a.id)
-        doc_info = None
+    if cached_summary or article_qa in ("AI_GENERATED", "APPROVED"):
+        ai_status = "AI_GENERATED"
+        pipeline_status = "AI Generated ✓"
+    elif article_qa == "FAILED":
+        ai_status = "FAILED"
+        pipeline_status = "AI Generation Failed"
+    elif article_qa == "DRAFT":
+        ai_status = "DRAFT"
+        pipeline_status = "Draft (Pending QA)"
+    else:
+        ai_status = "INGESTED"
         pipeline_status = "Stored in PostgreSQL"
-        
-        # Determine real AI status from article QA status or cached Gemini summary
-        cached_summary = pipeline_orchestrator.generated_summaries.get(a.id)
-        article_qa = getattr(a, "qa_status", "PUBLISHED") or "PUBLISHED"
 
-        if cached_summary or article_qa in ("AI_GENERATED", "APPROVED"):
-            ai_status = "AI_GENERATED"
-            pipeline_status = "AI Generated ✓"
-        elif article_qa == "FAILED":
-            ai_status = "FAILED"
-            pipeline_status = "AI Generation Failed"
-        elif article_qa == "DRAFT":
-            ai_status = "DRAFT"
-            pipeline_status = "Draft (Pending QA)"
-        else:
-            ai_status = "INGESTED"
-            pipeline_status = "Stored in PostgreSQL"
+    if doc:
+        doc_info = ArticleGoogleDocInfo(
+            status=doc.status,
+            document_id=doc.google_document_id,
+            document_url=doc.google_document_url,
+            category=doc.category,
+            completed_at=doc.completed_at,
+        )
+        if doc.status == DocumentStatus.CREATED.value:
+            pipeline_status = f"{pipeline_status} (Doc Synced)"
 
-        if doc:
-            doc_info = ArticleGoogleDocInfo(
-                status=doc.status,
-                document_id=doc.google_document_id,
-                document_url=doc.google_document_url,
-                category=doc.category,
-                completed_at=doc.completed_at,
+    preview = content_text or ""
+    content_snippet = description or (
+        (preview[:240] + "...") if len(preview) > 240 else preview
+    )
+
+    return ArticleCardItem(
+        id=article_id,
+        title=title,
+        slug=slug,
+        category=category,
+        subcategory=subcategory,
+        source_name=source_name,
+        source_type=source_type,
+        url=url,
+        canonical_url=canonical_url or url,
+        image_url=image_url,
+        published_at=published_at,
+        source_published_at=source_published_at or published_at,
+        created_at=created_at,
+        content_snippet=content_snippet,
+        content=content_text if include_content else None,
+        executive_summary=cached_summary or description,
+        entities=entities if include_content else {},
+        qa_status=article_qa,
+        ai_status=ai_status,
+        pipeline_status=pipeline_status,
+        likes_count=likes_count or 0,
+        google_doc=doc_info,
+        video_rail=get_cached_video_rail(article_id),
+    )
+
+
+def _fetch_doc_map(article_ids: List[int], session: Session) -> dict[int, GoogleDocumentRecord]:
+    if not article_ids:
+        return {}
+    docs = (
+        session.query(GoogleDocumentRecord)
+        .filter(GoogleDocumentRecord.article_id.in_(article_ids))
+        .all()
+    )
+    return {d.article_id: d for d in docs}
+
+
+def _build_article_card_items(
+    articles: List[NewsArticle], session: Session, include_content: bool = True
+) -> List[ArticleCardItem]:
+    """Helper to convert NewsArticle records to ArticleCardItem with Google Doc and Video metadata."""
+    doc_records = _fetch_doc_map([a.id for a in articles], session)
+    return [
+        _build_card_item_from_fields(
+            article_id=a.id,
+            title=a.title,
+            slug=getattr(a, "slug", None),
+            category=a.category,
+            subcategory=a.subcategory,
+            source_name=a.source_name,
+            source_type=a.source_type,
+            url=a.url,
+            canonical_url=getattr(a, "canonical_url", None),
+            image_url=a.image_url,
+            published_at=a.published_at,
+            source_published_at=getattr(a, "source_published_at", None),
+            created_at=a.created_at,
+            description=a.description,
+            content_text=a.content,
+            include_content=include_content,
+            entities=getattr(a, "entities", {}) or {},
+            qa_status=getattr(a, "qa_status", "PUBLISHED"),
+            likes_count=getattr(a, "likes_count", 0),
+            doc=doc_records.get(a.id),
+        )
+        for a in articles
+    ]
+
+
+def _query_lightweight_card_items(
+    session: Session,
+    *,
+    category: Optional[str] = None,
+    subcategory: Optional[str] = None,
+    search: Optional[str] = None,
+    limit: int = 200,
+) -> List[ArticleCardItem]:
+    """Query card fields without fetching full article body text from PostgreSQL."""
+    query = session.query(
+        NewsArticle.id,
+        NewsArticle.title,
+        NewsArticle.slug,
+        NewsArticle.category,
+        NewsArticle.subcategory,
+        NewsArticle.source_name,
+        NewsArticle.source_type,
+        NewsArticle.url,
+        NewsArticle.canonical_url,
+        NewsArticle.image_url,
+        NewsArticle.published_at,
+        NewsArticle.source_published_at,
+        NewsArticle.created_at,
+        NewsArticle.description,
+        NewsArticle.qa_status,
+        NewsArticle.likes_count,
+        func.substr(NewsArticle.content, 1, 260).label("content_preview"),
+    )
+
+    if category and category != "All":
+        query = query.filter(NewsArticle.category == category)
+    if subcategory:
+        query = query.filter(NewsArticle.subcategory == subcategory)
+    if search and search.strip():
+        term = f"%{search.strip()}%"
+        query = query.filter(
+            or_(
+                NewsArticle.title.ilike(term),
+                NewsArticle.source_name.ilike(term),
+                NewsArticle.category.ilike(term),
+                NewsArticle.subcategory.ilike(term),
+                NewsArticle.content.ilike(term),
             )
-            if doc.status == DocumentStatus.CREATED.value:
-                pipeline_status = f"{pipeline_status} (Doc Synced)"
-
-        content_snippet = a.description or (
-            (a.content[:240] + "...") if len(a.content) > 240 else a.content
         )
 
-        items.append(
-            ArticleCardItem(
-                id=a.id,
-                title=a.title,
-                slug=getattr(a, "slug", None),
-                category=a.category,
-                subcategory=a.subcategory,
-                source_name=a.source_name,
-                source_type=a.source_type,
-                url=a.url,
-                canonical_url=getattr(a, "canonical_url", None) or a.url,
-                image_url=a.image_url,
-                published_at=a.published_at,
-                source_published_at=getattr(a, "source_published_at", None) or a.published_at,
-                created_at=a.created_at,
-                content_snippet=content_snippet,
-                content=a.content,
-                executive_summary=cached_summary or a.description,
-                entities=getattr(a, "entities", {}) or {},
-                qa_status=article_qa,
-                ai_status=ai_status,
-                pipeline_status=pipeline_status,
-                likes_count=getattr(a, "likes_count", 0) or 0,
-                google_doc=doc_info,
-                video_rail=get_cached_video_rail(a.id),
-            )
+    rows = query.order_by(NewsArticle.created_at.desc()).limit(limit).all()
+    doc_records = _fetch_doc_map([r.id for r in rows], session)
+    return [
+        _build_card_item_from_fields(
+            article_id=r.id,
+            title=r.title,
+            slug=r.slug,
+            category=r.category,
+            subcategory=r.subcategory,
+            source_name=r.source_name,
+            source_type=r.source_type,
+            url=r.url,
+            canonical_url=r.canonical_url,
+            image_url=r.image_url,
+            published_at=r.published_at,
+            source_published_at=r.source_published_at,
+            created_at=r.created_at,
+            description=r.description,
+            content_text=r.content_preview,
+            include_content=False,
+            entities=None,
+            qa_status=r.qa_status,
+            likes_count=r.likes_count,
+            doc=doc_records.get(r.id),
         )
-    return items
+        for r in rows
+    ]
 
 
 # In-memory fast cache for dashboard articles to reduce latency from remote PostgreSQL
 _DASHBOARD_ARTICLES_CACHE: dict = {}
+_UNIFIED_FEED_CACHE: dict = {"timestamp": 0.0, "items": []}
 _DASHBOARD_CACHE_TTL = 180.0  # seconds (3 minutes fast cache)
 
 # In-memory cache for article likes status
@@ -212,6 +334,8 @@ _LIKES_CACHE_TTL = 120.0  # 120 seconds TTL
 def clear_dashboard_cache():
     """Clear cached articles and likes when pipeline finishes or like count mutates."""
     _DASHBOARD_ARTICLES_CACHE.clear()
+    _UNIFIED_FEED_CACHE["timestamp"] = 0.0
+    _UNIFIED_FEED_CACHE["items"] = []
     _LIKES_CACHE.clear()
 
 
@@ -225,6 +349,7 @@ def list_dashboard_articles(
     subcategory: Optional[str] = Query(default=None, description="Filter by canonical subcategory"),
     search: Optional[str] = Query(default=None, description="Search by title, source, subcategory, or content"),
     limit: int = Query(default=100, ge=1, le=200),
+    include_content: bool = Query(default=False, description="Include full article body text"),
     response: Response = None,
     session: Session = Depends(get_db),
 ):
@@ -232,34 +357,64 @@ def list_dashboard_articles(
     if response:
         response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=300"
 
-    cache_key = f"{category or 'All'}:{subcategory or 'All'}:{(search or '').strip().lower()}:{limit}"
     now = time.time()
+    clean_search = (search or "").strip()
+
+    # Fast unified cache path for standard feed & category queries (eliminates per-limit DB queries)
+    if not include_content and not clean_search:
+        if (now - _UNIFIED_FEED_CACHE["timestamp"] < _DASHBOARD_CACHE_TTL) and _UNIFIED_FEED_CACHE["items"]:
+            pool = _UNIFIED_FEED_CACHE["items"]
+        else:
+            pool = _query_lightweight_card_items(session, limit=200)
+            _UNIFIED_FEED_CACHE["timestamp"] = now
+            _UNIFIED_FEED_CACHE["items"] = pool
+
+        filtered = pool
+        if category and category != "All":
+            filtered = [item for item in filtered if item.category == category]
+        if subcategory and subcategory != "All":
+            filtered = [item for item in filtered if item.subcategory == subcategory]
+
+        sliced = filtered[:limit]
+        return ArticleListDashboardResponse(total=len(sliced), items=sliced)
+
+    cache_key = f"{category or 'All'}:{subcategory or 'All'}:{clean_search.lower()}:{limit}:{include_content}"
     cached = _DASHBOARD_ARTICLES_CACHE.get(cache_key)
     if cached and (now - cached["timestamp"] < _DASHBOARD_CACHE_TTL):
         return cached["response"]
 
-    query = session.query(NewsArticle)
-
-    if category and category != "All":
-        query = query.filter(NewsArticle.category == category)
-
-    if subcategory:
-        query = query.filter(NewsArticle.subcategory == subcategory)
-
-    if search and search.strip():
-        term = f"%{search.strip()}%"
-        query = query.filter(
-            or_(
-                NewsArticle.title.ilike(term),
-                NewsArticle.source_name.ilike(term),
-                NewsArticle.category.ilike(term),
-                NewsArticle.subcategory.ilike(term),
-                NewsArticle.content.ilike(term),
-            )
+    if not include_content:
+        items = _query_lightweight_card_items(
+            session,
+            category=category,
+            subcategory=subcategory,
+            search=clean_search,
+            limit=limit,
         )
+    else:
+        query = session.query(NewsArticle)
 
-    articles = query.order_by(NewsArticle.created_at.desc()).limit(limit).all()
-    items = _build_article_card_items(articles, session)
+        if category and category != "All":
+            query = query.filter(NewsArticle.category == category)
+
+        if subcategory:
+            query = query.filter(NewsArticle.subcategory == subcategory)
+
+        if clean_search:
+            term = f"%{clean_search}%"
+            query = query.filter(
+                or_(
+                    NewsArticle.title.ilike(term),
+                    NewsArticle.source_name.ilike(term),
+                    NewsArticle.category.ilike(term),
+                    NewsArticle.subcategory.ilike(term),
+                    NewsArticle.content.ilike(term),
+                )
+            )
+
+        articles = query.order_by(NewsArticle.created_at.desc()).limit(limit).all()
+        items = _build_article_card_items(articles, session, include_content=True)
+
     response_obj = ArticleListDashboardResponse(total=len(items), items=items)
 
     # Store in memory cache
@@ -372,9 +527,11 @@ _OVERVIEW_CACHE_TIME = 0.0
     response_model=SystemOverviewResponse,
     summary="Aggregate health and status across all ESTD subsystems",
 )
-def get_system_overview(session: Session = Depends(get_db)):
+def get_system_overview(response: Response, session: Session = Depends(get_db)):
     """Aggregate health and counts for PostgreSQL, MCP, Gemini, and Google Drive."""
     global _OVERVIEW_CACHE, _OVERVIEW_CACHE_TIME
+    if response:
+        response.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=180"
     now = time.time()
     if _OVERVIEW_CACHE and (now - _OVERVIEW_CACHE_TIME < 60.0):
         return _OVERVIEW_CACHE

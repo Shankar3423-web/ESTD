@@ -13,22 +13,16 @@ import { LayoutGrid, Zap, FileText } from 'lucide-react';
 import EmptyState from '../components/common/EmptyState';
 import ErrorState from '../components/common/ErrorState';
 import SkeletonCard from '../components/story/SkeletonCard';
-import { fetchStories } from '../api/estdApi';
+import { fetchStories, getCachedStories } from '../api/estdApi';
 import { CATEGORIES } from '../constants/taxonomy';
 import { useFollowedCategories } from '../utils/followedCategories';
 
 function getInitialFeedCache() {
-  try {
-    const cached = localStorage.getItem('estd_feed_cache');
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        // Verify cached stories has at least 4 unique categories so old 3-category cache is refreshed
-        const uniqueCats = new Set(parsed.map((s) => s.category));
-        if (uniqueCats.size >= 4) return parsed;
-      }
-    }
-  } catch {}
+  const cached = getCachedStories({ limit: 150 });
+  if (Array.isArray(cached) && cached.length > 0) {
+    const uniqueCats = new Set(cached.map((s) => s.category));
+    if (uniqueCats.size >= 4) return cached;
+  }
   return [];
 }
 
@@ -73,6 +67,16 @@ export default function HomePage({
       console.warn('Could not persist view mode:', e);
     }
   };
+
+  // Memoized O(1) lookup sets for saved & watch-later story IDs
+  const savedIdSet = useMemo(
+    () => new Set(savedStories.map((s) => String(s.id))),
+    [savedStories]
+  );
+  const watchLaterIdSet = useMemo(
+    () => new Set(watchLaterStories.map((s) => String(s.id))),
+    [watchLaterStories]
+  );
 
   // Video Lightbox Modal State
   const [modalStory, setModalStory] = useState(null);
@@ -136,7 +140,6 @@ export default function HomePage({
           if (isMounted) {
             setStories(finalStories);
             try {
-              localStorage.setItem('estd_feed_cache', JSON.stringify(finalStories.slice(0, 100)));
               window.dispatchEvent(
                 new CustomEvent('estd:feed-updated', { detail: finalStories.slice(0, 12) })
               );
@@ -306,11 +309,11 @@ export default function HomePage({
                 <StoryCard
                   key={story.id}
                   story={story}
-                  isSaved={savedStories.some((s) => s.id === story.id)}
+                  isSaved={savedIdSet.has(String(story.id))}
                   onToggleSave={onToggleSave}
                   watchLaterStories={watchLaterStories}
                   onToggleWatchLater={onToggleWatchLater}
-                  isWatchLater={watchLaterStories.some((s) => String(s.id) === String(story.id))}
+                  isWatchLater={watchLaterIdSet.has(String(story.id))}
                   onWatchVideo={() => handleOpenVideoModal(story)}
                 />
               ))}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Bookmark,
@@ -11,22 +11,17 @@ import {
 } from 'lucide-react';
 import ImageWithFallback from '../common/ImageWithFallback';
 import { getCategoryMeta, slugify } from '../../constants/taxonomy';
-import { toggleStoryLike } from '../../api/estdApi';
+import {
+  toggleStoryLike,
+  isStoryLikedLocally,
+  setStoryLikedLocally,
+} from '../../api/estdApi';
 import { trackArticleRead } from '../../utils/readingHistory';
 
 /**
  * Editorial News Card Component with Organic Squircle Geometry
- * Spec:
- * - Curved, non-sharp squircle edges (24px radius with glassmorphic border)
- * - 2-row structured top bar:
- *     Row 1: Category Badge & "X Videos" Badge
- *     Row 2: High-contrast Subcategory Capsule & Freshness Timestamp
- * - News image with "Watch Video Brief" overlay
- * - Headline of the news (2 lines fixed)
- * - Information of that news (One simple, complete 5-line paragraph)
- * - Action footer: Read More button (redirects to article) + Share, Save, Like (persists to DB, no default fake likes)
  */
-export default function StoryCard({
+const StoryCard = memo(function StoryCard({
   story,
   isSaved = false,
   onToggleSave,
@@ -37,15 +32,7 @@ export default function StoryCard({
 }) {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
-  const [liked, setLiked] = useState(() => {
-    try {
-      const stored = localStorage.getItem('estd_liked_stories');
-      const map = stored ? JSON.parse(stored) : {};
-      return !!map[story?.id];
-    } catch {
-      return false;
-    }
-  });
+  const [liked, setLiked] = useState(() => isStoryLikedLocally(story?.id));
 
   // Real like count from PostgreSQL database (no fake/deterministic defaults)
   const [likeCount, setLikeCount] = useState(() => {
@@ -59,7 +46,8 @@ export default function StoryCard({
   const subcategoryName = story.subcategory || 'Latest Analysis';
   const catMeta = story.categoryMeta || getCategoryMeta(categoryName);
   const accentColor = catMeta.color || '#00E5FF';
-  const videoCount = story.videoRail?.length || 5;
+  // Avoid triggering lazy videoRail getter on every card mount
+  const videoCount = story._videoRail?.length || 5;
 
   const handleOpenStory = (e) => {
     if (e.target.closest('button') && !e.target.closest('.story-read-more-btn')) return;
@@ -102,10 +90,7 @@ export default function StoryCard({
       setTimeout(() => setBursting(false), 700);
     }
     try {
-      const stored = localStorage.getItem('estd_liked_stories');
-      const map = stored ? JSON.parse(stored) : {};
-      map[story.id] = nextState;
-      localStorage.setItem('estd_liked_stories', JSON.stringify(map));
+      setStoryLikedLocally(story.id, nextState);
 
       // Call database API
       const res = await toggleStoryLike(story.id);
@@ -326,7 +311,9 @@ export default function StoryCard({
       </div>
     </article>
   );
-}
+});
+
+export default StoryCard;
 
 /**
  * Returns exactly ONE simple, complete, cohesive paragraph formatted to 5 lines.

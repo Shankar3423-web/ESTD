@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AppShell from './components/layout/AppShell';
 import { prefetchAllCategories } from './api/estdApi';
@@ -49,11 +49,11 @@ function PageLoaderFallback() {
 }
 
 export default function App() {
-  // Pre-warm category feeds in the background during idle time so all tabs open instantaneously
+  // Warm feed once during idle only if user landed directly on a secondary route
   useEffect(() => {
     const timer = setTimeout(() => {
       prefetchAllCategories();
-    }, 1200);
+    }, 3000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -67,14 +67,6 @@ export default function App() {
     }
   });
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('estd_saved_stories', JSON.stringify(savedStories));
-    } catch (e) {
-      console.warn('Could not persist saved stories:', e);
-    }
-  }, [savedStories]);
-
   // Locally persisted Watch Later stories
   const [watchLaterStories, setWatchLaterStories] = useState(() => {
     try {
@@ -85,15 +77,7 @@ export default function App() {
     }
   });
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('estd_watch_later', JSON.stringify(watchLaterStories));
-    } catch (e) {
-      console.warn('Could not persist watch later stories:', e);
-    }
-  }, [watchLaterStories]);
-
-  const handleToggleWatchLater = (story) => {
+  const handleToggleWatchLater = useCallback((story) => {
     if (!story) return;
     setWatchLaterStories((prev) => {
       const exists = prev.some((s) => String(s.id) === String(story.id));
@@ -107,9 +91,9 @@ export default function App() {
       }
       return next;
     });
-  };
+  }, []);
 
-  const handleToggleSave = (story) => {
+  const handleToggleSave = useCallback((story) => {
     if (!story) return;
     setSavedStories((prev) => {
       const exists = prev.some((s) => String(s.id) === String(story.id));
@@ -123,11 +107,14 @@ export default function App() {
       }
       return next;
     });
-  };
+  }, []);
 
-  const handleClearAllSaved = () => {
+  const handleClearAllSaved = useCallback(() => {
     setSavedStories([]);
-  };
+    try {
+      localStorage.removeItem('estd_saved_stories');
+    } catch {}
+  }, []);
 
   return (
     <BrowserRouter>

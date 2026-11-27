@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo, memo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Cpu,
@@ -51,7 +51,7 @@ function getSourceBadge(sourceName = '') {
  * CategoryQuickRow — A horizontal scroll row dedicated to a specific category or thematic pulse (e.g. Education Pulse).
  * Styled to match modern news cards with image, category badge, source metadata, headline, and real database-backed like, save, and share actions.
  */
-export default function CategoryQuickRow({
+const CategoryQuickRow = memo(function CategoryQuickRow({
   categoryName = 'Tech',
   subcategoryName = null,
   excludeSubcategory = null,
@@ -65,6 +65,7 @@ export default function CategoryQuickRow({
   icon: IconOverride = null,
   accentColor: accentColorOverride = null,
   seeAllLink: seeAllLinkOverride = null,
+  maxItems = 10,
 }) {
   const navigate = useNavigate();
   const trackRef = useRef(null);
@@ -237,6 +238,31 @@ export default function CategoryQuickRow({
     });
   }, [stories, categoryName, subcategoryName, excludeSubcategory]);
 
+  const visibleStories = useMemo(
+    () => (maxItems > 0 ? categoryStories.slice(0, maxItems) : categoryStories),
+    [categoryStories, maxItems]
+  );
+
+  const savedIdSet = useMemo(() => {
+    if (onToggleSave) return new Set(savedStories.map((s) => String(s.id)));
+    try {
+      const saved = JSON.parse(localStorage.getItem('estd_saved_stories') || '[]');
+      return new Set(saved.map((s) => String(s.id)));
+    } catch {
+      return new Set();
+    }
+  }, [onToggleSave, savedStories]);
+
+  const watchLaterIdSet = useMemo(() => {
+    if (onToggleWatchLater) return new Set(watchLaterStories.map((s) => String(s.id)));
+    try {
+      const list = JSON.parse(localStorage.getItem('estd_watch_later') || '[]');
+      return new Set(list.map((s) => String(s.id)));
+    } catch {
+      return new Set();
+    }
+  }, [onToggleWatchLater, watchLaterStories]);
+
   const catMeta = getCategoryMeta(categoryName);
   const accentColor = accentColorOverride || catMeta?.color || '#00E5FF';
   const categorySlug = catMeta?.slug || slugify(categoryName);
@@ -350,7 +376,7 @@ export default function CategoryQuickRow({
         ref={trackRef}
         onScroll={checkScroll}
       >
-        {categoryStories.map((story) => {
+        {visibleStories.map((story) => {
           const timeAgo = formatTimeAgo(story.publishedAt);
           const editorialType = story.editorialType;
           const displaySubcategory =
@@ -365,30 +391,16 @@ export default function CategoryQuickRow({
               : (story.likesCount || 0);
 
           const isSaved = onToggleSave
-            ? savedStories.some((s) => String(s.id) === String(story.id))
+            ? savedIdSet.has(String(story.id))
             : (localSavedMap[story.id] !== undefined
                 ? localSavedMap[story.id]
-                : (() => {
-                    try {
-                      const saved = JSON.parse(localStorage.getItem('estd_saved_stories') || '[]');
-                      return saved.some((s) => String(s.id) === String(story.id));
-                    } catch {
-                      return false;
-                    }
-                  })());
+                : savedIdSet.has(String(story.id)));
 
           const isWatchLater = onToggleWatchLater
-            ? watchLaterStories.some((s) => String(s.id) === String(story.id))
+            ? watchLaterIdSet.has(String(story.id))
             : (localWatchLaterMap[story.id] !== undefined
                 ? localWatchLaterMap[story.id]
-                : (() => {
-                    try {
-                      const list = JSON.parse(localStorage.getItem('estd_watch_later') || '[]');
-                      return list.some((s) => String(s.id) === String(story.id));
-                    } catch {
-                      return false;
-                    }
-                  })());
+                : watchLaterIdSet.has(String(story.id)));
           const isCopied = copiedId === story.id;
 
           return (
@@ -524,7 +536,9 @@ export default function CategoryQuickRow({
       </div>
     </section>
   );
-}
+});
+
+export default CategoryQuickRow;
 
 function formatTimeAgo(dateStr) {
   if (!dateStr) return 'Recent';
