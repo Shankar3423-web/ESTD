@@ -6997,7 +6997,8 @@ button {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .radar-category-pill {
@@ -7009,28 +7010,40 @@ button {
   font-size: 0.68rem;
   font-weight: 700;
   border: 1px solid;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .radar-tag-pill {
   font-size: 0.68rem;
   color: rgba(255, 255, 255, 0.45);
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .radar-card-title {
-  font-size: 0.92rem;
+  font-size: 0.90rem;
   font-weight: 700;
-  line-height: 1.36;
+  line-height: 1.35;
   color: #FFFFFF;
   margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .radar-card-desc {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   line-height: 1.45;
   color: rgba(255, 255, 255, 0.62);
   margin: 0;
-  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .radar-card-footer {
@@ -15373,7 +15386,7 @@ button {
 .estdpod-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 99999;
   background: rgba(0, 0, 0, 0.92);
   backdrop-filter: blur(16px);
   display: flex;
@@ -15384,39 +15397,80 @@ button {
 
 .estdpod-modal-dialog {
   position: relative;
-  width: 100%;
-  max-width: 1200px;
-  height: calc(100vh - 32px);
+  width: min(1220px, calc(100vw - 32px));
+  height: min(88vh, 720px);
   max-height: calc(100vh - 32px);
   background: #0E131F;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75);
   display: flex;
   flex-direction: column;
 }
 
+.estdpod-modal-topbar {
+  height: 48px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #090D16;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.estdpod-modal-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #F1F5F9;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.estdpod-modal-back-btn:hover {
+  background: rgba(255, 42, 84, 0.2);
+  border-color: rgba(255, 42, 84, 0.55);
+  color: #FFFFFF;
+}
+
+.estdpod-modal-topbar-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #94A3B8;
+  text-transform: uppercase;
+}
+
 .estdpod-modal-close {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  z-index: 20;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #CBD5E1;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  flex-shrink: 0;
   transition: all 0.2s ease;
 }
 
 .estdpod-modal-close:hover {
   background: #FF2A54;
+  border-color: #FF2A54;
   color: white;
   transform: rotate(90deg);
 }
@@ -15436,24 +15490,26 @@ button {
   aspect-ratio: 16 / 9;
   background: #000000;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .estdpod-iframe {
-  position: absolute;
-  inset: 0;
   width: 100%;
   height: 100%;
   border: none;
+  display: block;
 }
 
 .estdpod-modal-details {
-  padding: 18px 24px;
+  padding: 18px 22px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   overflow-y: auto;
   background: #0C101A;
-  flex-shrink: 0;
+  min-height: 0;
 }
 
 .estdpod-modal-badge-row {
@@ -15562,18 +15618,42 @@ button {
   gap: 10px;
   font-size: 12px;
   color: #CBD5E1;
-  line-height: 1.4;
+  line-height: 1.45;
+}
+
+.estdpod-chapter-btn {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.estdpod-chapter-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.estdpod-chapter-btn.active {
+  background: rgba(255, 42, 84, 0.09);
+  border-color: rgba(255, 42, 84, 0.3);
 }
 
 .estdpod-time-marker {
   display: inline-block;
-  padding: 1px 6px;
-  background: rgba(255, 42, 84, 0.15);
+  min-width: 52px;
+  text-align: center;
+  padding: 2px 6px;
+  background: rgba(255, 42, 84, 0.16);
   color: #FF2A54;
   border-radius: 4px;
   font-size: 11px;
   font-weight: 700;
-  font-family: monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
 
@@ -15639,16 +15719,18 @@ button {
 
 @media (min-width: 1024px) {
   .estdpod-modal-grid {
-    grid-template-columns: 1.6fr 1fr;
+    grid-template-columns: minmax(0, 1.55fr) minmax(320px, 1fr);
     overflow: hidden;
   }
   .estdpod-player-frame-wrapper {
     aspect-ratio: auto;
     height: 100%;
+    min-height: 0;
   }
   .estdpod-modal-details {
     overflow-y: auto;
-    max-height: calc(100vh - 34px);
+    height: 100%;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
   }
 }
 
@@ -15667,7 +15749,6 @@ button {
 
 .category-quick-section,
 .weekly-radar-section,
-.estdpod-shelf-section,
 .home-daily-pack-section {
   content-visibility: auto;
   contain-intrinsic-size: auto 420px;

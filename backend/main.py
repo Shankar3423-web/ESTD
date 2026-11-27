@@ -86,6 +86,7 @@ from backend.step8_gdrive_output.api.digest_routes import router as digest_route
 from backend.pipeline.router import router as pipeline_router
 from backend.step9_video_rail.apis.video_routes import router as video_router
 from backend.step9_video_rail.apis.podcast_routes import router as podcast_router
+from backend.step10_weekly_radar.apis.radar_routes import router as radar_router
 
 
 # Schema checks run inside lifespan to avoid double remote DB round-trips on startup.
@@ -568,6 +569,9 @@ app.include_router(video_router)
 
 # Include ESTDPOD YouTube Channel & Podcasts routes
 app.include_router(podcast_router)
+
+# Include Step 10 Dynamic Weekly Radar routes
+app.include_router(radar_router)
 
 
 

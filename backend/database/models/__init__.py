@@ -5,6 +5,7 @@ from backend.database.models.estdpod_episode import EstdpodEpisode
 from backend.database.models.duplicate_index_record import DuplicateIndexRecord
 from backend.database.models.google_document_record import DocumentStatus, GoogleDocumentRecord
 from backend.database.models.news_article import NewsArticle
+from backend.database.models.radar_drop import RadarDrop
 from backend.database.models.subcategory import Subcategory
 
 __all__ = [
@@ -12,6 +13,7 @@ __all__ = [
     "Category",
     "Subcategory",
     "NewsArticle",
+    "RadarDrop",
     "DuplicateIndexRecord",
     "GoogleDocumentRecord",
     "DocumentStatus",

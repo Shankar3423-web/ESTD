@@ -514,6 +514,15 @@ class PipelineOrchestrator:
                 logger.info(f"Step 8 Complete: {docs_created_count} Google Documents created.")
 
             # =========================================================================
+            # STEP 10: Refresh Dynamic Weekly Radar from Newly Ingested Articles
+            # =========================================================================
+            try:
+                from backend.step10_weekly_radar.services.radar_service import RadarService
+                RadarService().refresh_weekly_radar(force=True)
+            except Exception as radar_exc:
+                logger.warning(f"Weekly Radar refresh notice after pipeline run: {radar_exc}")
+
+            # =========================================================================
             # FINALIZE JOB
             # =========================================================================
             job.current_step = "COMPLETED"

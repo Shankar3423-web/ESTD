@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Calendar,
@@ -9,7 +9,6 @@ import {
   Cpu,
   Film,
   Trophy,
-  GraduationCap,
   TrendingUp,
   Compass,
   Check,
@@ -17,139 +16,153 @@ import {
   ExternalLink,
   Download,
   X,
-  Radio,
   Zap,
+  RefreshCw,
+  Newspaper,
 } from 'lucide-react';
-import { getCategoryMeta } from '../../constants/taxonomy';
+import {
+  fetchWeeklyRadar,
+  refreshWeeklyRadar,
+  getCachedWeeklyRadar,
+} from '../../api/estdApi';
 
-const RADAR_ITEMS = [
-  {
-    id: 'radar-1',
-    date: 'Oct 28',
-    dayName: 'Wednesday',
-    relativeTime: 'In 2 Days',
-    statusUrgency: 'urgent',
-    category: 'Tech',
-    tag: 'Product Launch',
-    title: 'OpenAI & Anthropic Next-Gen Voice & Reasoning Model Deployments',
-    description:
-      'Global rollout of advanced voice agent APIs and developer access for ultra-low latency multimodal assistants.',
-    accentColor: '#00E5FF',
-    icon: Cpu,
-    targetDate: '20261028T140000Z',
-    endDate: '20261028T160000Z',
-    isLiveNow: true, // Used for live alert demo
-  },
-  {
-    id: 'radar-2',
-    date: 'Oct 30',
-    dayName: 'Friday',
-    relativeTime: 'This Friday',
-    statusUrgency: 'soon',
-    category: 'Entertainment',
-    tag: 'Streaming & Box Office',
-    title: 'Weekend Global OTT Drops & Major Theatrical Film Premieres',
-    description:
-      'Prime Video and Netflix slate drops alongside nationwide cinematic debuts with creator watch-parties.',
-    accentColor: '#FF20B8',
-    icon: Film,
-    targetDate: '20261030T180000Z',
-    endDate: '20261030T210000Z',
-  },
-  {
-    id: 'radar-3',
-    date: 'Nov 01',
-    dayName: 'Sunday',
-    relativeTime: 'This Weekend',
-    statusUrgency: 'soon',
-    category: 'Sports',
-    tag: 'Live Fixture',
-    title: 'Championship Football Derbies & T20 Super League Clashes',
-    description:
-      'High-stakes weekend matches broadcasting live across global streaming networks with real-time fan telemetry.',
-    accentColor: '#10B981',
-    icon: Trophy,
-    targetDate: '20261101T150000Z',
-    endDate: '20261101T180000Z',
-  },
-  {
-    id: 'radar-4',
-    date: 'Nov 03',
-    dayName: 'Tuesday',
-    relativeTime: 'Next Week',
-    statusUrgency: 'normal',
-    category: 'Education',
-    tag: 'Policy & Admissions',
-    title: 'National Fellowship & Central University Winter Admission Portal',
-    description:
-      'Official application opening for postgraduate fellowships, research grants, and NEP-aligned degree tracks.',
-    accentColor: '#38BDF8',
-    icon: GraduationCap,
-    targetDate: '20261103T090000Z',
-    endDate: '20261103T180000Z',
-  },
-  {
-    id: 'radar-5',
-    date: 'Nov 04',
-    dayName: 'Wednesday',
-    relativeTime: 'Next Week',
-    statusUrgency: 'normal',
-    category: 'Business & Finance',
-    tag: 'Earnings Catalyst',
-    title: 'Big Tech Q3 Earnings & Global Central Bank Benchmark Updates',
-    description:
-      'Key quarterly financial disclosures and interest rate trajectory statements impacting tech hiring and venture funding.',
-    accentColor: '#FFB020',
-    icon: TrendingUp,
-    targetDate: '20261104T200000Z',
-    endDate: '20261104T220000Z',
-  },
-  {
-    id: 'radar-6',
-    date: 'Nov 06',
-    dayName: 'Friday',
-    relativeTime: 'Upcoming',
-    statusUrgency: 'normal',
-    category: 'Developments',
-    tag: 'Science Milestone',
-    title: 'Clean Energy Transition & Space Exploration Briefing',
-    description:
-      'International telemetry disclosures on next-gen solar efficiency standards and upcoming lunar payload readiness.',
-    accentColor: '#A855F7',
-    icon: Compass,
-    targetDate: '20261106T130000Z',
-    endDate: '20261106T150000Z',
-  },
-];
+const CATEGORY_VISUALS = {
+  Tech: { accentColor: '#00E5FF', icon: Cpu },
+  Entertainment: { accentColor: '#FF20B8', icon: Film },
+  Sports: { accentColor: '#10B981', icon: Trophy },
+  Developments: { accentColor: '#38BDF8', icon: Compass },
+  'Business & Finance': { accentColor: '#FFB020', icon: TrendingUp },
+};
 
 const FILTER_TABS = [
   { id: 'All', label: 'All Drops' },
   { id: 'Tech', label: 'Tech & AI' },
   { id: 'Entertainment', label: 'Entertainment' },
   { id: 'Sports', label: 'Sports' },
-  { id: 'Education', label: 'Education & Policy' },
+  { id: 'Developments', label: 'Policy & Science' },
   { id: 'Business & Finance', label: 'Markets' },
 ];
 
+const REMINDERS_STORAGE_KEY = 'estd_radar_reminders_v2';
+const FIRED_ALERTS_STORAGE_KEY = 'estd_radar_fired_alerts_v2';
+
+function getReminderKey(item) {
+  return item?.drop_key || item?.id;
+}
+
+function loadStoredMap(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveStoredMap(key, mapObj) {
+  try {
+    localStorage.setItem(key, JSON.stringify(mapObj));
+  } catch {}
+}
+
 /**
- * Generate a Google Calendar 1-Click Link
+ * Dynamically compute local date display, relative badge, and urgency from ISO timestamp.
  */
+function computeLocalRadarTiming(item, nowMs) {
+  const rawIso = item?.event_date;
+  const parsed = rawIso ? new Date(rawIso) : null;
+  if (!parsed || Number.isNaN(parsed.getTime())) {
+    return {
+      date: item?.date || 'Soon',
+      dayShort: item?.day_short || 'TBD',
+      dayName: item?.day_name || 'Upcoming',
+      relativeTime: item?.relative_time || 'Upcoming',
+      statusUrgency: item?.status_urgency || 'normal',
+      isDueNow: false,
+      eventMs: nowMs + 86400000,
+    };
+  }
+
+  const now = new Date(nowMs);
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startOfEventDay = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate()).getTime();
+  const deltaDays = Math.round((startOfEventDay - startOfToday) / 86400000);
+  const eventMs = parsed.getTime();
+  const isDueNow = nowMs >= eventMs;
+
+  const date = parsed.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+  const dayShort = parsed.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+  const dayName = parsed.toLocaleDateString('en-US', { weekday: 'long' });
+
+  let relativeTime = 'Upcoming';
+  let statusUrgency = 'normal';
+
+  if (deltaDays < 0) {
+    relativeTime = 'Recent';
+    statusUrgency = 'normal';
+  } else if (deltaDays === 0) {
+    relativeTime = isDueNow ? 'Live Today' : 'Dropping Today';
+    statusUrgency = 'urgent';
+  } else if (deltaDays === 1) {
+    relativeTime = 'Tomorrow';
+    statusUrgency = 'urgent';
+  } else if (deltaDays === 2) {
+    relativeTime = 'In 2 Days';
+    statusUrgency = 'urgent';
+  } else if (deltaDays <= 6) {
+    const evWeekday = parsed.getDay(); // 0=Sun, 6=Sat
+    const nowWeekday = now.getDay();
+    if ((evWeekday === 0 || evWeekday === 6) && nowWeekday >= 1 && nowWeekday <= 5) {
+      relativeTime = 'This Weekend';
+    } else {
+      relativeTime = `In ${deltaDays} Days`;
+    }
+    statusUrgency = 'soon';
+  } else if (deltaDays <= 13) {
+    relativeTime = 'Next Week';
+    statusUrgency = 'normal';
+  }
+
+  return {
+    date,
+    dayShort,
+    dayName,
+    relativeTime,
+    statusUrgency,
+    isDueNow,
+    eventMs,
+  };
+}
+
+function formatSyncAge(isoString, nowMs) {
+  if (!isoString) return null;
+  const ts = new Date(isoString).getTime();
+  if (Number.isNaN(ts)) return null;
+  const diffMins = Math.max(0, Math.floor((nowMs - ts) / 60000));
+  if (diffMins < 1) return 'Synced just now';
+  if (diffMins < 60) return `Synced ${diffMins}m ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `Synced ${diffHours}h ago`;
+  return `Synced ${Math.floor(diffHours / 24)}d ago`;
+}
+
 function createGoogleCalendarUrl(item) {
   const text = encodeURIComponent(`[ESTD Radar] ${item.title}`);
   const details = encodeURIComponent(
     `${item.description}\n\nTracked live on ESTD News Platform.\nCategory: ${item.category} • ${item.tag}`
   );
-  const location = encodeURIComponent('ESTD News Live Wire (https://estd.news)');
-  const dates = `${item.targetDate || '20261028T140000Z'}/${item.endDate || '20261028T160000Z'}`;
-  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&details=${details}&location=${location}&dates=${dates}`;
+  const location = encodeURIComponent('ESTD News Live Wire');
+  const startIcs = item.target_date_ics || new Date(item.event_date).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  const endIcs = item.end_date_ics || startIcs;
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&details=${details}&location=${location}&dates=${startIcs}/${endIcs}`;
 }
 
-/**
- * Download a standard .ICS Calendar File for Apple Calendar / Outlook / Mobile
- */
 function downloadIcsCalendar(item) {
-  const startDate = item.targetDate || '20261028T140000Z';
-  const endDate = item.endDate || '20261028T160000Z';
+  const startDate =
+    item.target_date_ics || new Date(item.event_date).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  const endDate = item.end_date_ics || startDate;
   const now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
 
   const icsBody = [
@@ -159,12 +172,12 @@ function downloadIcsCalendar(item) {
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     'BEGIN:VEVENT',
-    `UID:${item.id}@estd.news`,
+    `UID:${item.drop_key || item.id}@estd.news`,
     `DTSTAMP:${now}`,
     `DTSTART:${startDate}`,
     `DTEND:${endDate}`,
     `SUMMARY:[ESTD Radar] ${item.title}`,
-    `DESCRIPTION:${item.description}`,
+    `DESCRIPTION:${(item.description || '').replace(/\r?\n/g, ' ')}`,
     'LOCATION:ESTD News Live Wire',
     'STATUS:CONFIRMED',
     'BEGIN:VALARM',
@@ -180,7 +193,7 @@ function downloadIcsCalendar(item) {
   const url = window.URL.createObjectURL(blob);
   const anchor = document.createElement('a');
   anchor.href = url;
-  anchor.download = `${item.id}-calendar-reminder.ics`;
+  anchor.download = `${item.id || 'radar-drop'}-calendar-reminder.ics`;
   document.body.appendChild(anchor);
   anchor.click();
   document.body.removeChild(anchor);
@@ -190,79 +203,175 @@ function downloadIcsCalendar(item) {
 export default function WeeklyRadarDrop() {
   const navigate = useNavigate();
   const [selectedFilter, setSelectedFilter] = useState('All');
+  const [nowMs, setNowMs] = useState(() => Date.now());
 
-  // Reminders tracked in localStorage
-  const [reminders, setReminders] = useState(() => {
+  const initialCache = useMemo(() => getCachedWeeklyRadar(), []);
+  const [radarItems, setRadarItems] = useState(() => initialCache?.items || []);
+  const [generatedAt, setGeneratedAt] = useState(() => initialCache?.generated_at || null);
+  const [loading, setLoading] = useState(() => !(initialCache?.items?.length > 0));
+  const [refreshing, setRefreshing] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(null);
+
+  // Armed reminders stored as { [drop_key]: { ...snapshot } }
+  const [remindersMap, setRemindersMap] = useState(() => {
     try {
-      const saved = localStorage.getItem('estd_radar_reminders');
-      return new Set(saved ? JSON.parse(saved) : ['radar-1']); // Default demo has radar-1 armed
-    } catch {
-      return new Set(['radar-1']);
-    }
+      localStorage.removeItem('estd_radar_reminders'); // Clean up legacy static demo keys
+    } catch {}
+    return loadStoredMap(REMINDERS_STORAGE_KEY);
   });
+  const [firedAlertsMap, setFiredAlertsMap] = useState(() => loadStoredMap(FIRED_ALERTS_STORAGE_KEY));
 
-  // Calendar dropdown active menu
   const [calendarMenuOpenId, setCalendarMenuOpenId] = useState(null);
-
-  // Live Launched Reminder Popup State (triggered explicitly on user click, never unexpectedly on page load)
   const [activeAlertPopup, setActiveAlertPopup] = useState(null);
+  const [armNotice, setArmNotice] = useState(null);
 
-  const toggleReminder = async (item) => {
-    const id = item.id;
-    const isCurrentlyReminded = reminders.has(id);
+  // Keep local clock ticking every 60s so relative labels & due reminders stay live
+  useEffect(() => {
+    const timer = setInterval(() => setNowMs(Date.now()), 60000);
+    return () => clearInterval(timer);
+  }, []);
 
-    setReminders((prev) => {
-      const next = new Set(prev);
-      if (isCurrentlyReminded) {
-        next.delete(id);
-      } else {
-        next.add(id);
+  const loadRadar = useCallback(async ({ forceRefresh = false } = {}) => {
+    if (forceRefresh) {
+      setRefreshing(true);
+    } else if (radarItems.length === 0) {
+      setLoading(true);
+    }
+    setErrorMsg(null);
+    try {
+      const res = forceRefresh ? await refreshWeeklyRadar() : await fetchWeeklyRadar();
+      if (res && Array.isArray(res.items)) {
+        setRadarItems(res.items);
+        setGeneratedAt(res.generated_at || new Date().toISOString());
       }
-      try {
-        localStorage.setItem('estd_radar_reminders', JSON.stringify([...next]));
-      } catch {}
-      return next;
-    });
+    } catch (err) {
+      console.warn('Failed to load dynamic Weekly Radar:', err);
+      if (radarItems.length === 0) {
+        setErrorMsg(err.message || 'Unable to sync live Weekly Radar events.');
+      }
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [radarItems.length]);
 
-    if (!isCurrentlyReminded) {
-      // 1. Request Native Browser Notification permission if supported
-      if ('Notification' in window) {
-        try {
-          if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-            const perm = await Notification.requestPermission();
-            if (perm === 'granted') {
-              new Notification('🔔 ESTD Radar Reminder Set!', {
-                body: `We will alert you when "${item.title}" officially launches.`,
-                icon: '/favicon.ico',
-              });
-            }
-          }
-        } catch (e) {
-          console.debug('Notification permission notice:', e);
+  useEffect(() => {
+    loadRadar({ forceRefresh: false });
+  }, []);
+
+  // Automatically trigger live alert popup + notification when any armed reminder reaches its drop time
+  useEffect(() => {
+    if (!radarItems.length) return;
+    for (const item of radarItems) {
+      const key = getReminderKey(item);
+      if (!remindersMap[key] || firedAlertsMap[key]) continue;
+
+      const timing = computeLocalRadarTiming(item, nowMs);
+      if (timing.isDueNow) {
+        const visual = CATEGORY_VISUALS[item.category] || { accentColor: '#00E5FF' };
+        const enriched = { ...item, accentColor: visual.accentColor, isSimulated: false };
+        setActiveAlertPopup(enriched);
+
+        const nextFired = { ...firedAlertsMap, [key]: new Date(nowMs).toISOString() };
+        setFiredAlertsMap(nextFired);
+        saveStoredMap(FIRED_ALERTS_STORAGE_KEY, nextFired);
+
+        if ('Notification' in window && Notification.permission === 'granted') {
+          try {
+            new Notification('🔔 ESTD Radar Event Dropping Now!', {
+              body: item.title,
+              icon: '/favicon.ico',
+            });
+          } catch {}
         }
+        break;
       }
+    }
+  }, [radarItems, remindersMap, firedAlertsMap, nowMs]);
 
-      // 2. Trigger on-screen launch alert toast for demonstration
-      setActiveAlertPopup(item);
+  const toggleReminder = async (item, timing, visual) => {
+    const key = getReminderKey(item);
+    const isCurrentlyReminded = Boolean(remindersMap[key]);
+
+    if (isCurrentlyReminded) {
+      const next = { ...remindersMap };
+      delete next[key];
+      setRemindersMap(next);
+      saveStoredMap(REMINDERS_STORAGE_KEY, next);
+      setArmNotice(null);
+      return;
+    }
+
+    const next = {
+      ...remindersMap,
+      [key]: {
+        id: item.id,
+        drop_key: key,
+        title: item.title,
+        event_date: item.event_date,
+        category: item.category,
+        armed_at: new Date().toISOString(),
+      },
+    };
+    setRemindersMap(next);
+    saveStoredMap(REMINDERS_STORAGE_KEY, next);
+
+    if ('Notification' in window) {
+      try {
+        if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+          const perm = await Notification.requestPermission();
+          if (perm === 'granted') {
+            new Notification('🔔 ESTD Radar Reminder Armed', {
+              body: `${timing.date} (${timing.relativeTime}): "${item.title}"`,
+              icon: '/favicon.ico',
+            });
+          }
+        }
+      } catch {}
+    }
+
+    if (timing.isDueNow) {
+      setActiveAlertPopup({ ...item, accentColor: visual.accentColor, isSimulated: false });
+      const nextFired = { ...firedAlertsMap, [key]: new Date().toISOString() };
+      setFiredAlertsMap(nextFired);
+      saveStoredMap(FIRED_ALERTS_STORAGE_KEY, nextFired);
+    } else {
+      setArmNotice(`Reminder armed for ${timing.date} (${timing.relativeTime}) — we will alert you when it drops.`);
+      setTimeout(() => {
+        setArmNotice((curr) => (curr && curr.includes(timing.date) ? null : curr));
+      }, 4500);
     }
   };
 
-  const filteredItems = useMemo(() => {
-    if (selectedFilter === 'All') return RADAR_ITEMS;
-    return RADAR_ITEMS.filter((item) => {
-      if (selectedFilter === 'Education') {
-        return item.category === 'Education' || item.category === 'Developments';
-      }
-      return item.category === selectedFilter;
+  const enrichedItems = useMemo(() => {
+    return radarItems.map((item) => {
+      const visual = CATEGORY_VISUALS[item.category] || { accentColor: '#00E5FF', icon: Sparkles };
+      const timing = computeLocalRadarTiming(item, nowMs);
+      const rawTitle = (item.title || '').replace(/\s+\|\s+[^|]+$/, '').trim();
+      const conciseTitle = rawTitle.length > 82 ? rawTitle.slice(0, 82).replace(/\s+\S*$/, '') + '...' : rawTitle;
+      const rawDesc = (item.description || '').replace(/\s+/g, ' ').trim();
+      const conciseDesc = rawDesc.length > 135 ? rawDesc.slice(0, 135).replace(/\s+\S*$/, '') + '...' : rawDesc;
+      return {
+        ...item,
+        conciseTitle,
+        conciseDesc,
+        accentColor: visual.accentColor,
+        icon: visual.icon,
+        timing,
+      };
     });
-  }, [selectedFilter]);
+  }, [radarItems, nowMs]);
+
+  const filteredItems = useMemo(() => {
+    if (selectedFilter === 'All') return enrichedItems;
+    return enrichedItems.filter((item) => item.category === selectedFilter);
+  }, [enrichedItems, selectedFilter]);
+
+  const syncLabel = formatSyncAge(generatedAt, nowMs);
 
   return (
     <section className="weekly-radar-section" aria-label="What is Dropping This Week" style={{ position: 'relative' }}>
-      {/* ============================================================== */}
-      {/* LIVE REMINDER ALERT TOAST POPUP                                */}
-      {/* Pops up and alerts the user when their drop occurs / launches   */}
-      {/* ============================================================== */}
+      {/* LIVE REMINDER ALERT TOAST POPUP */}
       {activeAlertPopup && (
         <div
           className="radar-live-alert-toast"
@@ -282,7 +391,6 @@ export default function WeeklyRadarDrop() {
         >
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {/* Blinking Radar Beacon */}
               <span
                 style={{
                   width: 10,
@@ -303,7 +411,9 @@ export default function WeeklyRadarDrop() {
                   textTransform: 'uppercase',
                 }}
               >
-                🔔 REMINDER ALERT // EVENT LAUNCHED!
+                {activeAlertPopup.isSimulated
+                  ? '⚡ ALERT PREVIEW // DROP SIMULATION'
+                  : '🔔 REMINDER ALERT // EVENT DROPPING NOW!'}
               </span>
             </div>
 
@@ -338,10 +448,12 @@ export default function WeeklyRadarDrop() {
           </h4>
 
           <p style={{ fontSize: 12.5, color: '#cbd5e1', lineHeight: 1.5, margin: '0 0 14px 0' }}>
-            This event was scheduled for today and has officially dropped! You set a reminder for this drop on ESTD.
+            {activeAlertPopup.isSimulated
+              ? 'Preview of how your armed ESTD Radar alerts appear when a tracked event reaches its scheduled drop window.'
+              : 'This scheduled event has reached its drop window on ESTD. Open the live AI briefing or source coverage below.'}
           </p>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <button
               type="button"
               onClick={() => {
@@ -392,9 +504,7 @@ export default function WeeklyRadarDrop() {
         </div>
       )}
 
-      {/* ============================================================== */}
-      {/* SECTION HEADER                                                 */}
-      {/* ============================================================== */}
+      {/* SECTION HEADER */}
       <div className="weekly-radar-header">
         <div className="weekly-radar-title-group">
           <div className="weekly-radar-icon-badge">
@@ -407,22 +517,34 @@ export default function WeeklyRadarDrop() {
                 <Sparkles size={11} />
                 <span>Forward Intel</span>
               </span>
+              {syncLabel && (
+                <span
+                  style={{
+                    fontSize: '0.68rem',
+                    fontWeight: 600,
+                    color: 'rgba(0, 229, 255, 0.85)',
+                    background: 'rgba(0, 229, 255, 0.08)',
+                    border: '1px solid rgba(0, 229, 255, 0.22)',
+                    padding: '2px 8px',
+                    borderRadius: 999,
+                  }}
+                >
+                  {syncLabel}
+                </span>
+              )}
             </div>
             <p className="weekly-radar-sub">
-              Upcoming tech launches, streaming releases, major match fixtures & policy milestones
+              Upcoming launches, streaming drops, live fixtures & policy milestones extracted automatically from this week's news
             </p>
           </div>
         </div>
 
-        {/* Action Controls: Live Alert Simulation & Filter Chips */}
+        {/* Action Controls: Sync Live News, Alert Preview & Filter Chips */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          {/* Quick Simulation Trigger Button */}
           <button
             type="button"
-            onClick={() => {
-              const testItem = RADAR_ITEMS[0];
-              setActiveAlertPopup(testItem);
-            }}
+            disabled={refreshing}
+            onClick={() => loadRadar({ forceRefresh: true })}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -430,18 +552,49 @@ export default function WeeklyRadarDrop() {
               padding: '6px 12px',
               borderRadius: 20,
               fontSize: 11.5,
-              fontWeight: 800,
-              background: 'linear-gradient(135deg, rgba(0, 229, 255, 0.18), rgba(0, 229, 255, 0.05))',
-              border: '1px solid rgba(0, 229, 255, 0.35)',
-              color: '#00E5FF',
-              cursor: 'pointer',
+              fontWeight: 700,
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.14)',
+              color: '#e2e8f0',
+              cursor: refreshing ? 'wait' : 'pointer',
+              opacity: refreshing ? 0.7 : 1,
               transition: 'all 0.15s ease',
             }}
-            title="Preview how a reminder alerts you when an event drops"
+            title="Re-scan the latest ingested news stories for upcoming events this week"
           >
-            <Zap size={13} />
-            <span>Simulate Drop Alert</span>
+            <RefreshCw size={13} className={refreshing ? 'radar-spin-icon' : ''} />
+            <span>{refreshing ? 'Scanning News...' : 'Sync Live News'}</span>
           </button>
+
+          {enrichedItems.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                const target = filteredItems[0] || enrichedItems[0];
+                if (target) {
+                  setActiveAlertPopup({ ...target, isSimulated: true });
+                }
+              }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 12px',
+                borderRadius: 20,
+                fontSize: 11.5,
+                fontWeight: 800,
+                background: 'linear-gradient(135deg, rgba(0, 229, 255, 0.18), rgba(0, 229, 255, 0.05))',
+                border: '1px solid rgba(0, 229, 255, 0.35)',
+                color: '#00E5FF',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              title="Preview how a reminder alerts you when an event drops"
+            >
+              <Zap size={13} />
+              <span>Simulate Drop Alert</span>
+            </button>
+          )}
 
           {/* Filter Chips */}
           <div className="weekly-radar-filters">
@@ -457,266 +610,341 @@ export default function WeeklyRadarDrop() {
             ))}
           </div>
         </div>
+
+        {armNotice && (
+          <div
+            style={{
+              fontSize: 12,
+              color: '#00E5FF',
+              background: 'rgba(0, 229, 255, 0.08)',
+              border: '1px solid rgba(0, 229, 255, 0.25)',
+              borderRadius: 10,
+              padding: '8px 12px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              alignSelf: 'flex-start',
+            }}
+          >
+            <Bell size={13} />
+            <span>{armNotice}</span>
+          </div>
+        )}
       </div>
 
-      {/* ============================================================== */}
-      {/* RADAR CARDS GRID                                               */}
-      {/* ============================================================== */}
-      <div className="weekly-radar-grid">
-        {filteredItems.map((item) => {
-          const isReminded = reminders.has(item.id);
-          const IconComp = item.icon || Sparkles;
-          const isMenuOpen = calendarMenuOpenId === item.id;
-
-          return (
-            <article
-              key={item.id}
-              className={`weekly-radar-card ${isReminded ? 'radar-card-armed' : ''}`}
-              style={{
-                '--radar-accent': item.accentColor,
-                border: isReminded
-                  ? `1.5px solid ${item.accentColor}`
-                  : '1px solid rgba(255, 255, 255, 0.08)',
-                boxShadow: isReminded
-                  ? `0 8px 30px rgba(0, 0, 0, 0.5), 0 0 20px ${item.accentColor}30`
-                  : 'none',
-                position: 'relative',
-              }}
+      {/* LOADING / ERROR / EMPTY STATES */}
+      {loading && radarItems.length === 0 ? (
+        <div className="weekly-radar-grid">
+          {[1, 2, 3].map((n) => (
+            <div
+              key={n}
+              className="weekly-radar-card"
+              style={{ minHeight: 190, opacity: 0.55, justifyContent: 'space-between' }}
             >
-              {/* Card Top Row: Date Pill & Status Cluster */}
-              <div className="radar-card-top">
-                <div className="radar-date-pill">
-                  <span className="radar-date-num">{item.date}</span>
-                  <span className="radar-date-day">{item.dayName.slice(0, 3).toUpperCase()}</span>
-                </div>
+              <div style={{ height: 22, width: '55%', borderRadius: 6, background: 'rgba(255,255,255,0.08)' }} />
+              <div style={{ height: 48, width: '92%', borderRadius: 8, background: 'rgba(255,255,255,0.06)' }} />
+              <div style={{ height: 32, width: '100%', borderRadius: 8, background: 'rgba(255,255,255,0.05)' }} />
+            </div>
+          ))}
+        </div>
+      ) : errorMsg && radarItems.length === 0 ? (
+        <div
+          className="weekly-radar-card"
+          style={{
+            padding: 20,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 12,
+          }}
+        >
+          <span style={{ fontSize: 13, color: '#cbd5e1' }}>{errorMsg}</span>
+          <button
+            type="button"
+            onClick={() => loadRadar({ forceRefresh: true })}
+            className="weekly-radar-filter-btn active"
+          >
+            Retry Live Sync
+          </button>
+        </div>
+      ) : filteredItems.length === 0 ? (
+        <div className="weekly-radar-card" style={{ padding: 20 }}>
+          <span style={{ fontSize: 13, color: 'rgba(255, 255, 255, 0.68)' }}>
+            No upcoming events detected in this category yet for this week. Click{' '}
+            <strong>Sync Live News</strong> or select <strong>All Drops</strong>.
+          </span>
+        </div>
+      ) : (
+        /* RADAR CARDS GRID */
+        <div className="weekly-radar-grid">
+          {filteredItems.map((item) => {
+            const key = getReminderKey(item);
+            const isReminded = Boolean(remindersMap[key]);
+            const IconComp = item.icon || Sparkles;
+            const isMenuOpen = calendarMenuOpenId === item.id;
+            const { timing } = item;
 
-                <div className="radar-status-cluster">
-                  {/* Blinking Indicator if Reminder is Armed */}
-                  {isReminded && (
-                    <span
-                      className="radar-badge-pill radar-armed-pill"
-                      style={{
-                        background: `${item.accentColor}18`,
-                        borderColor: `${item.accentColor}50`,
-                        color: item.accentColor,
-                      }}
-                    >
-                      <span
-                        className="radar-beacon-dot"
-                        style={{
-                          background: item.accentColor,
-                          boxShadow: `0 0 8px ${item.accentColor}`,
-                        }}
-                      />
-                      <span>Alert Armed</span>
-                    </span>
-                  )}
-
-                  <span className={`radar-badge-pill radar-urgency-tag ${item.statusUrgency}`}>
-                    <Clock size={11} style={{ flexShrink: 0 }} />
-                    <span>{item.relativeTime}</span>
-                  </span>
-                </div>
-              </div>
-
-              {/* Category & Tag */}
-              <div className="radar-card-meta">
-                <span
-                  className="radar-category-pill"
-                  style={{
-                    backgroundColor: `${item.accentColor}18`,
-                    borderColor: `${item.accentColor}44`,
-                    color: item.accentColor,
-                  }}
-                >
-                  <IconComp size={12} />
-                  <span>{item.category}</span>
-                </span>
-
-                <span className="radar-tag-pill">{item.tag}</span>
-              </div>
-
-              {/* Title & Description */}
-              <h3
-                className="radar-card-title"
-                style={{ cursor: 'pointer', transition: 'color 0.15s ease' }}
-                onClick={() => {
-                  const query = encodeURIComponent(item.title);
-                  const category = encodeURIComponent(item.category);
-                  navigate(`/search?q=${query}&category=${category}&from=radar`);
-                }}
-                title="Read live dispatch via Gemini AI"
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = item.accentColor || '#00E5FF';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = '#FFFFFF';
-                }}
-              >
-                {item.title}
-              </h3>
-              <p className="radar-card-desc">{item.description}</p>
-
-              {/* Card Action Row: Remind Me + Add to Calendar */}
-              <div
-                className="radar-card-footer"
+            return (
+              <article
+                key={key}
+                className={`weekly-radar-card ${isReminded ? 'radar-card-armed' : ''}`}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 8,
+                  '--radar-accent': item.accentColor,
+                  border: isReminded
+                    ? `1.5px solid ${item.accentColor}`
+                    : '1px solid rgba(255, 255, 255, 0.08)',
+                  boxShadow: isReminded
+                    ? `0 8px 30px rgba(0, 0, 0, 0.5), 0 0 20px ${item.accentColor}30`
+                    : 'none',
                   position: 'relative',
                 }}
               >
-                {/* Remind Me Button */}
-                <button
-                  type="button"
-                  className={`radar-remind-btn ${isReminded ? 'active' : ''}`}
-                  onClick={() => toggleReminder(item)}
-                  style={{
-                    background: isReminded ? item.accentColor : 'rgba(255, 255, 255, 0.05)',
-                    color: isReminded ? '#000000' : 'rgba(255, 255, 255, 0.75)',
-                    border: isReminded ? `1px solid ${item.accentColor}` : '1px solid rgba(255, 255, 255, 0.1)',
-                    boxShadow: isReminded ? `0 0 14px ${item.accentColor}66` : 'none',
-                    fontWeight: 800,
-                  }}
-                  aria-label={isReminded ? 'Alert armed' : 'Remind me of this drop'}
-                >
-                  {isReminded ? (
-                    <>
-                      <Check size={13} strokeWidth={3} />
-                      <span>Alert Armed</span>
-                    </>
-                  ) : (
-                    <>
-                      <Bell size={13} />
-                      <span>Remind Me</span>
-                    </>
-                  )}
-                </button>
+                {/* Card Top Row: Date Pill & Status Cluster */}
+                <div className="radar-card-top">
+                  <div className="radar-date-pill">
+                    <span className="radar-date-num">{timing.date}</span>
+                    <span className="radar-date-day">{timing.dayShort}</span>
+                  </div>
 
-                {/* Calendar Add Button */}
-                <div style={{ position: 'relative' }}>
-                  <button
-                    type="button"
-                    onClick={() => setCalendarMenuOpenId(isMenuOpen ? null : item.id)}
+                  <div className="radar-status-cluster">
+                    {isReminded && (
+                      <span
+                        className="radar-badge-pill radar-armed-pill"
+                        style={{
+                          background: `${item.accentColor}18`,
+                          borderColor: `${item.accentColor}50`,
+                          color: item.accentColor,
+                        }}
+                      >
+                        <span
+                          className="radar-beacon-dot"
+                          style={{
+                            background: item.accentColor,
+                            boxShadow: `0 0 8px ${item.accentColor}`,
+                          }}
+                        />
+                        <span>Alert Armed</span>
+                      </span>
+                    )}
+
+                    <span className={`radar-badge-pill radar-urgency-tag ${timing.statusUrgency}`}>
+                      <Clock size={11} style={{ flexShrink: 0 }} />
+                      <span>{timing.relativeTime}</span>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Category & Tag */}
+                <div className="radar-card-meta">
+                  <span
+                    className="radar-category-pill"
                     style={{
-                      display: 'inline-flex',
+                      backgroundColor: `${item.accentColor}18`,
+                      borderColor: `${item.accentColor}44`,
+                      color: item.accentColor,
+                    }}
+                  >
+                    <IconComp size={12} />
+                    <span>{item.category}</span>
+                  </span>
+
+                  <span className="radar-tag-pill">{item.tag}</span>
+                </div>
+
+                {/* Title & Description */}
+                <h3
+                  className="radar-card-title"
+                  style={{ cursor: 'pointer', transition: 'color 0.15s ease' }}
+                  onClick={() => {
+                    const query = encodeURIComponent(item.title);
+                    const category = encodeURIComponent(item.category);
+                    navigate(`/search?q=${query}&category=${category}&from=radar`);
+                  }}
+                  title="Read live dispatch via Gemini AI"
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = item.accentColor || '#00E5FF';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = '#FFFFFF';
+                  }}
+                >
+                  {item.conciseTitle || item.title}
+                </h3>
+                <p className="radar-card-desc">{item.conciseDesc || item.description}</p>
+
+                {item.source_name && (
+                  <div
+                    style={{
+                      display: 'flex',
                       alignItems: 'center',
                       gap: 5,
-                      padding: '5px 10px',
-                      borderRadius: 8,
-                      fontSize: 11.5,
-                      fontWeight: 700,
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
-                      color: '#cbd5e1',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
+                      fontSize: 11,
+                      color: 'rgba(255, 255, 255, 0.45)',
+                      marginTop: -2,
                     }}
-                    title="Add to Calendar"
                   >
-                    <CalendarPlus size={13} />
-                    <span>Calendar</span>
+                    <Newspaper size={11} />
+                    <span>Via {item.source_name}</span>
+                  </div>
+                )}
+
+                {/* Card Action Row: Remind Me + Add to Calendar */}
+                <div
+                  className="radar-card-footer"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 8,
+                    position: 'relative',
+                  }}
+                >
+                  <button
+                    type="button"
+                    className={`radar-remind-btn ${isReminded ? 'active' : ''}`}
+                    onClick={() => toggleReminder(item, timing, item)}
+                    style={{
+                      background: isReminded ? item.accentColor : 'rgba(255, 255, 255, 0.05)',
+                      color: isReminded ? '#000000' : 'rgba(255, 255, 255, 0.75)',
+                      border: isReminded ? `1px solid ${item.accentColor}` : '1px solid rgba(255, 255, 255, 0.1)',
+                      boxShadow: isReminded ? `0 0 14px ${item.accentColor}66` : 'none',
+                      fontWeight: 800,
+                    }}
+                    aria-label={isReminded ? 'Alert armed' : 'Remind me of this drop'}
+                  >
+                    {isReminded ? (
+                      <>
+                        <Check size={13} strokeWidth={3} />
+                        <span>Alert Armed</span>
+                      </>
+                    ) : (
+                      <>
+                        <Bell size={13} />
+                        <span>Remind Me</span>
+                      </>
+                    )}
                   </button>
 
-                  {/* Calendar Options Dropdown */}
-                  {isMenuOpen && (
-                    <div
+                  <div style={{ position: 'relative' }}>
+                    <button
+                      type="button"
+                      onClick={() => setCalendarMenuOpenId(isMenuOpen ? null : item.id)}
                       style={{
-                        position: 'absolute',
-                        bottom: '100%',
-                        right: 0,
-                        marginBottom: 6,
-                        zIndex: 20,
-                        background: '#0D101A',
-                        border: '1px solid rgba(255, 255, 255, 0.15)',
-                        borderRadius: 10,
-                        padding: 6,
-                        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.7)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 4,
-                        minWidth: 170,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 5,
+                        padding: '5px 10px',
+                        borderRadius: 8,
+                        fontSize: 11.5,
+                        fontWeight: 700,
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        color: '#cbd5e1',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
                       }}
+                      title="Add to Calendar"
                     >
-                      {/* Google Calendar Link */}
-                      <a
-                        href={createGoogleCalendarUrl(item)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={() => setCalendarMenuOpenId(null)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 8,
-                          padding: '6px 10px',
-                          borderRadius: 6,
-                          fontSize: 11.5,
-                          fontWeight: 700,
-                          color: '#ffffff',
-                          textDecoration: 'none',
-                          background: 'rgba(255, 255, 255, 0.04)',
-                          transition: 'all 0.15s ease',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'rgba(0, 229, 255, 0.15)';
-                          e.currentTarget.style.color = '#00E5FF';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
-                          e.currentTarget.style.color = '#ffffff';
-                        }}
-                      >
-                        <ExternalLink size={12} />
-                        <span>Google Calendar</span>
-                      </a>
+                      <CalendarPlus size={13} />
+                      <span>Calendar</span>
+                    </button>
 
-                      {/* Download .ICS */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          downloadIcsCalendar(item);
-                          setCalendarMenuOpenId(null);
-                        }}
+                    {isMenuOpen && (
+                      <div
                         style={{
+                          position: 'absolute',
+                          bottom: '100%',
+                          right: 0,
+                          marginBottom: 6,
+                          zIndex: 20,
+                          background: '#0D101A',
+                          border: '1px solid rgba(255, 255, 255, 0.15)',
+                          borderRadius: 10,
+                          padding: 6,
+                          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.7)',
                           display: 'flex',
-                          alignItems: 'center',
-                          gap: 8,
-                          padding: '6px 10px',
-                          borderRadius: 6,
-                          fontSize: 11.5,
-                          fontWeight: 700,
-                          color: '#ffffff',
-                          background: 'rgba(255, 255, 255, 0.04)',
-                          border: 'none',
-                          cursor: 'pointer',
-                          textAlign: 'left',
-                          width: '100%',
-                          transition: 'all 0.15s ease',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'rgba(0, 229, 255, 0.15)';
-                          e.currentTarget.style.color = '#00E5FF';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
-                          e.currentTarget.style.color = '#ffffff';
+                          flexDirection: 'column',
+                          gap: 4,
+                          minWidth: 170,
                         }}
                       >
-                        <Download size={12} />
-                        <span>Apple / Outlook (.ics)</span>
-                      </button>
-                    </div>
-                  )}
+                        <a
+                          href={createGoogleCalendarUrl(item)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => setCalendarMenuOpenId(null)}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            padding: '6px 10px',
+                            borderRadius: 6,
+                            fontSize: 11.5,
+                            fontWeight: 700,
+                            color: '#ffffff',
+                            textDecoration: 'none',
+                            background: 'rgba(255, 255, 255, 0.04)',
+                            transition: 'all 0.15s ease',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(0, 229, 255, 0.15)';
+                            e.currentTarget.style.color = '#00E5FF';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                            e.currentTarget.style.color = '#ffffff';
+                          }}
+                        >
+                          <ExternalLink size={12} />
+                          <span>Google Calendar</span>
+                        </a>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            downloadIcsCalendar(item);
+                            setCalendarMenuOpenId(null);
+                          }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            padding: '6px 10px',
+                            borderRadius: 6,
+                            fontSize: 11.5,
+                            fontWeight: 700,
+                            color: '#ffffff',
+                            background: 'rgba(255, 255, 255, 0.04)',
+                            border: 'none',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            width: '100%',
+                            transition: 'all 0.15s ease',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(0, 229, 255, 0.15)';
+                            e.currentTarget.style.color = '#00E5FF';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                            e.currentTarget.style.color = '#ffffff';
+                          }}
+                        >
+                          <Download size={12} />
+                          <span>Apple / Outlook (.ics)</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </article>
-          );
-        })}
-      </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
 
-      {/* Global Embedded Keyframes for Beacon & Slide-up Animation */}
+      {/* Global Embedded Keyframes for Beacon, Spin & Slide-up Animation */}
       <style>{`
         .radar-card-top {
           display: flex;
@@ -784,6 +1012,13 @@ export default function WeeklyRadarDrop() {
         }
         .radar-urgency-tag {
           font-size: 11px;
+        }
+        .radar-spin-icon {
+          animation: radarSpin 0.9s linear infinite;
+        }
+        @keyframes radarSpin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
         @keyframes radarPulseBeacon {
           0%, 100% {

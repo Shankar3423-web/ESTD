@@ -2162,3 +2162,215 @@ function extractCulturalPulse(article) {
     reactionType: 'Executive Take',
   };
 }
+
+let _WEEKLY_RADAR_CACHE = null;
+let _WEEKLY_RADAR_CACHE_AT = 0;
+const _WEEKLY_RADAR_TTL_MS = 120000; // 2 minutes
+
+const _RADAR_FORWARD_TERMS = [
+  'upcoming', 'scheduled', 'launch', 'launches', 'launching', 'release', 'releasing',
+  'premiere', 'premieres', 'drop', 'fixture', 'match', 'clash', 'derby', 'tournament',
+  'cup', 'grand prix', 'summit', 'conference', 'deadline', 'earnings', 'expected',
+  'next week', 'this week', 'this weekend', 'tomorrow', 'set to', 'slated', 'begins',
+  'opens', 'starts', 'black friday', 'rollout', 'briefing',
+];
+
+function _deriveClientRadarFromStories(stories) {
+  if (!Array.isArray(stories) || stories.length === 0) return [];
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const cats = ['Tech', 'Entertainment', 'Sports', 'Developments', 'Business & Finance'];
+
+  const scored = stories.map((s) => {
+    const text = `${s.headline || ''} ${s.brief || ''}`.toLowerCase();
+    let score = 0;
+    for (const kw of _RADAR_FORWARD_TERMS) {
+      if (text.includes(kw)) score += 2;
+    }
+    const ts = new Date(s.publishedAt || s.createdAt || now).getTime();
+    const ageHours = Math.max(0, (now.getTime() - (Number.isNaN(ts) ? now.getTime() : ts)) / 3600000);
+    score += Math.max(0, 10 - ageHours / 18);
+    return { story: s, score };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+
+  const picked = [];
+  const usedIds = new Set();
+  for (const cat of cats) {
+    const match = scored.find((x) => x.story.category === cat && !usedIds.has(x.story.id));
+    if (match) {
+      usedIds.add(match.story.id);
+      picked.push(match.story);
+    }
+  }
+  for (const x of scored) {
+    if (picked.length >= 6) break;
+    if (!usedIds.has(x.story.id)) {
+      usedIds.add(x.story.id);
+      picked.push(x.story);
+    }
+  }
+
+  return picked.map((s, idx) => {
+    const ev = new Date(todayStart.getTime() + (idx % 6) * 86400000 + 14 * 3600000);
+    const end = new Date(ev.getTime() + 7200000);
+    const brief = (s.brief || '').replace(/\s+/g, ' ').trim();
+    const desc = brief.length > 200 ? brief.slice(0, 200).replace(/\s+\S*$/, '') + '...' : brief;
+    return {
+      id: `radar-live-${s.id}`,
+      drop_key: `live-story-${s.id}`,
+      title: s.headline || s.originalTitle,
+      description: desc || `Developing ${s.category} coverage from ${s.sourceName || 'ESTD Wire'}.`,
+      category: s.category || 'Tech',
+      tag: s.subcategory || 'Live Watch',
+      event_date: ev.toISOString(),
+      end_date: end.toISOString(),
+      target_date_ics: ev.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z',
+      end_date_ics: end.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z',
+      source_article_id: s.id,
+      source_title: s.originalTitle || s.headline,
+      source_url: s.sourceUrl,
+      source_name: s.sourceName || 'ESTD Wire',
+      generated_at: now.toISOString(),
+    };
+  });
+}
+
+async function _fetchLocalBackendRadarFallback(pathAndQuery, method = 'GET') {
+  if (typeof window === 'undefined') return null;
+  const host = window.location?.hostname || '';
+  const isLocalHost = host === 'localhost' || host === '127.0.0.1';
+  const configuredBase = (import.meta.env.VITE_API_BASE_URL || '').trim();
+  if (!isLocalHost || configuredBase.includes('localhost') || configuredBase.includes('127.0.0.1')) {
+    return null;
+  }
+  try {
+    const res = await fetch(`http://127.0.0.1:8000${pathAndQuery}`, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Retrieves dynamic Weekly Radar ("What's Dropping This Week") events from the backend.
+ */
+export async function fetchWeeklyRadar({ category, refresh = false } = {}) {
+  const now = Date.now();
+  if (!refresh && !category && _WEEKLY_RADAR_CACHE && now - _WEEKLY_RADAR_CACHE_AT < _WEEKLY_RADAR_TTL_MS) {
+    return _WEEKLY_RADAR_CACHE;
+  }
+
+  const params = new URLSearchParams();
+  if (category && category !== 'All') {
+    params.append('category', category);
+  }
+  if (refresh) {
+    params.append('refresh', 'true');
+  }
+  const qs = params.toString();
+  const pathAndQuery = `/api/v1/radar/drops${qs ? `?${qs}` : ''}`;
+
+  let data = null;
+  try {
+    data = await apiRequest(pathAndQuery);
+  } catch (err) {
+    if (err?.status === 404 || err?.code === 'NETWORK_ERROR') {
+      const localData = await _fetchLocalBackendRadarFallback(pathAndQuery, 'GET');
+      if (localData && Array.isArray(localData.items)) {
+        data = localData;
+      } else {
+        // Graceful fallback: derive dynamic weekly radar directly from live ingested stories
+        let stories = getCachedStories({ limit: 80 });
+        if (!stories || stories.length === 0) {
+          stories = await fetchStories({ limit: 80 }).catch(() => []);
+        }
+        const derived = _deriveClientRadarFromStories(stories);
+        if (derived.length > 0) {
+          data = {
+            total: derived.length,
+            generated_at: new Date().toISOString(),
+            server_now: new Date().toISOString(),
+            cached: false,
+            source: 'live_stories_fallback',
+            items: derived,
+          };
+        } else {
+          throw err;
+        }
+      }
+    } else {
+      throw err;
+    }
+  }
+
+  if (!category && data && Array.isArray(data.items)) {
+    _WEEKLY_RADAR_CACHE = data;
+    _WEEKLY_RADAR_CACHE_AT = now;
+    try {
+      localStorage.setItem('estd_weekly_radar_cache', JSON.stringify(data));
+    } catch {}
+  }
+  return data;
+}
+
+/**
+ * Forces backend re-extraction of Weekly Radar drops from the latest ingested news.
+ */
+export async function refreshWeeklyRadar() {
+  const pathAndQuery = '/api/v1/radar/refresh?force=true';
+  let data = null;
+  try {
+    data = await apiRequest(pathAndQuery, { method: 'POST' });
+  } catch (err) {
+    if (err?.status === 404 || err?.code === 'NETWORK_ERROR') {
+      const localData = await _fetchLocalBackendRadarFallback(pathAndQuery, 'POST');
+      if (localData && Array.isArray(localData.items)) {
+        data = localData;
+      } else {
+        const stories = await fetchStories({ limit: 80, forceRefresh: true }).catch(() => []);
+        const derived = _deriveClientRadarFromStories(stories);
+        if (derived.length > 0) {
+          data = {
+            total: derived.length,
+            generated_at: new Date().toISOString(),
+            server_now: new Date().toISOString(),
+            cached: false,
+            source: 'live_stories_fallback',
+            items: derived,
+          };
+        } else {
+          throw err;
+        }
+      }
+    } else {
+      throw err;
+    }
+  }
+
+  _WEEKLY_RADAR_CACHE = data;
+  _WEEKLY_RADAR_CACHE_AT = Date.now();
+  try {
+    localStorage.setItem('estd_weekly_radar_cache', JSON.stringify(data));
+  } catch {}
+  return data;
+}
+
+export function getCachedWeeklyRadar() {
+  if (_WEEKLY_RADAR_CACHE) return _WEEKLY_RADAR_CACHE;
+  try {
+    const raw = localStorage.getItem('estd_weekly_radar_cache');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.items)) {
+        return parsed;
+      }
+    }
+  } catch {}
+  return null;
+}

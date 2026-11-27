@@ -141,6 +141,14 @@ class ContentEngineScheduler:
                 except Exception as estdpod_exc:
                     logger.warning(f"[Scheduler] ESTDPOD sync notice: {estdpod_exc}")
 
+                # Synchronize Dynamic Weekly Radar upcoming drops from fresh news
+                try:
+                    from backend.step10_weekly_radar.services.radar_service import RadarService
+                    logger.info("[Scheduler] Syncing Dynamic Weekly Radar from latest news...")
+                    await asyncio.to_thread(RadarService().refresh_weekly_radar, force=False)
+                except Exception as radar_exc:
+                    logger.warning(f"[Scheduler] Weekly Radar sync notice: {radar_exc}")
+
             except Exception as exc:
                 logger.error(f"[Scheduler] Error during scheduled pipeline execution: {exc}")
                 self.last_run_status = f"ERROR:{str(exc)[:60]}"
